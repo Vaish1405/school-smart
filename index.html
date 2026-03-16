@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SchoolSmart LMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <aside class="global-nav" aria-label="Global navigation">
+      <div class="brand-pill">SS</div>
+      <nav>
+        <a href="#" class="nav-icon active" id="navDashboard" aria-label="Dashboard">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg>
+        </a>
+        <a href="#" class="nav-icon" id="navCourses" aria-label="Courses">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M8 6v12"/></svg>
+        </a>
+        <a href="#" class="nav-icon" id="navCalendar" aria-label="Calendar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v15H4z"/><path d="M4 10h16M8 3v4m8-4v4"/></svg>
+        </a>
+        <a href="#" class="nav-icon" id="navInbox" aria-label="Inbox">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 8l9 6 9-6"/></svg>
+        </a>
+      </nav>
+    </aside>
+
+    <main class="content" id="learningContent">
+      <section id="homeView">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">SchoolSmart Portal</p>
+            <h1>Dashboard</h1>
+            <p class="subtitle">Spring 2026 | Student View</p>
+          </div>
+          <button class="help-toggle" id="chatToggle" aria-expanded="false" aria-controls="chatPanel">
+            Open AI Study Helper
+          </button>
+        </header>
+
+        <div class="dashboard-layout">
+          <section class="courses-area">
+            <h2>Published Classes (6)</h2>
+            <div class="course-grid">
+              <button class="course-card theme-lagoon class-card" data-course="chemistry">
+                <div class="course-top">
+                  <span class="course-icon">CH</span>
+                  <span class="ghost-dot">...</span>
+                </div>
+                <div class="course-body">
+                  <h3>Chemistry Lab Foundations</h3>
+                  <p>Dr. Nina Verma</p>
+                  <p>Mon/Wed | 10:00 AM</p>
+                  <p class="course-grade">Grade: 92% (A-)</p>
+                </div>
+              </button>
+
+              <button class="course-card theme-sunrise class-card" data-course="math">
+                <div class="course-top">
+                  <span class="course-icon">MA</span>
+                  <span class="ghost-dot">...</span>
+                </div>
+                <div class="course-body">
+                  <h3>Discrete Mathematics</h3>
+                  <p>Prof. Lena Hart</p>
+                  <p>Tue/Thu | 1:30 PM</p>
+                  <p class="course-grade">Grade: 88% (B+)</p>
+                </div>
+              </button>
+
+              <button class="course-card theme-fern class-card" data-course="biology">
+                <div class="course-top">
+                  <span class="course-icon">BI</span>
+                  <span class="ghost-dot">...</span>
+                </div>
+                <div class="course-body">
+                  <h3>Biology 101: Cell Systems</h3>
+                  <p>Ms. Riley Stone</p>
+                  <p>Mon/Fri | 9:00 AM</p>
+                  <p class="course-grade">Grade: 94% (A)</p>
+                </div>
+              </button>
+
+              <button class="course-card theme-dusk class-card" data-course="literature">
+                <div class="course-top">
+                  <span class="course-icon">LI</span>
+                  <span class="ghost-dot">...</span>
+                </div>
+                <div class="course-body">
+                  <h3>Modern Literature</h3>
+                  <p>Mr. Osei Kwan</p>
+                  <p>Wed | 2:00 PM</p>
+                  <p class="course-grade">Grade: 90% (A-)</p>
+                </div>
+              </button>
+
+              <button class="course-card theme-sky class-card" data-course="history">
+                <div class="course-top">
+                  <span class="course-icon">HI</span>
+                  <span class="ghost-dot">...</span>
+                </div>
+                <div class="course-body">
+                  <h3>Global History</h3>
+                  <p>Dr. Farah Lin</p>
+                  <p>Thu | 11:00 AM</p>
+                  <p class="course-grade">Grade: 86% (B)</p>
+                </div>
+              </button>
+
+              <button class="course-card theme-pebble class-card" data-course="programming">
+                <div class="course-top">
+                  <span class="course-icon">CS</span>
+                  <span class="ghost-dot">...</span>
+                </div>
+                <div class="course-body">
+                  <h3>Intro to Programming</h3>
+                  <p>Coach Aaron Bell</p>
+                  <p>Tue | 3:00 PM</p>
+                  <p class="course-grade">Grade: 91% (A-)</p>
+                </div>
+              </button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="calendarView" class="hidden">
+        <header class="calendar-topbar">
+          <div class="calendar-controls">
+            <button class="calendar-btn">Today</button>
+            <button class="calendar-btn" id="calendarPrev" aria-label="Previous month">&larr;</button>
+            <button class="calendar-btn" id="calendarNext" aria-label="Next month">&rarr;</button>
+            <h1 id="calendarMonthLabel">March 2026</h1>
+          </div>
+          <div class="calendar-view-switch" aria-label="Calendar view switch">
+            <button class="calendar-btn">Week</button>
+            <button class="calendar-btn active">Month</button>
+            <button class="calendar-btn">Agenda</button>
+            <button class="calendar-btn">+</button>
+          </div>
+        </header>
+
+        <section class="calendar-shell">
+          <article class="calendar-board">
+            <div class="calendar-weekdays">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div id="monthGrid" class="month-grid"></div>
+          </article>
+
+          <aside class="calendar-side">
+            <section class="mini-month">
+              <div class="mini-month-header">
+                <button id="miniPrev" aria-label="Previous mini month">&lt;</button>
+                <h3 id="miniMonthLabel">March 2026</h3>
+                <button id="miniNext" aria-label="Next mini month">&gt;</button>
+              </div>
+              <div class="mini-weekdays">
+                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+              </div>
+              <div id="miniGrid" class="mini-grid"></div>
+            </section>
+
+            <section class="calendar-list">
+              <h3>Calendars</h3>
+              <ul>
+                <li><label><input type="checkbox" checked /> Chemistry Lab Foundations</label></li>
+                <li><label><input type="checkbox" checked /> Discrete Mathematics</label></li>
+                <li><label><input type="checkbox" checked /> Biology 101: Cell Systems</label></li>
+                <li><label><input type="checkbox" checked /> Modern Literature</label></li>
+                <li><label><input type="checkbox" checked /> Global History</label></li>
+                <li><label><input type="checkbox" checked /> Intro to Programming</label></li>
+              </ul>
+            </section>
+          </aside>
+        </section>
+      </section>
+
+      <section id="detailView" class="hidden">
+        <header class="page-topbar">
+          <div class="course-title-wrap">
+            <button class="menu-button" id="backToHome" aria-label="Back to dashboard">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M9 12h10"/></svg>
+            </button>
+            <div>
+              <p class="eyebrow" id="detailTag">Course</p>
+              <h1 id="detailTitle">Course Title</h1>
+            </div>
+          </div>
+          <button class="help-toggle" id="chatToggleDetail" aria-expanded="false" aria-controls="chatPanel">
+            Open AI Study Helper
+          </button>
+        </header>
+
+        <section class="course-layout">
+          <aside class="course-nav" aria-label="Course navigation">
+            <p class="mini-label">Course Tabs</p>
+            <button class="course-tab active" data-tab="assignments" type="button">Assignments</button>
+            <button class="course-tab" data-tab="grades" type="button">Grades</button>
+            <button class="course-tab" data-tab="announcements" type="button">Announcements</button>
+            <button class="course-tab" data-tab="files" type="button">Files</button>
+            <button class="course-tab" data-tab="modules" type="button">Modules</button>
+          </aside>
+
+          <article class="course-main">
+            <h2 id="detailHeading">Lesson Overview</h2>
+            <p id="detailIntro"></p>
+            <section class="tab-content">
+              <h3 id="tabTitle">Assignments</h3>
+              <p id="tabDescription"></p>
+              <ul id="tabList"></ul>
+              <div id="calendarGroups" class="calendar-groups hidden"></div>
+            </section>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <aside class="chat-panel" id="chatPanel" aria-hidden="true">
+      <div class="chat-header">
+        <h3>AI Study Helper</h3>
+        <p>Ask about this current page</p>
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="message bot">
+          Hi! Open a class card and ask me questions about that page's content.
+        </div>
+      </div>
+
+      <form class="chat-input-row" id="chatForm">
+        <label for="chatInput" class="sr-only">Ask your question</label>
+        <input
+          id="chatInput"
+          type="text"
+          placeholder="Example: What is due this week?"
+          autocomplete="off"
+          required
+        />
+        <button type="submit">Send</button>
+      </form>
+    </aside>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
