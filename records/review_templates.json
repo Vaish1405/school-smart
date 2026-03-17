@@ -1,0 +1,140 @@
+{
+  "chemistry": [
+    {
+      "prompt": "What is the most likely source of error in this lab setup?",
+      "idealAnswer": "Uncontrolled variables and inconsistent measurement steps",
+      "misconception": "Only recording mistakes affect results",
+      "issue": "Error analysis was too narrow.",
+      "explanation": "In labs, setup consistency and controlled variables matter as much as note accuracy."
+    },
+    {
+      "prompt": "How should significant figures be applied in the final result?",
+      "idealAnswer": "Round to match the least precise measurement used",
+      "misconception": "Always keep all calculator digits",
+      "issue": "Rounding rule was misapplied.",
+      "explanation": "Scientific reporting requires precision that matches measurement limits, not calculator output."
+    },
+    {
+      "prompt": "Which part of the conclusion best supports your hypothesis?",
+      "idealAnswer": "A claim linked to data trend and one limitation",
+      "misconception": "A summary sentence without data reference",
+      "issue": "Conclusion lacked evidence linkage.",
+      "explanation": "Strong conclusions tie claim to evidence and acknowledge at least one limitation."
+    }
+  ],
+  "math": [
+    {
+      "prompt": "Which rule proves this implication is valid?",
+      "idealAnswer": "Contrapositive or direct proof with justified steps",
+      "misconception": "Example checking is sufficient proof",
+      "issue": "Proof method was incomplete.",
+      "explanation": "A valid proof needs a general argument, not just sampled examples."
+    },
+    {
+      "prompt": "How should this set expression be simplified?",
+      "idealAnswer": "Apply distributive and complement laws step by step",
+      "misconception": "Skip identities and jump to final result",
+      "issue": "Set identities were skipped.",
+      "explanation": "Showing each identity application prevents logic errors and improves clarity."
+    },
+    {
+      "prompt": "What is missing in this induction proof?",
+      "idealAnswer": "A clear inductive hypothesis and substitution in the inductive step",
+      "misconception": "Base case alone is enough",
+      "issue": "Inductive step lacked justification.",
+      "explanation": "Induction needs both a valid base case and a justified step from n to n+1."
+    }
+  ],
+  "biology": [
+    {
+      "prompt": "Which organelle is most directly responsible for ATP generation?",
+      "idealAnswer": "Mitochondria",
+      "misconception": "Golgi apparatus",
+      "issue": "Organelle function mapping was incorrect.",
+      "explanation": "Mitochondria generate ATP; Golgi modifies and packages cellular products."
+    },
+    {
+      "prompt": "What observation best indicates proper microscope focus?",
+      "idealAnswer": "Sharp cell boundaries and visible nucleus details",
+      "misconception": "Bright image is enough",
+      "issue": "Focus criteria were incomplete.",
+      "explanation": "Image brightness alone is not quality; structural detail confirms focus."
+    },
+    {
+      "prompt": "Why is membrane transport selective?",
+      "idealAnswer": "Because membrane proteins regulate specific molecule movement",
+      "misconception": "All molecules pass if concentration is high",
+      "issue": "Selectivity concept was misunderstood.",
+      "explanation": "Transport depends on size, polarity, and protein channels, not concentration alone."
+    }
+  ],
+  "literature": [
+    {
+      "prompt": "How does narrative voice shape reader trust?",
+      "idealAnswer": "It controls reliability and perspective framing",
+      "misconception": "Voice only changes tone",
+      "issue": "Narrative impact was underexplained.",
+      "explanation": "Voice influences both tone and how readers interpret truth and bias."
+    },
+    {
+      "prompt": "What makes this quote strong evidence for your theme?",
+      "idealAnswer": "It directly supports the claim and is analyzed in context",
+      "misconception": "Any quote from the chapter works",
+      "issue": "Evidence relevance was weak.",
+      "explanation": "Evidence must be closely tied to the claim and interpreted, not just inserted."
+    },
+    {
+      "prompt": "Which revision improves analytical depth?",
+      "idealAnswer": "Add interpretation of author choice and effect on meaning",
+      "misconception": "Add longer summary",
+      "issue": "Response leaned on plot summary.",
+      "explanation": "Analysis should prioritize interpretation over retelling events."
+    }
+  ],
+  "history": [
+    {
+      "prompt": "Which source is more reliable for this claim and why?",
+      "idealAnswer": "The source with stronger provenance and corroborating evidence",
+      "misconception": "The source with stronger wording",
+      "issue": "Source credibility criteria were weak.",
+      "explanation": "Reliability depends on origin, context, and corroboration, not confident tone."
+    },
+    {
+      "prompt": "What is the strongest cause-effect link in this trade network?",
+      "idealAnswer": "A concrete policy/economic change linked to exchange evidence",
+      "misconception": "General statement without evidence",
+      "issue": "Cause-effect chain was vague.",
+      "explanation": "Historical arguments need specific causal links supported by records."
+    },
+    {
+      "prompt": "How should you address a counterargument in debate notes?",
+      "idealAnswer": "State the opposing claim and rebut with evidence",
+      "misconception": "Ignore weak counterarguments",
+      "issue": "Counterargument section was missing.",
+      "explanation": "Addressing counterarguments strengthens credibility and argument control."
+    }
+  ],
+  "programming": [
+    {
+      "prompt": "Why does this loop produce an off-by-one error?",
+      "idealAnswer": "The boundary condition includes/excludes one extra index",
+      "misconception": "The variable name causes it",
+      "issue": "Loop bounds were incorrect.",
+      "explanation": "Most off-by-one bugs come from boundary logic, especially <= versus < checks."
+    },
+    {
+      "prompt": "Which debugging step should come first?",
+      "idealAnswer": "Reproduce the bug consistently with a minimal test case",
+      "misconception": "Rewrite large sections immediately",
+      "issue": "Debugging workflow was rushed.",
+      "explanation": "Reliable reproduction narrows root cause faster than broad rewrites."
+    },
+    {
+      "prompt": "How can this function be made more readable?",
+      "idealAnswer": "Use clearer variable names and split logic into helper steps",
+      "misconception": "Only add comments",
+      "issue": "Readability strategy was incomplete.",
+      "explanation": "Good naming and decomposition improve maintainability more than comments alone."
+    }
+  ]
+}

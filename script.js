@@ -100,6 +100,11 @@ const teacherDashboardCards = [
   { icon: "WD", title: "Web Development", teacher: "Prof. Aaron Bell", schedule: "Wed/Fri | 11:00 AM", published: false },
   { icon: "SE", title: "Software Engineering", teacher: "Prof. Aaron Bell", schedule: "Fri | 2:30 PM", published: false },
 ];
+let dbTeacherDashboardCards = [];
+let dbUniqueTabSeedByCourse = {};
+let dbDefaultModulesScheduleByCourse = {};
+let dbReviewQuestionTemplatesByCourse = {};
+let dbCareerReadinessByCourse = {};
 
 let studentDashboardCards = [];
 let analyticsClassId = "c1";
@@ -769,7 +774,15 @@ const careerReadinessByCourse = {
 };
 
 function makeTabPlaceholders(courseTitle, courseKey) {
-  const seed = uniqueTabSeedByCourse[courseKey] || uniqueTabSeedByCourse.math;
+  const tabSeedSource =
+    Object.keys(dbUniqueTabSeedByCourse).length > 0
+      ? dbUniqueTabSeedByCourse
+      : uniqueTabSeedByCourse;
+  const modulesScheduleSource =
+    Object.keys(dbDefaultModulesScheduleByCourse).length > 0
+      ? dbDefaultModulesScheduleByCourse
+      : defaultModulesScheduleByCourse;
+  const seed = tabSeedSource[courseKey] || tabSeedSource.math;
   return {
     assignments: {
       title: "Assignments",
@@ -795,7 +808,7 @@ function makeTabPlaceholders(courseTitle, courseKey) {
       title: "Modules",
       description: `Weekly modules and resources for ${courseTitle}.`,
       weeks: seed.modules,
-      schedule: defaultModulesScheduleByCourse[courseKey] || [],
+      schedule: modulesScheduleSource[courseKey] || [],
     },
     tutor: {
       title: "Tutor",
@@ -948,7 +961,11 @@ function getCourseGradeSummary(courseKey) {
 }
 
 function getQuestionReviewForAssignment(courseKey, scorePercent, questionCount = 5, wrongCount = null) {
-  const templates = reviewQuestionTemplatesByCourse[courseKey] || reviewQuestionTemplatesByCourse.programming;
+  const reviewSource =
+    Object.keys(dbReviewQuestionTemplatesByCourse).length > 0
+      ? dbReviewQuestionTemplatesByCourse
+      : reviewQuestionTemplatesByCourse;
+  const templates = reviewSource[courseKey] || reviewSource.programming;
   const totalQuestions = Math.min(5, Math.max(1, Number(questionCount) || 5));
   const derivedWrongCount = wrongCount == null
     ? Math.round(((100 - scorePercent) / 100) * totalQuestions)
@@ -1296,6 +1313,10 @@ async function loadRecords() {
     "class_grades.json",
     "announcements.json",
     "files.json",
+    "tab_seeds.json",
+    "career_readiness.json",
+    "review_templates.json",
+    "dashboard_cards.json",
   ];
   try {
     const results = await Promise.all(
@@ -1311,7 +1332,34 @@ async function loadRecords() {
       recordsClassGrades,
       recordsAnnouncements,
       recordsFiles,
-    ] = results.map((r) => (Array.isArray(r) ? r : []));
+      tabSeedsResult,
+      careerReadinessResult,
+      reviewTemplatesResult,
+      dashboardCardsResult,
+    ] = results;
+
+    recordsTeachers = Array.isArray(recordsTeachers) ? recordsTeachers : [];
+    recordsClasses = Array.isArray(recordsClasses) ? recordsClasses : [];
+    recordsStudents = Array.isArray(recordsStudents) ? recordsStudents : [];
+    recordsEnrollments = Array.isArray(recordsEnrollments) ? recordsEnrollments : [];
+    recordsAssignments = Array.isArray(recordsAssignments) ? recordsAssignments : [];
+    recordsAssignmentGrades = Array.isArray(recordsAssignmentGrades) ? recordsAssignmentGrades : [];
+    recordsClassGrades = Array.isArray(recordsClassGrades) ? recordsClassGrades : [];
+    recordsAnnouncements = Array.isArray(recordsAnnouncements) ? recordsAnnouncements : [];
+    recordsFiles = Array.isArray(recordsFiles) ? recordsFiles : [];
+
+    dbUniqueTabSeedByCourse = tabSeedsResult?.uniqueTabSeedByCourse || {};
+    dbDefaultModulesScheduleByCourse = tabSeedsResult?.defaultModulesScheduleByCourse || {};
+    dbCareerReadinessByCourse = careerReadinessResult && typeof careerReadinessResult === "object"
+      ? careerReadinessResult
+      : {};
+    dbReviewQuestionTemplatesByCourse = reviewTemplatesResult && typeof reviewTemplatesResult === "object"
+      ? reviewTemplatesResult
+      : {};
+    dbTeacherDashboardCards = Array.isArray(dashboardCardsResult?.teacherDashboardCards)
+      ? dashboardCardsResult.teacherDashboardCards
+      : [];
+
     recordsLoaded = true;
     applyRecordsToCourseData();
     updateCourseCardsGrades();
@@ -1786,7 +1834,11 @@ function renderAnalytics() {
 updateCourseCardsGrades();
 
 function getCareerDataForCourse(courseKey) {
-  return careerReadinessByCourse[courseKey] || careerReadinessByCourse.programming;
+  const careerSource =
+    Object.keys(dbCareerReadinessByCourse).length > 0
+      ? dbCareerReadinessByCourse
+      : careerReadinessByCourse;
+  return careerSource[courseKey] || careerSource.programming;
 }
 
 function projectStorageKey(courseKey, projectId) {
@@ -2521,7 +2573,8 @@ function captureStudentDashboardCards() {
 
 function applyDashboardClassesForRole() {
   captureStudentDashboardCards();
-  const source = isTeacherView ? teacherDashboardCards : studentDashboardCards;
+  const teacherCards = dbTeacherDashboardCards.length ? dbTeacherDashboardCards : teacherDashboardCards;
+  const source = isTeacherView ? teacherCards : studentDashboardCards;
   let publishedCount = 0;
   let unpublishedCount = 0;
   cards.forEach((card, index) => {

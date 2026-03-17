@@ -1,0 +1,46 @@
+{
+  "teacherDashboardCards": [
+    {
+      "icon": "CS1",
+      "title": "Intro to Programming - Period 1",
+      "teacher": "Prof. Aaron Bell",
+      "schedule": "Mon/Wed | 8:00 AM",
+      "published": true
+    },
+    {
+      "icon": "CS2",
+      "title": "Intro to Programming - Period 2",
+      "teacher": "Prof. Aaron Bell",
+      "schedule": "Mon/Wed | 9:30 AM",
+      "published": true
+    },
+    {
+      "icon": "DS",
+      "title": "Data Structures",
+      "teacher": "Prof. Aaron Bell",
+      "schedule": "Tue/Thu | 10:00 AM",
+      "published": true
+    },
+    {
+      "icon": "AL",
+      "title": "Algorithms",
+      "teacher": "Prof. Aaron Bell",
+      "schedule": "Tue/Thu | 1:00 PM",
+      "published": true
+    },
+    {
+      "icon": "WD",
+      "title": "Web Development",
+      "teacher": "Prof. Aaron Bell",
+      "schedule": "Wed/Fri | 11:00 AM",
+      "published": false
+    },
+    {
+      "icon": "SE",
+      "title": "Software Engineering",
+      "teacher": "Prof. Aaron Bell",
+      "schedule": "Fri | 2:30 PM",
+      "published": false
+    }
+  ]
+}
