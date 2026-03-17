@@ -3011,6 +3011,37 @@ function setChatOpen(isOpen) {
     btn.setAttribute("aria-expanded", String(isOpen));
     btn.textContent = isOpen ? "Close AI Study Helper" : "Open AI Study Helper";
   });
+
+  // Coordinate with the IBM widget (loader injects into #ibm-root).
+  // When our Study Helper opens we hide the IBM launcher/widget; when it closes we show it again
+  // and attempt to programmatically close the widget if an API is exposed.
+  try {
+    const ibmRoot = document.getElementById("ibm-root");
+    if (ibmRoot) {
+      if (isOpen) {
+        ibmRoot.style.display = "none";
+      } else {
+        ibmRoot.style.display = "";
+      }
+    }
+
+    // Try best-effort to close the IBM widget if it exposes a close API.
+    // Different loader versions expose different globals; check common names safely.
+    const closeIfAvailable = (obj) => {
+      if (!obj) return;
+      if (typeof obj.close === "function") {
+        try { obj.close(); } catch (e) {}
+      } else if (typeof obj.hide === "function") {
+        try { obj.hide(); } catch (e) {}
+      }
+    };
+
+    closeIfAvailable(window.wxo);
+    closeIfAvailable(window.wxoChat);
+    closeIfAvailable(window.wxoLoader);
+  } catch (e) {
+    // non-fatal: swallow errors to avoid breaking UI if widget isn't present
+  }
 }
 
 function captureStudentDashboardCards() {
