@@ -487,6 +487,32 @@ body:not(.teacher-view) .analytics-controls {
   display: none;
 }
 
+.analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.analytics-kpi {
+  border: 1px solid #d3e2df;
+  border-radius: 10px;
+  background: #f7fcfb;
+  padding: 10px 12px;
+}
+
+.kpi-label {
+  display: block;
+  color: #4f6670;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.kpi-value {
+  color: #223e47;
+  font-size: 1.08rem;
+}
+
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -504,6 +530,12 @@ body:not(.teacher-view) .analytics-controls {
 .analytics-card h3 {
   margin: 0 0 10px;
   font-size: 1rem;
+}
+
+.analytics-help {
+  margin: -4px 0 10px;
+  color: #55707a;
+  font-size: 0.84rem;
 }
 
 .analytics-card canvas {
@@ -802,11 +834,7 @@ body.teacher-view .course-card .course-grade {
 }
 
 .ghost-dot {
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
-  color: #32434a;
-  font-weight: 700;
-  padding: 2px 8px;
+  display: none;
 }
 
 .course-body {
@@ -1224,13 +1252,116 @@ body.teacher-view .course-card .course-grade {
   border: 1px solid #dbe6e4;
   border-radius: 12px;
   background: #fff;
-  padding: 10px;
-  margin: 10px 0;
+  padding: 12px;
+  margin: 0;
 }
 
 .tutor-assignment-list {
   display: grid;
   gap: 8px;
+}
+
+.tutor-workspace {
+  display: grid;
+  gap: 12px;
+}
+
+.career-workspace {
+  display: grid;
+  gap: 12px;
+}
+
+.tutor-hero {
+  border: 1px solid #d3e3e0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eef8f6, #e5f2ef);
+  padding: 14px;
+}
+
+.tutor-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tutor-controls label {
+  font-weight: 800;
+  color: #2b4953;
+}
+
+.tutor-controls select {
+  min-width: 240px;
+  border: 1px solid #c9dbd8;
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-family: inherit;
+  color: #2f4650;
+  background: #fff;
+}
+
+.tutor-hero h3 {
+  margin: 0;
+  color: #27414a;
+}
+
+.tutor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tutor-session-cards {
+  display: grid;
+  gap: 10px;
+}
+
+.tutor-session-card {
+  border: 1px solid #dbe7e4;
+  border-radius: 12px;
+  background: #fcfffd;
+  padding: 12px;
+}
+
+.tutor-session-card h4 {
+  margin: 0 0 6px;
+  color: #27404a;
+}
+
+.tutor-session-card p {
+  margin: 0 0 10px;
+  color: #476069;
+  font-size: 0.9rem;
+}
+
+.tutor-resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.tutor-resource-item {
+  border: 1px solid #dde8e5;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fbfefd;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tutor-resource-item strong {
+  color: #24404a;
+}
+
+.tutor-resource-item p {
+  margin: 4px 0 0;
+  color: #4d656f;
+  font-size: 0.86rem;
 }
 
 .tutor-row {
@@ -1427,6 +1558,35 @@ body.teacher-view .course-card .course-grade {
   font-size: 0.86rem;
 }
 
+.review-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.review-chip.success {
+  background: #ecf8f2;
+  color: #2f7657;
+  border-color: #bcdcc9;
+}
+
+.review-chip.danger {
+  background: #fceff0;
+  color: #91555b;
+  border-color: #e3c2c6;
+}
+
+.review-chip.neutral {
+  background: #eef5f7;
+  color: #405b65;
+  border-color: #ccdde3;
+}
+
 .review-missed {
   border: 1px solid #d5e3e1;
   background: #eef7f5;
@@ -1468,6 +1628,14 @@ body.teacher-view .course-card .course-grade {
   padding: 8px;
 }
 
+.review-question-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 .review-question.correct {
   border-left: 4px solid #60a983;
 }
@@ -1485,6 +1653,26 @@ body.teacher-view .course-card .course-grade {
   margin: 3px 0;
   font-size: 0.84rem;
   color: #324c55;
+}
+
+.review-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.review-progress {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #edf3f4;
+  overflow: hidden;
+  margin-top: 7px;
+}
+
+.review-progress-right {
+  height: 100%;
+  background: linear-gradient(90deg, #60a983, #5ab897);
 }
 
 #tabList {
@@ -1695,6 +1883,14 @@ body.teacher-view .course-card .course-grade {
   }
 
   .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tutor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-kpis {
     grid-template-columns: 1fr;
   }
 

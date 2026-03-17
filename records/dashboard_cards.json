@@ -1,45 +1,45 @@
 {
   "teacherDashboardCards": [
     {
-      "icon": "CS1",
-      "title": "Intro to Programming - Period 1",
-      "teacher": "Prof. Aaron Bell",
-      "schedule": "Mon/Wed | 8:00 AM",
+      "icon": "CH",
+      "title": "Chemistry Lab Foundations",
+      "teacher": "Dr. Nina Verma",
+      "schedule": "Mon/Wed | 10:00 AM",
       "published": true
     },
     {
-      "icon": "CS2",
-      "title": "Intro to Programming - Period 2",
-      "teacher": "Prof. Aaron Bell",
-      "schedule": "Mon/Wed | 9:30 AM",
+      "icon": "MA",
+      "title": "Discrete Mathematics",
+      "teacher": "Prof. Lena Hart",
+      "schedule": "Tue/Thu | 1:30 PM",
       "published": true
     },
     {
-      "icon": "DS",
-      "title": "Data Structures",
-      "teacher": "Prof. Aaron Bell",
-      "schedule": "Tue/Thu | 10:00 AM",
+      "icon": "BI",
+      "title": "Biology 101: Cell Systems",
+      "teacher": "Ms. Riley Stone",
+      "schedule": "Mon/Fri | 9:00 AM",
       "published": true
     },
     {
-      "icon": "AL",
-      "title": "Algorithms",
-      "teacher": "Prof. Aaron Bell",
-      "schedule": "Tue/Thu | 1:00 PM",
+      "icon": "LI",
+      "title": "Modern Literature",
+      "teacher": "Mr. Osei Kwan",
+      "schedule": "Wed | 2:00 PM",
       "published": true
     },
     {
-      "icon": "WD",
-      "title": "Web Development",
-      "teacher": "Prof. Aaron Bell",
-      "schedule": "Wed/Fri | 11:00 AM",
+      "icon": "HI",
+      "title": "Global History",
+      "teacher": "Dr. Farah Lin",
+      "schedule": "Thu | 11:00 AM",
       "published": false
     },
     {
-      "icon": "SE",
-      "title": "Software Engineering",
-      "teacher": "Prof. Aaron Bell",
-      "schedule": "Fri | 2:30 PM",
+      "icon": "CS",
+      "title": "Intro to Programming",
+      "teacher": "Coach Aaron Bell",
+      "schedule": "Tue | 3:00 PM",
       "published": false
     }
   ]
