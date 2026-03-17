@@ -354,6 +354,147 @@ const defaultModulesScheduleByCourse = {
   ],
 };
 
+const reviewQuestionTemplatesByCourse = {
+  chemistry: [
+    {
+      prompt: "What is the most likely source of error in this lab setup?",
+      idealAnswer: "Uncontrolled variables and inconsistent measurement steps",
+      misconception: "Only recording mistakes affect results",
+      issue: "Error analysis was too narrow.",
+      explanation: "In labs, setup consistency and controlled variables matter as much as note accuracy.",
+    },
+    {
+      prompt: "How should significant figures be applied in the final result?",
+      idealAnswer: "Round to match the least precise measurement used",
+      misconception: "Always keep all calculator digits",
+      issue: "Rounding rule was misapplied.",
+      explanation: "Scientific reporting requires precision that matches measurement limits, not calculator output.",
+    },
+    {
+      prompt: "Which part of the conclusion best supports your hypothesis?",
+      idealAnswer: "A claim linked to data trend and one limitation",
+      misconception: "A summary sentence without data reference",
+      issue: "Conclusion lacked evidence linkage.",
+      explanation: "Strong conclusions tie claim to evidence and acknowledge at least one limitation.",
+    },
+  ],
+  math: [
+    {
+      prompt: "Which rule proves this implication is valid?",
+      idealAnswer: "Contrapositive or direct proof with justified steps",
+      misconception: "Example checking is sufficient proof",
+      issue: "Proof method was incomplete.",
+      explanation: "A valid proof needs a general argument, not just sampled examples.",
+    },
+    {
+      prompt: "How should this set expression be simplified?",
+      idealAnswer: "Apply distributive and complement laws step by step",
+      misconception: "Skip identities and jump to final result",
+      issue: "Set identities were skipped.",
+      explanation: "Showing each identity application prevents logic errors and improves clarity.",
+    },
+    {
+      prompt: "What is missing in this induction proof?",
+      idealAnswer: "A clear inductive hypothesis and substitution in the inductive step",
+      misconception: "Base case alone is enough",
+      issue: "Inductive step lacked justification.",
+      explanation: "Induction needs both a valid base case and a justified step from n to n+1.",
+    },
+  ],
+  biology: [
+    {
+      prompt: "Which organelle is most directly responsible for ATP generation?",
+      idealAnswer: "Mitochondria",
+      misconception: "Golgi apparatus",
+      issue: "Organelle function mapping was incorrect.",
+      explanation: "Mitochondria generate ATP; Golgi modifies and packages cellular products.",
+    },
+    {
+      prompt: "What observation best indicates proper microscope focus?",
+      idealAnswer: "Sharp cell boundaries and visible nucleus details",
+      misconception: "Bright image is enough",
+      issue: "Focus criteria were incomplete.",
+      explanation: "Image brightness alone is not quality; structural detail confirms focus.",
+    },
+    {
+      prompt: "Why is membrane transport selective?",
+      idealAnswer: "Because membrane proteins regulate specific molecule movement",
+      misconception: "All molecules pass if concentration is high",
+      issue: "Selectivity concept was misunderstood.",
+      explanation: "Transport depends on size, polarity, and protein channels, not concentration alone.",
+    },
+  ],
+  literature: [
+    {
+      prompt: "How does narrative voice shape reader trust?",
+      idealAnswer: "It controls reliability and perspective framing",
+      misconception: "Voice only changes tone",
+      issue: "Narrative impact was underexplained.",
+      explanation: "Voice influences both tone and how readers interpret truth and bias.",
+    },
+    {
+      prompt: "What makes this quote strong evidence for your theme?",
+      idealAnswer: "It directly supports the claim and is analyzed in context",
+      misconception: "Any quote from the chapter works",
+      issue: "Evidence relevance was weak.",
+      explanation: "Evidence must be closely tied to the claim and interpreted, not just inserted.",
+    },
+    {
+      prompt: "Which revision improves analytical depth?",
+      idealAnswer: "Add interpretation of author choice and effect on meaning",
+      misconception: "Add longer summary",
+      issue: "Response leaned on plot summary.",
+      explanation: "Analysis should prioritize interpretation over retelling events.",
+    },
+  ],
+  history: [
+    {
+      prompt: "Which source is more reliable for this claim and why?",
+      idealAnswer: "The source with stronger provenance and corroborating evidence",
+      misconception: "The source with stronger wording",
+      issue: "Source credibility criteria were weak.",
+      explanation: "Reliability depends on origin, context, and corroboration, not confident tone.",
+    },
+    {
+      prompt: "What is the strongest cause-effect link in this trade network?",
+      idealAnswer: "A concrete policy/economic change linked to exchange evidence",
+      misconception: "General statement without evidence",
+      issue: "Cause-effect chain was vague.",
+      explanation: "Historical arguments need specific causal links supported by records.",
+    },
+    {
+      prompt: "How should you address a counterargument in debate notes?",
+      idealAnswer: "State the opposing claim and rebut with evidence",
+      misconception: "Ignore weak counterarguments",
+      issue: "Counterargument section was missing.",
+      explanation: "Addressing counterarguments strengthens credibility and argument control.",
+    },
+  ],
+  programming: [
+    {
+      prompt: "Why does this loop produce an off-by-one error?",
+      idealAnswer: "The boundary condition includes/excludes one extra index",
+      misconception: "The variable name causes it",
+      issue: "Loop bounds were incorrect.",
+      explanation: "Most off-by-one bugs come from boundary logic, especially <= versus < checks.",
+    },
+    {
+      prompt: "Which debugging step should come first?",
+      idealAnswer: "Reproduce the bug consistently with a minimal test case",
+      misconception: "Rewrite large sections immediately",
+      issue: "Debugging workflow was rushed.",
+      explanation: "Reliable reproduction narrows root cause faster than broad rewrites.",
+    },
+    {
+      prompt: "How can this function be made more readable?",
+      idealAnswer: "Use clearer variable names and split logic into helper steps",
+      misconception: "Only add comments",
+      issue: "Readability strategy was incomplete.",
+      explanation: "Good naming and decomposition improve maintainability more than comments alone.",
+    },
+  ],
+};
+
 const careerReadinessByCourse = {
   chemistry: {
     careers: [
@@ -804,6 +945,88 @@ function getCourseGradeSummary(courseKey) {
   const records = getGradeRecordsForCourse(courseKey);
   const percent = computePercentFromGradeRecords(records);
   return { percent, letter: letterGradeFromPercent(percent) };
+}
+
+function getQuestionReviewForAssignment(courseKey, scorePercent, questionCount = 5, wrongCount = null) {
+  const templates = reviewQuestionTemplatesByCourse[courseKey] || reviewQuestionTemplatesByCourse.programming;
+  const totalQuestions = Math.min(5, Math.max(1, Number(questionCount) || 5));
+  const derivedWrongCount = wrongCount == null
+    ? Math.round(((100 - scorePercent) / 100) * totalQuestions)
+    : Number(wrongCount);
+  const boundedWrongCount = Math.max(0, Math.min(totalQuestions, derivedWrongCount));
+
+  return Array.from({ length: totalQuestions }, (_unused, index) => {
+    const template = templates[index % templates.length];
+    const correct = index >= boundedWrongCount;
+    return {
+      prompt: template.prompt,
+      studentAnswer: correct ? template.idealAnswer : template.misconception,
+      expectedAnswer: template.idealAnswer,
+      correct,
+      issue: correct ? "Correct response." : template.issue,
+      explanation: correct ? "Good reasoning and alignment with course expectations." : template.explanation,
+    };
+  });
+}
+
+function buildPastAssignmentReviewItem(courseKey, record) {
+  const earned = record.status === "Missing" ? 0 : Number(record.earned ?? 0);
+  const total = Number(record.total ?? 100);
+  const percent = total > 0 ? Math.round((earned / total) * 100) : 0;
+  const questionCount = 5;
+  const correctCount = Math.max(0, Math.min(questionCount, Math.round((percent / 100) * questionCount)));
+  const missed = questionCount - correctCount;
+  const reviewPercent = Math.round((correctCount / questionCount) * 100);
+  const questions = getQuestionReviewForAssignment(courseKey, percent, questionCount, missed);
+  return {
+    type: "pastReview",
+    title: record.name,
+    scoreLabel: `${correctCount}/${questionCount}`,
+    percentLabel: `${reviewPercent}%`,
+    missedCount: missed,
+    teacherNotes: record.teacherNotes || "No additional notes.",
+    questions,
+  };
+}
+
+function buildProgressiveReviewPercent(index, totalCount) {
+  if (totalCount <= 1) return 70;
+  const start = 30;
+  const end = 90;
+  return Math.round(start + (index / (totalCount - 1)) * (end - start));
+}
+
+function ensurePastAssignmentDetails(courseKey) {
+  const course = courseData[courseKey];
+  const sections = course?.tabs?.assignments?.sections;
+  if (!sections || !Array.isArray(sections)) return;
+
+  const pastSection = sections.find((section) =>
+    String(section?.label || "").toLowerCase().includes("past")
+  );
+  if (!pastSection) return;
+
+  const gradeRecords = getGradeRecordsForCourse(courseKey).filter((record) =>
+    ["Complete", "Late"].includes(record.status)
+  );
+
+  if (!gradeRecords.length) return;
+
+  const sortedRecords = [...gradeRecords].sort((a, b) => {
+    const ad = Date.parse(a.dueDate || "") || 0;
+    const bd = Date.parse(b.dueDate || "") || 0;
+    return ad - bd;
+  });
+
+  pastSection.summary = "Question-level review to understand what went wrong and how to improve.";
+  pastSection.items = sortedRecords.map((record, index) => {
+    const progressivePercent = buildProgressiveReviewPercent(index, sortedRecords.length);
+    const progressiveEarned = Math.round((progressivePercent / 100) * Number(record.total || 100));
+    return buildPastAssignmentReviewItem(courseKey, {
+      ...record,
+      earned: progressiveEarned,
+    });
+  });
 }
 
 function getTutorAssignmentsForCourse(courseKey) {
@@ -1714,6 +1937,7 @@ function renderActiveTab() {
 
   // ASSIGNMENTS TAB ONLY
   if (activeTab === "assignments") {
+    ensurePastAssignmentDetails(currentCourse);
     assignmentsAccordion.classList.remove("hidden");
 
     (tabData.sections || []).forEach((section, index) => {
@@ -1735,7 +1959,49 @@ function renderActiveTab() {
 
       (section.items || []).forEach((item) => {
         const li = document.createElement("li");
-        li.textContent = item;
+        if (item && typeof item === "object" && item.type === "pastReview") {
+          li.className = "assignment-review-item";
+          const questionRows = (item.questions || [])
+            .map(
+              (question, qIndex) => `
+                <article class="review-question ${question.correct ? "correct" : "wrong"}">
+                  <h5>Q${qIndex + 1}. ${escapeHtml(question.prompt)}</h5>
+                  <p><strong>Your answer:</strong> ${escapeHtml(question.studentAnswer)}</p>
+                  <p><strong>Expected:</strong> ${escapeHtml(question.expectedAnswer)}</p>
+                  ${question.correct
+                    ? `<p><strong>Status:</strong> Correct</p>`
+                    : `<p><strong>Issue:</strong> ${escapeHtml(question.issue)}</p>
+                       <p><strong>Explanation:</strong> ${escapeHtml(question.explanation)}</p>`}
+                </article>
+              `
+            )
+            .join("");
+          li.innerHTML = `
+            <div class="review-header">
+              <div>
+                <strong>${escapeHtml(item.title)}</strong>
+                <p class="review-meta">Score: ${escapeHtml(item.scoreLabel)} (${escapeHtml(item.percentLabel)})</p>
+              </div>
+              <span class="review-missed">${item.missedCount} missed</span>
+            </div>
+            <p class="review-teacher-note"><strong>Teacher note:</strong> ${escapeHtml(item.teacherNotes)}</p>
+            <details class="review-details">
+              <summary>View question-level feedback</summary>
+              <div class="review-questions">${questionRows}</div>
+            </details>
+          `;
+          const detailsEl = li.querySelector(".review-details");
+          if (detailsEl) {
+            detailsEl.addEventListener("toggle", () => {
+              if (!detailsEl.open) return;
+              listEl.querySelectorAll(".review-details").forEach((other) => {
+                if (other !== detailsEl) other.open = false;
+              });
+            });
+          }
+        } else {
+          li.textContent = typeof item === "string" ? item : "";
+        }
         listEl.appendChild(li);
       });
 
