@@ -3109,7 +3109,8 @@ function renderCareerReadinessTab(courseKey) {
   const summaryText = String(data.summary_text || "").trim();
 
   if (careerSummaryTitle) {
-    careerSummaryTitle.textContent = summaryTitle || `${completionPct}% Portfolio Plan Complete`;
+    const pctLabel = `${completionPct}% Portfolio Plan Complete`;
+    careerSummaryTitle.textContent = summaryTitle ? `${pctLabel} - ${summaryTitle}` : pctLabel;
   }
   if (careerSummaryText) {
     const completionText = `${completedCount} of ${projects.length} projects completed.`;

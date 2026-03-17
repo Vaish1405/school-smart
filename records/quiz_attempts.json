@@ -283,5 +283,35 @@
     "explanation": "Both a lab coat and safety goggles are mandatory for safety in the lab.",
     "createdAt": null,
     "id": "qa_1773768267762557000"
+  },
+  {
+    "studentId": "s1",
+    "courseKey": "chemistry",
+    "track": "practice",
+    "sessionId": "sess_20260317_001",
+    "quizTitle": "Practice Quiz: Measurements",
+    "questionId": "q1",
+    "prompt": "What is the correct number of significant figures in the measurement 0.004560 m?",
+    "selectedChoiceIndex": 0,
+    "correctChoiceIndex": 1,
+    "isCorrect": false,
+    "explanation": "Leading zeros are not significant; the digits 4560 contain four significant figures.",
+    "createdAt": null,
+    "id": "qa_1773768819944264000"
+  },
+  {
+    "studentId": "s1",
+    "courseKey": "chemistry",
+    "track": "sharpen",
+    "sessionId": "sess_20260317_001",
+    "quizTitle": "Sharpen Quiz: Lab Safety",
+    "questionId": "sq1",
+    "prompt": "Which of the following is NOT a recommended step when handling unknown chemicals?",
+    "selectedChoiceIndex": 2,
+    "correctChoiceIndex": 2,
+    "isCorrect": true,
+    "explanation": "Tasting chemicals is unsafe and never recommended.",
+    "createdAt": null,
+    "id": "qa_1773768826100431000"
   }
 ]

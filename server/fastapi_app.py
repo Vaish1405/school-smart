@@ -478,11 +478,21 @@ async def study_helper(payload: StudyHelperRequest) -> JSONResponse:
     if not answer:
         raise HTTPException(status_code=502, detail={"error": "No answer text in IBM response", "raw": data})
 
-    json_answer = _normalize_json_answer(answer)
+    # Defensive guard: some upstream payload variants can still produce edge-case
+    # values that break normalization. Never crash the endpoint for this.
+    answer_text = answer if isinstance(answer, str) else str(answer)
+    try:
+        json_answer = _normalize_json_answer(answer_text)
+    except Exception:  # noqa: BLE001
+        json_answer = ""
     if json_answer:
         return JSONResponse({"answer": json_answer})
 
-    return JSONResponse({"answer": _clean_agent_answer(answer)})
+    try:
+        cleaned = _clean_agent_answer(answer_text)
+    except Exception:  # noqa: BLE001
+        cleaned = answer_text
+    return JSONResponse({"answer": cleaned})
 
 
 @app.post("/api/tutor-session")
