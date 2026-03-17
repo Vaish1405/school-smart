@@ -140,6 +140,11 @@ let dbDefaultModulesScheduleByCourse = {};
 let dbReviewQuestionTemplatesByCourse = {};
 let dbCareerReadinessByCourse = {};
 let dbTutorStudioByCourse = {};
+let careerAgentDataByCourse = {};
+let careerAgentRequestByCourse = {};
+let careerAgentErrorByCourse = {};
+let careerDataSourceByCourse = {};
+let careerAgentJsonByCourse = {};
 
 let studentDashboardCards = [];
 let analyticsClassId = "c1";
@@ -2663,8 +2668,340 @@ function renderAnalytics() {
 updateCourseCardsGrades();
 
 function getCareerDataForCourse(courseKey) {
+  if (careerAgentDataByCourse[courseKey]) {
+    careerDataSourceByCourse[courseKey] = "agent";
+    return careerAgentDataByCourse[courseKey];
+  }
   const careerSource = Object.keys(dbCareerReadinessByCourse).length > 0 ? dbCareerReadinessByCourse : {};
-  return careerSource[courseKey] || careerSource.programming || { careers: [], projects: [], ideas: [] };
+  if (careerAgentErrorByCourse[courseKey]) {
+    careerDataSourceByCourse[courseKey] = "fallback";
+    return careerSource[courseKey] || careerSource.programming || { careers: [], projects: [], ideas: [] };
+  }
+  careerDataSourceByCourse[courseKey] = "loading";
+  return { careers: [], projects: [], ideas: [] };
+}
+
+function buildCareerAgentPrompt(courseName) {
+  return `I am Jordan Chen. Recommend some future pathways for me based on my course: "${courseName}".
+Return only one valid JSON object (no markdown or extra text) using this exact schema:
+{
+  "course_name": "string",
+  "summary_title": "string",
+  "summary_text": "string",
+  "careers": [
+    {
+      "title": "string",
+      "why": "string",
+      "requiredSkills": ["string"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "string",
+      "title": "string",
+      "outcome": "string",
+      "skills": ["string"],
+      "plan": ["string"]
+    }
+  ],
+  "ideas": ["string"]
+}
+If anything is unknown, use empty strings or empty arrays.`;
+}
+
+function buildCareerJsonRepairPrompt(rawOutput, courseName) {
+  const truncated = String(rawOutput || "").slice(0, 12000);
+  return `Convert the following model output into one valid RFC 8259 JSON object.
+
+Target course:
+- course_name: ${courseName}
+
+Rules:
+- Output exactly one JSON object
+- No markdown
+- No explanation
+- No text before or after JSON
+- Ensure all strings are double-quoted
+- Keep this exact schema and include all fields
+- If a field is missing, use empty string or empty array
+
+Schema:
+{
+  "course_name": "string",
+  "summary_title": "string",
+  "summary_text": "string",
+  "careers": [
+    {
+      "title": "string",
+      "why": "string",
+      "requiredSkills": ["string"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "string",
+      "title": "string",
+      "outcome": "string",
+      "skills": ["string"],
+      "plan": ["string"]
+    }
+  ],
+  "ideas": ["string"]
+}
+
+Input to convert:
+${truncated}`;
+}
+
+function extractFirstJsonObject(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (_error) {
+    // Continue to relaxed extraction.
+  }
+
+  const fencedMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fencedMatch ? fencedMatch[1].trim() : raw;
+
+  const validObjects = [];
+  let depth = 0;
+  let start = -1;
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < candidate.length; i += 1) {
+    const ch = candidate[i];
+
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      if (inString) escape = true;
+      continue;
+    }
+    if (ch === "\"") {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+
+    if (ch === "{") {
+      if (depth === 0) start = i;
+      depth += 1;
+      continue;
+    }
+    if (ch === "}") {
+      if (depth === 0) continue;
+      depth -= 1;
+      if (depth === 0 && start !== -1) {
+        const slice = candidate.slice(start, i + 1);
+        try {
+          const parsed = JSON.parse(slice);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            validObjects.push(parsed);
+          }
+        } catch (_error) {
+          // Skip invalid object candidate.
+        }
+        start = -1;
+      }
+    }
+  }
+
+  return validObjects.length ? validObjects[validObjects.length - 1] : null;
+}
+
+function normalizeCareerAgentData(payload, fallbackCourseName) {
+  const source = payload && typeof payload === "object" ? payload : {};
+
+  const careersRaw = Array.isArray(source.careers) ? source.careers : [];
+  const projectsRaw = Array.isArray(source.projects) ? source.projects : [];
+  const ideasRaw = Array.isArray(source.ideas) ? source.ideas : [];
+
+  const careers = careersRaw
+    .filter((item) => item && typeof item === "object")
+    .map((item) => ({
+      title: String(item.title || "").trim(),
+      why: String(item.why || "").trim(),
+      requiredSkills: Array.isArray(item.requiredSkills)
+        ? item.requiredSkills.map((skill) => String(skill || "").trim()).filter(Boolean)
+        : [],
+    }))
+    .filter((career) => career.title || career.why || career.requiredSkills.length > 0);
+
+  const projects = projectsRaw
+    .filter((item) => item && typeof item === "object")
+    .map((item, index) => ({
+      id: String(item.id || `${fallbackCourseName || "course"}-project-${index + 1}`),
+      title: String(item.title || "").trim(),
+      outcome: String(item.outcome || "").trim(),
+      skills: Array.isArray(item.skills)
+        ? item.skills.map((skill) => String(skill || "").trim()).filter(Boolean)
+        : [],
+      plan: Array.isArray(item.plan)
+        ? item.plan.map((step) => String(step || "").trim()).filter(Boolean)
+        : [],
+    }))
+    .filter((project) => project.title || project.outcome || project.skills.length > 0 || project.plan.length > 0);
+
+  const ideas = ideasRaw.map((idea) => String(idea || "").trim()).filter(Boolean);
+
+  return {
+    course_name: String(source.course_name || fallbackCourseName || "").trim(),
+    summary_title: String(source.summary_title || "").trim(),
+    summary_text: String(source.summary_text || "").trim(),
+    careers,
+    projects,
+    ideas,
+  };
+}
+
+function ensureCareerAgentOutputButton() {
+  if (!careerSummaryText) return;
+  if (document.getElementById("showCareerAgentOutputBtn")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "showCareerAgentOutputBtn";
+  btn.type = "button";
+  btn.className = "study-btn";
+  btn.style.marginTop = "10px";
+  btn.textContent = "Show Agent Output";
+  btn.addEventListener("click", () => {
+    const rawJson = careerAgentJsonByCourse[careerSelectedCourse];
+    const source = careerDataSourceByCourse[careerSelectedCourse] || "unknown";
+
+    if (!rawJson) {
+      showCareerAgentOutputPopup(
+        JSON.stringify(
+          {
+            message: "No agent JSON captured yet for this course.",
+            course_key: careerSelectedCourse,
+            source,
+          },
+          null,
+          2
+        )
+      );
+      return;
+    }
+
+    showCareerAgentOutputPopup(rawJson);
+  });
+
+  careerSummaryText.insertAdjacentElement("afterend", btn);
+}
+
+function showCareerAgentOutputPopup(content) {
+  const existing = document.getElementById("careerAgentOutputOverlay");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "careerAgentOutputOverlay";
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.background = "rgba(15, 23, 42, 0.62)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = "9999";
+
+  const card = document.createElement("div");
+  card.style.width = "min(900px, 92vw)";
+  card.style.maxHeight = "80vh";
+  card.style.background = "#ffffff";
+  card.style.borderRadius = "12px";
+  card.style.boxShadow = "0 12px 34px rgba(2, 6, 23, 0.25)";
+  card.style.display = "flex";
+  card.style.flexDirection = "column";
+  card.style.overflow = "hidden";
+
+  const head = document.createElement("div");
+  head.style.display = "flex";
+  head.style.alignItems = "center";
+  head.style.justifyContent = "space-between";
+  head.style.padding = "12px 16px";
+  head.style.borderBottom = "1px solid #e2e8f0";
+  head.innerHTML = `<strong>Agent JSON Output</strong>`;
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "study-btn";
+  closeBtn.textContent = "Close";
+  closeBtn.style.padding = "6px 12px";
+  closeBtn.addEventListener("click", () => overlay.remove());
+  head.appendChild(closeBtn);
+
+  const pre = document.createElement("pre");
+  pre.style.margin = "0";
+  pre.style.padding = "14px 16px";
+  pre.style.overflow = "auto";
+  pre.style.fontSize = "12px";
+  pre.style.lineHeight = "1.5";
+  pre.style.background = "#0f172a";
+  pre.style.color = "#e2e8f0";
+  pre.style.flex = "1";
+  pre.textContent = String(content || "");
+
+  card.appendChild(head);
+  card.appendChild(pre);
+  overlay.appendChild(card);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) overlay.remove();
+  });
+  document.body.appendChild(overlay);
+}
+
+async function fetchCareerDataFromAgent(courseKey) {
+  if (!courseKey) return null;
+  if (careerAgentDataByCourse[courseKey]) return careerAgentDataByCourse[courseKey];
+  if (careerAgentRequestByCourse[courseKey]) return careerAgentRequestByCourse[courseKey];
+
+  const courseName = String(courseData[courseKey]?.title || courseKey || "").trim();
+  const prompt = buildCareerAgentPrompt(courseName);
+
+  const requestPromise = queryStudyHelperApi(prompt, {
+    includePageContext: false,
+    currentView: "career",
+    timeoutMs: 70000,
+  })
+    .then(async (answerText) => {
+      let parsed = extractFirstJsonObject(answerText);
+
+      if (!parsed) {
+        const repairPrompt = buildCareerJsonRepairPrompt(answerText, courseName);
+        const repairedAnswer = await queryStudyHelperApi(repairPrompt, {
+          includePageContext: false,
+          currentView: "career",
+          timeoutMs: 70000,
+        });
+        parsed = extractFirstJsonObject(repairedAnswer);
+      }
+
+      if (!parsed) throw new Error("Agent did not return parseable JSON for career pathways.");
+
+      careerAgentJsonByCourse[courseKey] = JSON.stringify(parsed, null, 2);
+      const normalized = normalizeCareerAgentData(parsed, courseName);
+      careerAgentDataByCourse[courseKey] = normalized;
+      careerDataSourceByCourse[courseKey] = "agent";
+      delete careerAgentErrorByCourse[courseKey];
+      return normalized;
+    })
+    .catch((error) => {
+      console.warn(`Career agent fetch failed for ${courseKey}:`, error);
+      careerAgentErrorByCourse[courseKey] = error?.message || "Unable to load pathways from agent.";
+      careerDataSourceByCourse[courseKey] = "fallback";
+      return null;
+    })
+    .finally(() => {
+      delete careerAgentRequestByCourse[courseKey];
+    });
+
+  careerAgentRequestByCourse[courseKey] = requestPromise;
+  return requestPromise;
 }
 
 function projectStorageKey(courseKey, projectId) {
@@ -2722,8 +3059,9 @@ function renderCareerReadinessTab(courseKey) {
 
   let completedCount = 0;
 
-  projects.forEach((project) => {
-    const done = isProjectCompleted(courseKey, project.id);
+  projects.forEach((project, index) => {
+    const projectId = String(project?.id || `${courseKey}-project-${index + 1}`);
+    const done = isProjectCompleted(courseKey, projectId);
     if (done) completedCount += 1;
 
     const card = document.createElement("article");
@@ -2752,7 +3090,7 @@ function renderCareerReadinessTab(courseKey) {
     const checkbox = card.querySelector("input[type='checkbox']");
     if (checkbox) {
       checkbox.addEventListener("change", () => {
-        setProjectCompleted(courseKey, project.id, checkbox.checked);
+        setProjectCompleted(courseKey, projectId, checkbox.checked);
         renderCareerReadinessTab(courseKey);
       });
     }
@@ -2766,11 +3104,23 @@ function renderCareerReadinessTab(courseKey) {
     careerIdeasList.appendChild(li);
   });
 
+  const completionPct = projects.length ? Math.round((completedCount / projects.length) * 100) : 0;
+  const summaryTitle = String(data.summary_title || "").trim();
+  const summaryText = String(data.summary_text || "").trim();
+
   if (careerSummaryTitle) {
-    careerSummaryTitle.textContent = `${projects.length ? Math.round((completedCount / projects.length) * 100) : 0}% Portfolio Plan Complete`;
+    careerSummaryTitle.textContent = summaryTitle || `${completionPct}% Portfolio Plan Complete`;
   }
   if (careerSummaryText) {
-    careerSummaryText.textContent = `${completedCount} of ${projects.length} projects completed.`;
+    const completionText = `${completedCount} of ${projects.length} projects completed.`;
+    const source = careerDataSourceByCourse[courseKey] || "unknown";
+    const sourceLabel = source === "agent"
+      ? "Source: Agent"
+      : source === "fallback"
+        ? "Source: Fallback"
+        : "Source: Loading";
+    const baseText = summaryText ? `${summaryText} ${completionText}` : completionText;
+    careerSummaryText.textContent = `${baseText} (${sourceLabel})`;
   }
 }
 
@@ -2802,8 +3152,36 @@ function renderCareerWorkspace() {
   if (careerContentHeader) {
     careerContentHeader.textContent = `Career pathways for ${courseData[careerSelectedCourse]?.title || "this course"}`;
   }
+  ensureCareerAgentOutputButton();
 
-  renderCareerReadinessTab(careerSelectedCourse);
+  const hasAgentData = Boolean(careerAgentDataByCourse[careerSelectedCourse]);
+  if (hasAgentData) {
+    renderCareerReadinessTab(careerSelectedCourse);
+  } else {
+    if (careerTrackList) careerTrackList.innerHTML = "";
+    if (careerSkillsList) careerSkillsList.innerHTML = "";
+    if (careerProjectsList) careerProjectsList.innerHTML = "";
+    if (careerIdeasList) careerIdeasList.innerHTML = "";
+    if (careerSummaryTitle) careerSummaryTitle.textContent = "Generating Future Pathways";
+    if (careerSummaryText) careerSummaryText.textContent = "Loading personalized pathways from the AI agent... (Source: Loading)";
+  }
+
+  const selectedKeyAtRequestTime = careerSelectedCourse;
+  fetchCareerDataFromAgent(selectedKeyAtRequestTime).then((result) => {
+    if (careerSelectedCourse !== selectedKeyAtRequestTime) return;
+    if (result) {
+      renderCareerReadinessTab(selectedKeyAtRequestTime);
+      return;
+    }
+    // On agent failure, immediately render local fallback data for the selected course.
+    renderCareerReadinessTab(selectedKeyAtRequestTime);
+    if (careerSummaryText) {
+      const err = careerAgentErrorByCourse[selectedKeyAtRequestTime];
+      if (err) {
+        careerSummaryText.textContent = `${careerSummaryText.textContent} Agent error: ${err}`;
+      }
+    }
+  });
 }
 
 function renderActiveTab() {
@@ -3473,16 +3851,36 @@ function appendMessage(text, role) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-async function queryStudyHelperApi(question) {
-  const response = await fetch("/api/study-helper", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      question,
-      pageContext: activeContextText(),
-      currentView: currentViewName(),
-    }),
-  });
+async function queryStudyHelperApi(question, options = {}) {
+  const includePageContext = options.includePageContext !== false;
+  const providedView = typeof options.currentView === "string" ? options.currentView : "";
+  const pageContext = includePageContext ? activeContextText() : "";
+  const currentView = providedView || currentViewName();
+  const timeoutMs = Number(options.timeoutMs || 45000);
+
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetch("/api/study-helper", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question,
+        pageContext,
+        currentView,
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Study helper request timed out after ${Math.round(timeoutMs / 1000)}s.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -3505,6 +3903,37 @@ function setChatOpen(isOpen) {
     btn.setAttribute("aria-expanded", String(isOpen));
     btn.textContent = isOpen ? "Close AI Study Helper" : "Open AI Study Helper";
   });
+
+  // Coordinate with the IBM widget (loader injects into #ibm-root).
+  // When our Study Helper opens we hide the IBM launcher/widget; when it closes we show it again
+  // and attempt to programmatically close the widget if an API is exposed.
+  try {
+    const ibmRoot = document.getElementById("ibm-root");
+    if (ibmRoot) {
+      if (isOpen) {
+        ibmRoot.style.display = "none";
+      } else {
+        ibmRoot.style.display = "";
+      }
+    }
+
+    // Try best-effort to close the IBM widget if it exposes a close API.
+    // Different loader versions expose different globals; check common names safely.
+    const closeIfAvailable = (obj) => {
+      if (!obj) return;
+      if (typeof obj.close === "function") {
+        try { obj.close(); } catch (e) {}
+      } else if (typeof obj.hide === "function") {
+        try { obj.hide(); } catch (e) {}
+      }
+    };
+
+    closeIfAvailable(window.wxo);
+    closeIfAvailable(window.wxoChat);
+    closeIfAvailable(window.wxoLoader);
+  } catch (e) {
+    // non-fatal: swallow errors to avoid breaking UI if widget isn't present
+  }
 }
 
 function captureStudentDashboardCards() {
@@ -3648,6 +4077,9 @@ function setViewRole(teacherMode) {
       ? "Switch to Student View"
       : "Switch to Teacher View";
   }
+  if (navCareer) {
+    navCareer.classList.toggle("hidden", teacherMode);
+  }
   updateCourseTabVisibility();
   applyDashboardClassesForRole();
   if (currentCourse !== "home") renderActiveTab();
@@ -3704,6 +4136,10 @@ if (navTutor) {
 if (navCareer) {
   navCareer.addEventListener("click", (event) => {
     event.preventDefault();
+    if (isTeacherView) {
+      navigateToPage("teacher.html");
+      return;
+    }
     navigateToPage("dashboard.html", { tab: "career" });
   });
 }
@@ -3781,7 +4217,7 @@ if (settingsOption) {
 function initPageRoute() {
   const pageName = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
   const routeParams = new URLSearchParams(window.location.search);
-  if (routeParams.get("tab") === "career") {
+  if (routeParams.get("tab") === "career" && !initialTeacherMode) {
     showView("career");
     return;
   }

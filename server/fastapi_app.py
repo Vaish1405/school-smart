@@ -478,6 +478,10 @@ async def study_helper(payload: StudyHelperRequest) -> JSONResponse:
     if not answer:
         raise HTTPException(status_code=502, detail={"error": "No answer text in IBM response", "raw": data})
 
+    json_answer = _normalize_json_answer(answer)
+    if json_answer:
+        return JSONResponse({"answer": json_answer})
+
     return JSONResponse({"answer": _clean_agent_answer(answer)})
 
 

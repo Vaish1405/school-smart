@@ -39,26 +39,235 @@ let iamTokenCache = {
   expiresAt: 0,
 };
 
-function extractAnswer(payload) {
-  if (!payload || typeof payload !== "object") return "";
+function extractFirstText(value) {
+  if (typeof value === "string") return value.trim();
 
-  if (typeof payload.answer === "string" && payload.answer.trim()) return payload.answer;
-  if (typeof payload.response === "string" && payload.response.trim()) return payload.response;
-  if (typeof payload.output === "string" && payload.output.trim()) return payload.output;
-  if (typeof payload.text === "string" && payload.text.trim()) return payload.text;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const extracted = extractFirstText(item);
+      if (extracted) return extracted;
+    }
+    return "";
+  }
 
-  const content = payload?.choices?.[0]?.message?.content;
-  if (typeof content === "string" && content.trim()) return content;
+  if (!value || typeof value !== "object") return "";
 
-  const outputText =
-    payload?.result?.output_text ||
-    payload?.result?.text ||
-    payload?.data?.answer ||
-    payload?.data?.response;
+  const metadataKeys = new Set([
+    "id",
+    "message_id",
+    "run_id",
+    "event_id",
+    "created_at",
+    "updated_at",
+    "event",
+    "type",
+    "status",
+    "timestamp",
+  ]);
 
-  if (typeof outputText === "string" && outputText.trim()) return outputText;
+  const keys = Object.keys(value);
+  if (keys.length && keys.every((k) => metadataKeys.has(k))) return "";
+
+  const directKeys = [
+    "answer",
+    "response",
+    "output",
+    "output_text",
+    "text",
+    "content",
+    "message",
+    "delta",
+    "partial_response",
+  ];
+  for (const key of directKeys) {
+    if (key in value) {
+      const extracted = extractFirstText(value[key]);
+      if (extracted) return extracted;
+    }
+  }
+
+  for (const [key, nested] of Object.entries(value)) {
+    if (metadataKeys.has(key)) continue;
+    const extracted = extractFirstText(nested);
+    if (extracted) return extracted;
+  }
 
   return "";
+}
+
+function extractTextFromStreamBody(rawText) {
+  const text = String(rawText || "");
+  if (!text.trim()) return "";
+
+  const candidates = [];
+  const controlTokens = new Set([
+    "run.started",
+    "message.started",
+    "run.step.intermediate",
+    "message.delta",
+    "message.created",
+    "message.completed",
+    "run.completed",
+    "done",
+  ]);
+  const idLikePattern = /^\d{10,}-\d+$/;
+
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    if (line.startsWith("event:")) continue;
+    if (line.startsWith("id:")) continue;
+    if (line.startsWith("retry:")) continue;
+    if (line.startsWith(":")) continue;
+    if (idLikePattern.test(line)) continue;
+
+    let payloadLine = line;
+    if (line.startsWith("data:")) {
+      payloadLine = line.slice(5).trim();
+      if (!payloadLine || payloadLine === "[DONE]") continue;
+      if (payloadLine.startsWith("id:")) continue;
+      if (idLikePattern.test(payloadLine)) continue;
+    }
+
+    try {
+      const parsed = JSON.parse(payloadLine);
+      const extracted = extractFirstText(parsed);
+      if (extracted) {
+        candidates.push(extracted);
+        continue;
+      }
+    } catch (_error) {
+      // Fallback to raw chunk text.
+    }
+
+    const lowered = payloadLine.toLowerCase();
+    if (lowered && !controlTokens.has(lowered)) candidates.push(payloadLine);
+  }
+
+  const deduped = [];
+  const seen = new Set();
+  for (const item of candidates) {
+    const cleaned = item.trim();
+    const lowered = cleaned.toLowerCase();
+    if (!cleaned) continue;
+    if (controlTokens.has(lowered)) continue;
+    if (seen.has(cleaned)) continue;
+    seen.add(cleaned);
+    deduped.push(cleaned);
+  }
+
+  return deduped.join("\n").trim();
+}
+
+function extractJsonBlock(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+
+  if (raw.startsWith("{") || raw.startsWith("[")) {
+    try {
+      JSON.parse(raw);
+      return raw;
+    } catch (_error) {
+      // Continue to extraction.
+    }
+  }
+
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced && fenced[1]) {
+    const inner = fenced[1].trim();
+    if (inner.startsWith("{") || inner.startsWith("[")) {
+      try {
+        JSON.parse(inner);
+        return inner;
+      } catch (_error) {
+        // Continue to extraction.
+      }
+    }
+  }
+
+  return "";
+}
+
+function extractLastBalancedObject(text) {
+  const s = String(text || "").trim();
+  if (!s) return "";
+
+  let inString = false;
+  let escape = false;
+  let depth = 0;
+  let start = -1;
+  const candidates = [];
+
+  for (let i = 0; i < s.length; i += 1) {
+    const ch = s[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\" && inString) {
+      escape = true;
+      continue;
+    }
+    if (ch === "\"") {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === "{") {
+      if (depth === 0) start = i;
+      depth += 1;
+      continue;
+    }
+    if (ch === "}") {
+      if (depth === 0) continue;
+      depth -= 1;
+      if (depth === 0 && start !== -1) {
+        candidates.push(s.slice(start, i + 1).trim());
+        start = -1;
+      }
+    }
+  }
+
+  return candidates.length ? candidates[candidates.length - 1] : "";
+}
+
+function repairCommonJsonIssues(text) {
+  let s = String(text || "").trim();
+  if (!s) return "";
+
+  s = s
+    .replace(/\u201c/g, "\"")
+    .replace(/\u201d/g, "\"")
+    .replace(/\u2018/g, "'")
+    .replace(/\u2019/g, "'");
+
+  const keyPattern = "(course_name|summary_title|summary_text|title|why|id|outcome)";
+  const valuePattern = "([A-Za-z][^,\\]\\}\\n\"]*)";
+  const regex = new RegExp(`("(?:${keyPattern})"\\s*:\\s*)${valuePattern}`, "gi");
+  s = s.replace(regex, (_match, prefix, value) => `${prefix}${JSON.stringify(String(value || "").trim())}`);
+
+  return s;
+}
+
+function normalizeJsonAnswer(text) {
+  const direct = extractJsonBlock(text);
+  if (direct) return direct;
+
+  const candidate = extractLastBalancedObject(text);
+  if (!candidate) return "";
+  try {
+    JSON.parse(candidate);
+    return candidate;
+  } catch (_error) {
+    const repaired = repairCommonJsonIssues(candidate);
+    if (!repaired) return "";
+    try {
+      JSON.parse(repaired);
+      return repaired;
+    } catch (_error2) {
+      return "";
+    }
+  }
 }
 
 async function fetchIamToken() {
@@ -199,24 +408,34 @@ app.post("/api/study-helper", async (req, res) => {
 
     clearTimeout(timeout);
 
-    const data = await response.json().catch(() => ({}));
+    const rawBody = await response.text();
+    let data = {};
+    try {
+      data = rawBody ? JSON.parse(rawBody) : {};
+    } catch (_error) {
+      data = {};
+    }
 
     if (!response.ok) {
       return res.status(response.status).json({
         error: "IBM Orchestra request failed.",
-        details: data,
+        details: Object.keys(data).length ? data : rawBody,
       });
     }
 
-    const answer = extractAnswer(data);
+    const answer =
+      extractFirstText(data) ||
+      extractTextFromStreamBody(rawBody);
+
     if (!answer) {
       return res.status(502).json({
         error: "No answer text found in IBM Orchestra response.",
-        raw: data,
+        raw: Object.keys(data).length ? data : rawBody,
       });
     }
 
-    return res.json({ answer });
+    const normalizedJson = normalizeJsonAnswer(answer);
+    return res.json({ answer: normalizedJson || answer });
   } catch (error) {
     clearTimeout(timeout);
     return res.status(500).json({
