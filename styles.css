@@ -382,9 +382,21 @@ h1 {
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  display: block;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+}
 
+.course-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 72px;
+  background: var(--card-top-bg, linear-gradient(130deg, #d8e8e6, #bcd1cd));
+  z-index: 0;
 }
 
 .course-card:hover {
@@ -396,12 +408,11 @@ h1 {
   justify-content: space-between;
   align-items: flex-start;
   min-height: 72px;
-  width: 100%;
   margin: 0;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  display: block;
-
+  display: flex;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .course-icon {
@@ -426,6 +437,8 @@ h1 {
 
 .course-body {
   padding: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .course-body h3 {
@@ -445,28 +458,28 @@ h1 {
   color: #24444e;
 }
 
-.theme-lagoon .course-top {
-  background: linear-gradient(130deg, #89c8c5, #5ca2ac);
+.theme-lagoon {
+  --card-top-bg: linear-gradient(130deg, #89c8c5, #5ca2ac);
 }
 
-.theme-sunrise .course-top {
-  background: linear-gradient(130deg, #ffd9a8, #f4b181);
+.theme-sunrise {
+  --card-top-bg: linear-gradient(130deg, #ffd9a8, #f4b181);
 }
 
-.theme-fern .course-top {
-  background: linear-gradient(130deg, #acd7b2, #7eb490);
+.theme-fern {
+  --card-top-bg: linear-gradient(130deg, #acd7b2, #7eb490);
 }
 
-.theme-dusk .course-top {
-  background: linear-gradient(130deg, #c6c7f1, #9ea0da);
+.theme-dusk {
+  --card-top-bg: linear-gradient(130deg, #c6c7f1, #9ea0da);
 }
 
-.theme-sky .course-top {
-  background: linear-gradient(130deg, #add7f2, #80bce0);
+.theme-sky {
+  --card-top-bg: linear-gradient(130deg, #add7f2, #80bce0);
 }
 
-.theme-pebble .course-top {
-  background: linear-gradient(130deg, #d7d4cb, #bcb7ac);
+.theme-pebble {
+  --card-top-bg: linear-gradient(130deg, #d7d4cb, #bcb7ac);
 }
 
 .school-feed {

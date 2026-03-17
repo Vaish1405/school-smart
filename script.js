@@ -67,6 +67,42 @@ let recordsLoaded = false;
 // Demo: current user (used for dashboard grade and Grades tab)
 let currentStudentId = "s1";
 
+const defaultGradeRecordsByCourse = {
+  chemistry: [
+    { name: "Lab Report 1", dueDate: "Mar 5", submittedDate: "Mar 5", status: "Complete", earned: 96, total: 100, teacherNotes: "Excellent method section; improve conclusion clarity." },
+    { name: "Problem Set 2", dueDate: "Mar 10", submittedDate: "Mar 12", status: "Late", earned: 84, total: 100, teacherNotes: "Submitted late, so points were deducted. Good effort; watch algebraic simplification." },
+    { name: "Quiz 3", dueDate: "Mar 16", submittedDate: "-", status: "Missing", earned: 0, total: 100, teacherNotes: "Not submitted. Missing work receives a zero." },
+  ],
+  math: [
+    { name: "Logic Quiz 2", dueDate: "Mar 6", submittedDate: "Mar 6", status: "Complete", earned: 44, total: 50, teacherNotes: "Strong on truth tables." },
+    { name: "Set Proof Worksheet", dueDate: "Mar 11", submittedDate: "Mar 11", status: "Complete", earned: 46, total: 50, teacherNotes: "Proof structure is improving." },
+    { name: "Induction Checkpoint", dueDate: "Mar 15", submittedDate: "Mar 15", status: "Complete", earned: 45, total: 50, teacherNotes: "Very clear base and inductive steps." },
+  ],
+  biology: [
+    { name: "Organelle Diagram", dueDate: "Mar 4", submittedDate: "Mar 4", status: "Complete", earned: 48, total: 50, teacherNotes: "Detailed labeling and neat annotations." },
+    { name: "Microscopy Lab", dueDate: "Mar 9", submittedDate: "Mar 9", status: "Complete", earned: 46, total: 50, teacherNotes: "Good observations and conclusions." },
+    { name: "Cell Cycle Quiz", dueDate: "Mar 14", submittedDate: "Mar 14", status: "Complete", earned: 46, total: 50, teacherNotes: "Only one missed concept." },
+  ],
+  literature: [
+    { name: "Theme Analysis", dueDate: "Mar 5", submittedDate: "Mar 5", status: "Complete", earned: 45, total: 50, teacherNotes: "Great thematic evidence." },
+    { name: "Narrative Voice Essay", dueDate: "Mar 12", submittedDate: "Mar 12", status: "Complete", earned: 44, total: 50, teacherNotes: "Thoughtful close reading." },
+    { name: "Discussion Reflection", dueDate: "Mar 16", submittedDate: "Mar 16", status: "Complete", earned: 45, total: 50, teacherNotes: "Strong synthesis across texts." },
+  ],
+  history: [
+    { name: "Trade Route Map", dueDate: "Mar 3", submittedDate: "Mar 3", status: "Complete", earned: 42, total: 50, teacherNotes: "Good map accuracy, add more context notes." },
+    { name: "Source Comparison", dueDate: "Mar 10", submittedDate: "Mar 10", status: "Complete", earned: 43, total: 50, teacherNotes: "Solid evidence use." },
+    { name: "Debate Prep Notes", dueDate: "Mar 15", submittedDate: "Mar 15", status: "Complete", earned: 44, total: 50, teacherNotes: "Clear claims and supporting data." },
+  ],
+  programming: [
+    { name: "Loop Practice Set", dueDate: "Mar 4", submittedDate: "Mar 4", status: "Complete", earned: 47, total: 50, teacherNotes: "Correct and readable solutions." },
+    { name: "Tracing Worksheet", dueDate: "Mar 10", submittedDate: "Mar 10", status: "Complete", earned: 46, total: 50, teacherNotes: "Strong step-by-step tracing." },
+    { name: "Mini Coding Challenge", dueDate: "Mar 15", submittedDate: "Mar 15", status: "Complete", earned: 45, total: 50, teacherNotes: "Good decomposition and naming." },
+  ],
+};
+const lateSubmissionOffsetsByAssignmentId = {
+  a2: 1,
+};
+
 function makeTabPlaceholders(courseTitle) {
   return {
     assignments: {
@@ -102,35 +138,7 @@ function makeTabPlaceholders(courseTitle) {
     grades: {
       title: "Grades",
       description: `View overall class grade and assignment score details for ${courseTitle}.`,
-      records: [
-        {
-          name: "Lab Report 1",
-          dueDate: "Mar 5",
-          submittedDate: "Mar 5",
-          status: "Complete",
-          earned: 96,
-          total: 100,
-          teacherNotes: "Excellent method section; improve conclusion clarity.",
-        },
-        {
-          name: "Problem Set 2",
-          dueDate: "Mar 10",
-          submittedDate: "Mar 12",
-          status: "Late",
-          earned: 84,
-          total: 100,
-          teacherNotes: "Submitted late, so points were deducted. Good effort; watch algebraic simplification.",
-        },
-        {
-          name: "Quiz 3",
-          dueDate: "Mar 16",
-          submittedDate: "-",
-          status: "Missing",
-          earned: 0,
-          total: 100,
-          teacherNotes: "Not submitted. Missing work receives a zero.",
-        },
-      ],
+      records: [],
     },
     announcements: {
       title: "Announcements",
@@ -256,9 +264,74 @@ const courseData = {
   },
 };
 
-Object.values(courseData).forEach((course) => {
+Object.entries(courseData).forEach(([courseKey, course]) => {
   course.tabs = makeTabPlaceholders(course.title);
+  course.tabs.grades.records = defaultGradeRecordsByCourse[courseKey] || [];
 });
+
+function computePercentFromGradeRecords(records) {
+  let totalEarned = 0;
+  let totalPossible = 0;
+  records.forEach((record) => {
+    const earned = record.status === "Missing" ? 0 : Number(record.earned ?? 0);
+    const total = Number(record.total ?? 100);
+    totalEarned += earned;
+    totalPossible += total;
+  });
+  return totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+}
+
+function letterGradeFromPercent(percent) {
+  if (percent >= 97) return "A+";
+  if (percent >= 93) return "A";
+  if (percent >= 90) return "A-";
+  if (percent >= 87) return "B+";
+  if (percent >= 83) return "B";
+  if (percent >= 80) return "B-";
+  if (percent >= 77) return "C+";
+  if (percent >= 73) return "C";
+  if (percent >= 70) return "C-";
+  if (percent >= 67) return "D+";
+  if (percent >= 63) return "D";
+  if (percent >= 60) return "D-";
+  return "F";
+}
+
+function getGradeRecordsForCourse(courseKey) {
+  const course = courseData[courseKey];
+  const tab = course?.tabs?.grades;
+  if (!tab) return [];
+  if (Array.isArray(tab.records) && tab.records.length) return tab.records;
+  if (tab.recordGrades && Array.isArray(tab.items)) {
+    return tab.items
+      .filter((item) => item && typeof item === "object" && "assignmentTitle" in item)
+      .map((item) => {
+        const dueIso = item.dueDate || "";
+        const dueDate = dueIso ? formatShortDate(dueIso) : "-";
+        const isMissing = item.pointsEarned == null;
+        const lateOffset = item.assignmentId
+          ? Number(lateSubmissionOffsetsByAssignmentId[item.assignmentId] || 0)
+          : 0;
+        const submittedIso = !isMissing && dueIso ? addDaysToIsoDate(dueIso, lateOffset) : "";
+        return {
+          name: item.assignmentTitle,
+          dueDate,
+          submittedDate: isMissing ? "-" : (submittedIso ? formatShortDate(submittedIso) : dueDate),
+          status: isMissing ? "Missing" : (lateOffset > 0 ? "Late" : "Complete"),
+          earned: isMissing ? 0 : Number(item.pointsEarned ?? 0),
+          total: Number(item.pointsPossible ?? 100),
+          teacherNotes: item.feedback || "No notes from teacher.",
+        };
+      });
+  }
+  return [];
+}
+
+function getCourseGradeSummary(courseKey) {
+  const records = getGradeRecordsForCourse(courseKey);
+  const percent = computePercentFromGradeRecords(records);
+  return { percent, letter: letterGradeFromPercent(percent) };
+}
 
 function escapeHtml(text) {
   const div = document.createElement("div");
@@ -269,6 +342,17 @@ function escapeHtml(text) {
 function formatAssignmentDate(isoDate) {
   const d = new Date(isoDate);
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function formatShortDate(isoDate) {
+  const d = new Date(isoDate);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function addDaysToIsoDate(isoDate, daysToAdd) {
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + daysToAdd);
+  return d.toISOString().slice(0, 10);
 }
 
 function getTeacherById(id) {
@@ -344,7 +428,9 @@ function applyRecordsToCourseData() {
         const a = getAssignmentById(g.assignmentId);
         return a && a.classId === classId
           ? {
+              assignmentId: a.id,
               assignmentTitle: a.title,
+              dueDate: a.dueDate,
               pointsEarned: g.pointsEarned,
               pointsPossible: a.pointsPossible,
               feedback: g.feedback,
@@ -352,14 +438,9 @@ function applyRecordsToCourseData() {
           : null;
       })
       .filter(Boolean);
-    const classGrade = recordsClassGrades.find(
-      (g) => g.studentId === currentStudentId && g.classId === classId
-    );
     course.tabs.grades = {
       title: "Grades",
-      description: classGrade
-        ? `Current grade: ${classGrade.percent}% (${classGrade.letterGrade}).`
-        : `Gradebook for ${course.title}.`,
+      description: `Gradebook for ${course.title}. Overall score updates from the assignment rows below.`,
       items: gradeRows.length
         ? gradeRows
         : ["No graded items posted yet."],
@@ -394,27 +475,31 @@ function applyRecordsToCourseData() {
   });
 }
 
-function updateChemistryCard() {
-  const classId = courseKeyToClassId.chemistry;
-  const cls = getClassById(classId);
+function updateCourseCardsGrades() {
+  const chemistryClassId = courseKeyToClassId.chemistry;
+  const cls = getClassById(chemistryClassId);
   const teacher = cls ? getTeacherById(cls.teacherId) : null;
-  const classGrade = recordsClassGrades.find(
-    (g) => g.studentId === currentStudentId && g.classId === classId
-  );
-  const card = document.querySelector('.class-card[data-course="chemistry"]');
-  if (!card) return;
-  const body = card.querySelector(".course-body");
-  if (!body) return;
-  if (cls) {
-    const h3 = body.querySelector("h3");
-    if (h3) h3.textContent = cls.name;
-    const ps = body.querySelectorAll("p");
-    if (teacher && ps[0]) ps[0].textContent = `${teacher.title} ${teacher.firstName} ${teacher.lastName}`;
-    if (cls.schedule && ps[1]) ps[1].textContent = cls.schedule.replace(/\s+(\d)/, " | $1");
+  const chemistryCard = document.querySelector('.class-card[data-course="chemistry"]');
+  if (chemistryCard) {
+    const body = chemistryCard.querySelector(".course-body");
+    if (body && cls) {
+      const h3 = body.querySelector("h3");
+      if (h3) h3.textContent = cls.name;
+      const ps = body.querySelectorAll("p");
+      if (teacher && ps[0]) ps[0].textContent = `${teacher.title} ${teacher.firstName} ${teacher.lastName}`;
+      if (cls.schedule && ps[1]) ps[1].textContent = cls.schedule.replace(/\s+(\d)/, " | $1");
+    }
   }
-  const gradeEl = body.querySelector(".course-grade");
-  if (gradeEl && classGrade)
-    gradeEl.textContent = `Grade: ${classGrade.percent}% (${classGrade.letterGrade})`;
+
+  document.querySelectorAll(".class-card").forEach((card) => {
+    const courseKey = card.dataset.course;
+    if (!courseKey || !courseData[courseKey]) return;
+    const summary = getCourseGradeSummary(courseKey);
+    const gradeEl = card.querySelector(".course-grade");
+    if (gradeEl) {
+      gradeEl.textContent = `Grade: ${summary.percent}% (${summary.letter})`;
+    }
+  });
 }
 
 async function loadRecords() {
@@ -446,7 +531,7 @@ async function loadRecords() {
     ] = results.map((r) => (Array.isArray(r) ? r : []));
     recordsLoaded = true;
     applyRecordsToCourseData();
-    updateChemistryCard();
+    updateCourseCardsGrades();
     if (currentCourse !== "home") renderActiveTab();
   } catch (e) {
     console.warn("Could not load records. Serve the app over HTTP (see README).", e);
@@ -454,6 +539,7 @@ async function loadRecords() {
 }
 
 loadRecords();
+updateCourseCardsGrades();
 
 function appendMessage(text, role) {
   const bubble = document.createElement("div");
@@ -544,10 +630,9 @@ function renderActiveTab() {
   else if (activeTab === "grades") {
     gradesPanel.classList.remove("hidden");
 
-    const records = tabData.records || [];
+    const records = getGradeRecordsForCourse(currentCourse);
 
-    let totalEarned = 0;
-    let totalPossible = 0;
+    const summary = getCourseGradeSummary(currentCourse);
 
     records.forEach((record) => {
       const earned =
@@ -556,9 +641,6 @@ function renderActiveTab() {
           : Number(record.earned ?? 0);
 
       const total = Number(record.total ?? 100);
-
-      totalEarned += earned;
-      totalPossible += total;
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -578,10 +660,7 @@ function renderActiveTab() {
       gradesTableBody.appendChild(tr);
     });
 
-    const overallPercent =
-      totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
-
-    overallGradeEl.textContent = `${overallPercent}%`;
+    overallGradeEl.textContent = `${summary.percent}%`;
   }
 
   // ANNOUNCEMENTS TAB ONLY
