@@ -40,6 +40,17 @@ const fileItems = document.getElementById("fileItems");
 const selectedFolderTitle = document.getElementById("selectedFolderTitle");
 const selectedFolderDesc = document.getElementById("selectedFolderDesc");
 const modulesAccordion = document.getElementById("modulesAccordion");
+const homeSubtitle = document.getElementById("homeSubtitle");
+const profileToggle = document.getElementById("profileToggle");
+const profileMenu = document.getElementById("profileMenu");
+const teacherViewOption = document.getElementById("teacherViewOption");
+const settingsOption = document.getElementById("settingsOption");
+const publishedCoursesHeading = document.getElementById("publishedCoursesHeading");
+const unpublishedCoursesHeading = document.getElementById("unpublishedCoursesHeading");
+const publishedCourseGrid = document.getElementById("publishedCourseGrid");
+const unpublishedCourseGrid = document.getElementById("unpublishedCourseGrid");
+const unpublishedCoursesGroup = document.getElementById("unpublishedCoursesGroup");
+const publishedCourseDivider = document.querySelector("#publishedCoursesGroup .course-divider");
 
 const toggleButtons = [
   document.getElementById("chatToggle"),
@@ -50,6 +61,18 @@ const toggleButtons = [
 let currentCourse = "home";
 let activeTab = "assignments";
 let calendarDate = new Date(2026, 2, 1);
+let isTeacherView = false;
+
+const teacherDashboardCards = [
+  { icon: "CS1", title: "Intro to Programming - Period 1", teacher: "Prof. Aaron Bell", schedule: "Mon/Wed | 8:00 AM", published: true },
+  { icon: "CS2", title: "Intro to Programming - Period 2", teacher: "Prof. Aaron Bell", schedule: "Mon/Wed | 9:30 AM", published: true },
+  { icon: "DS", title: "Data Structures", teacher: "Prof. Aaron Bell", schedule: "Tue/Thu | 10:00 AM", published: true },
+  { icon: "AL", title: "Algorithms", teacher: "Prof. Aaron Bell", schedule: "Tue/Thu | 1:00 PM", published: true },
+  { icon: "WD", title: "Web Development", teacher: "Prof. Aaron Bell", schedule: "Wed/Fri | 11:00 AM", published: false },
+  { icon: "SE", title: "Software Engineering", teacher: "Prof. Aaron Bell", schedule: "Fri | 2:30 PM", published: false },
+];
+
+let studentDashboardCards = [];
 
 // Records: only courses in courseKeyToClassId get real data (chemistry -> c1)
 const courseKeyToClassId = { chemistry: "c1" };
@@ -67,140 +90,267 @@ let recordsLoaded = false;
 // Demo: current user (used for dashboard grade and Grades tab)
 let currentStudentId = "s1";
 
-function makeTabPlaceholders(courseTitle) {
+const defaultGradeRecordsByCourse = {
+  chemistry: [
+    { name: "Lab Report 1", dueDate: "Mar 5", submittedDate: "Mar 5", status: "Complete", earned: 96, total: 100, teacherNotes: "Excellent method section; improve conclusion clarity." },
+    { name: "Problem Set 2", dueDate: "Mar 10", submittedDate: "Mar 12", status: "Late", earned: 84, total: 100, teacherNotes: "Submitted late, so points were deducted. Good effort; watch algebraic simplification." },
+    { name: "Quiz 3", dueDate: "Mar 16", submittedDate: "-", status: "Missing", earned: 0, total: 100, teacherNotes: "Not submitted. Missing work receives a zero." },
+  ],
+  math: [
+    { name: "Logic Quiz 2", dueDate: "Mar 6", submittedDate: "Mar 6", status: "Complete", earned: 44, total: 50, teacherNotes: "Strong on truth tables." },
+    { name: "Set Proof Worksheet", dueDate: "Mar 11", submittedDate: "Mar 11", status: "Complete", earned: 46, total: 50, teacherNotes: "Proof structure is improving." },
+    { name: "Induction Checkpoint", dueDate: "Mar 15", submittedDate: "Mar 15", status: "Complete", earned: 45, total: 50, teacherNotes: "Very clear base and inductive steps." },
+  ],
+  biology: [
+    { name: "Organelle Diagram", dueDate: "Mar 4", submittedDate: "Mar 4", status: "Complete", earned: 48, total: 50, teacherNotes: "Detailed labeling and neat annotations." },
+    { name: "Microscopy Lab", dueDate: "Mar 9", submittedDate: "Mar 9", status: "Complete", earned: 46, total: 50, teacherNotes: "Good observations and conclusions." },
+    { name: "Cell Cycle Quiz", dueDate: "Mar 14", submittedDate: "Mar 14", status: "Complete", earned: 46, total: 50, teacherNotes: "Only one missed concept." },
+  ],
+  literature: [
+    { name: "Theme Analysis", dueDate: "Mar 5", submittedDate: "Mar 5", status: "Complete", earned: 45, total: 50, teacherNotes: "Great thematic evidence." },
+    { name: "Narrative Voice Essay", dueDate: "Mar 12", submittedDate: "Mar 12", status: "Complete", earned: 44, total: 50, teacherNotes: "Thoughtful close reading." },
+    { name: "Discussion Reflection", dueDate: "Mar 16", submittedDate: "Mar 16", status: "Complete", earned: 45, total: 50, teacherNotes: "Strong synthesis across texts." },
+  ],
+  history: [
+    { name: "Trade Route Map", dueDate: "Mar 3", submittedDate: "Mar 3", status: "Complete", earned: 42, total: 50, teacherNotes: "Good map accuracy, add more context notes." },
+    { name: "Source Comparison", dueDate: "Mar 10", submittedDate: "Mar 10", status: "Complete", earned: 43, total: 50, teacherNotes: "Solid evidence use." },
+    { name: "Debate Prep Notes", dueDate: "Mar 15", submittedDate: "Mar 15", status: "Complete", earned: 44, total: 50, teacherNotes: "Clear claims and supporting data." },
+  ],
+  programming: [
+    { name: "Loop Practice Set", dueDate: "Mar 4", submittedDate: "Mar 4", status: "Complete", earned: 47, total: 50, teacherNotes: "Correct and readable solutions." },
+    { name: "Tracing Worksheet", dueDate: "Mar 10", submittedDate: "Mar 10", status: "Complete", earned: 46, total: 50, teacherNotes: "Strong step-by-step tracing." },
+    { name: "Mini Coding Challenge", dueDate: "Mar 15", submittedDate: "Mar 15", status: "Complete", earned: 45, total: 50, teacherNotes: "Good decomposition and naming." },
+  ],
+};
+const lateSubmissionOffsetsByAssignmentId = {
+  a2: 1,
+};
+const demoToday = new Date(2026, 2, 16);
+
+const uniqueTabSeedByCourse = {
+  chemistry: {
+    assignments: [
+      {
+        label: "Overdue Assignments",
+        summary: "Safety and lab prep follow-up",
+        items: [
+          "Lab station checklist update (was due Mon)",
+          "Goggles compliance form (was due Tue)",
+        ],
+      },
+      {
+        label: "Current Assignments",
+        summary: "Due this week",
+        items: [
+          "Measurement conversion warmup (due Thu)",
+          "Pre-lab question set (due Fri)",
+        ],
+      },
+      {
+        label: "Past Assignments",
+        summary: "Submitted items",
+        items: [
+          "Lab safety contract (submitted)",
+          "Notebook setup check (graded)",
+        ],
+      },
+    ],
+    announcements: [
+      { title: "Lab Coat Reminder", preview: "Bring your lab coat and goggles for Wednesday's activity.", date: "Mar 14, 2026" },
+      { title: "Bench Rotation Update", preview: "Partner benches were updated. Check seating before class.", date: "Mar 11, 2026" },
+      { title: "Data Table Template Posted", preview: "Use the new table format for your first experiment write-up.", date: "Mar 8, 2026" },
+    ],
+    files: {
+      Syllabus: [{ name: "Chemistry Syllabus.pdf", type: "PDF" }],
+      Labs: [{ name: "Lab Rules Sheet.pdf", type: "PDF" }, { name: "Data Table Template.docx", type: "DOCX" }],
+      Homework: [{ name: "Sig Figs Practice.pdf", type: "PDF" }],
+      Slides: [{ name: "Intro Lab Safety.pptx", type: "PPTX" }],
+    },
+    modules: [
+      { title: "Week 1", summary: "Safety and Measurement Basics", materials: ["Safety Protocol Handout", "Measurement Demo"], assignments: ["Safety Contract", "Notebook Template"], homework: ["Sig Fig Worksheet"] },
+      { title: "Week 2", summary: "Data Recording", materials: ["Observation Notes", "Sample Data Tables"], assignments: ["Pre-lab Questions"], homework: ["Unit Conversion Practice"] },
+      { title: "Week 3", summary: "First Experiment", materials: ["Procedure Walkthrough", "Report Rubric"], assignments: ["Experiment Write-up"], homework: ["Graphing Practice"] },
+    ],
+  },
+  math: {
+    assignments: [
+      { label: "Overdue Assignments", summary: "Needs immediate action", items: ["Proof rewrite draft (was due Mon)", "Set notation corrections (was due Tue)"] },
+      { label: "Current Assignments", summary: "Due this week", items: ["Logic quiz review (due Thu)", "Combinatorics worksheet (due Fri)"] },
+      { label: "Past Assignments", summary: "Completed or submitted", items: ["Truth table practice (submitted)", "Induction checkpoint (graded)"] },
+    ],
+    announcements: [
+      { title: "Quiz Scope Posted", preview: "Quiz 4 covers implication, equivalence, and quantifiers.", date: "Mar 13, 2026" },
+      { title: "Office Hours Added", preview: "Extra office hours on Thursday 4:00-5:00 PM.", date: "Mar 10, 2026" },
+      { title: "Proof Style Guide", preview: "A sample direct-proof format is now in Files.", date: "Mar 7, 2026" },
+    ],
+    files: {
+      Syllabus: [{ name: "Discrete Math Syllabus.pdf", type: "PDF" }],
+      Assignments: [{ name: "Proof Set 4.docx", type: "DOCX" }],
+      Homework: [{ name: "Combinatorics HW.pdf", type: "PDF" }],
+      Slides: [{ name: "Logic and Quantifiers.pptx", type: "PPTX" }],
+    },
+    modules: [
+      { title: "Week 1", summary: "Logic Foundations", materials: ["Propositions Notes", "Truth Table Guide"], assignments: ["Logic Quiz Prep"], homework: ["Truth Table Set"] },
+      { title: "Week 2", summary: "Sets and Functions", materials: ["Set Operations Notes", "Function Examples"], assignments: ["Set Proof Worksheet"], homework: ["Set Builder Practice"] },
+      { title: "Week 3", summary: "Proof Techniques", materials: ["Direct vs Contrapositive", "Induction Template"], assignments: ["Induction Checkpoint"], homework: ["Proof Revision"] },
+    ],
+  },
+  biology: {
+    assignments: [
+      { label: "Overdue Assignments", summary: "Follow-up needed", items: ["Microscope sketch labels (was due Mon)", "Organelle comparison chart (was due Tue)"] },
+      { label: "Current Assignments", summary: "Due this week", items: ["Cell membrane diagram (due Thu)", "Lab observation notes (due Fri)"] },
+      { label: "Past Assignments", summary: "Completed or submitted", items: ["Cell model worksheet (submitted)", "Organelle quiz (graded)"] },
+    ],
+    announcements: [
+      { title: "Microscope Lab Prep", preview: "Review slide handling before Friday's practical.", date: "Mar 14, 2026" },
+      { title: "Cell Cycle Diagram Resource", preview: "A printable guide is available in Files.", date: "Mar 9, 2026" },
+      { title: "Lab Partner Rotation", preview: "Pairs updated for this week's microscope station.", date: "Mar 6, 2026" },
+    ],
+    files: {
+      Syllabus: [{ name: "Biology 101 Syllabus.pdf", type: "PDF" }],
+      Labs: [{ name: "Microscope Lab Guide.pdf", type: "PDF" }],
+      Homework: [{ name: "Cell Function Practice.pdf", type: "PDF" }],
+      Slides: [{ name: "Cell Organelles Overview.pptx", type: "PPTX" }],
+    },
+    modules: [
+      { title: "Week 1", summary: "Cell Structures", materials: ["Organelle Chart", "Cell Type Comparison"], assignments: ["Cell Diagram"], homework: ["Membrane Function Questions"] },
+      { title: "Week 2", summary: "Microscopy Skills", materials: ["Slide Prep Demo", "Microscope Checklist"], assignments: ["Lab Observation Log"], homework: ["Vocabulary Review"] },
+      { title: "Week 3", summary: "Cell Cycle", materials: ["Mitosis Notes", "Cell Cycle Animation"], assignments: ["Cell Cycle Quiz"], homework: ["Cycle Sequence Practice"] },
+    ],
+  },
+  literature: {
+    assignments: [
+      { label: "Overdue Assignments", summary: "Revision needed", items: ["Quote integration pass (was due Mon)", "Theme draft polish (was due Tue)"] },
+      { label: "Current Assignments", summary: "Due this week", items: ["Narrative voice paragraph (due Thu)", "Short reflection response (due Fri)"] },
+      { label: "Past Assignments", summary: "Completed or submitted", items: ["Reading annotation set (submitted)", "Theme analysis (graded)"] },
+    ],
+    announcements: [
+      { title: "Discussion Prompt 5", preview: "Prepare one passage on point of view for seminar.", date: "Mar 15, 2026" },
+      { title: "Essay Rubric Updated", preview: "The rubric now clarifies evidence and analysis criteria.", date: "Mar 11, 2026" },
+      { title: "Reading Schedule", preview: "Chapter breakdown for next week is posted in Files.", date: "Mar 7, 2026" },
+    ],
+    files: {
+      Syllabus: [{ name: "Modern Literature Syllabus.pdf", type: "PDF" }],
+      Assignments: [{ name: "Narrative Voice Prompt.docx", type: "DOCX" }],
+      Reading: [{ name: "Short Fiction Packet.pdf", type: "PDF" }],
+      Slides: [{ name: "Theme and Tone.pptx", type: "PPTX" }],
+    },
+    modules: [
+      { title: "Week 1", summary: "Narrative Perspective", materials: ["POV Handout", "Sample Excerpts"], assignments: ["Voice Analysis"], homework: ["Annotation Task"] },
+      { title: "Week 2", summary: "Theme Development", materials: ["Theme Tracker", "Close Reading Notes"], assignments: ["Theme Paragraph"], homework: ["Reading Reflection"] },
+      { title: "Week 3", summary: "Author Choices", materials: ["Style Device Guide", "Discussion Notes"], assignments: ["Seminar Response"], homework: ["Evidence Collection"] },
+    ],
+  },
+  history: {
+    assignments: [
+      { label: "Overdue Assignments", summary: "Catch-up tasks", items: ["Map label corrections (was due Mon)", "Timeline citations (was due Tue)"] },
+      { label: "Current Assignments", summary: "Due this week", items: ["Primary source analysis (due Thu)", "Debate claim sheet (due Fri)"] },
+      { label: "Past Assignments", summary: "Completed or submitted", items: ["Trade route map (submitted)", "Source comparison (graded)"] },
+    ],
+    announcements: [
+      { title: "Debate Teams Posted", preview: "Check your team assignment for Thursday's debate.", date: "Mar 14, 2026" },
+      { title: "Archive Source Packet", preview: "New source packet uploaded under Files.", date: "Mar 10, 2026" },
+      { title: "Map Quiz Format", preview: "Map quiz includes route labeling and short response.", date: "Mar 8, 2026" },
+    ],
+    files: {
+      Syllabus: [{ name: "Global History Syllabus.pdf", type: "PDF" }],
+      Assignments: [{ name: "Source Analysis Template.docx", type: "DOCX" }],
+      Homework: [{ name: "Trade Network Questions.pdf", type: "PDF" }],
+      Slides: [{ name: "Silk Road and Exchange.pptx", type: "PPTX" }],
+    },
+    modules: [
+      { title: "Week 1", summary: "Trade Networks", materials: ["Silk Road Map", "Exchange Notes"], assignments: ["Route Map"], homework: ["Trade Impact Questions"] },
+      { title: "Week 2", summary: "Primary Sources", materials: ["Source Evaluation Guide", "Bias Checklist"], assignments: ["Source Comparison"], homework: ["Evidence Notes"] },
+      { title: "Week 3", summary: "Debate and Argument", materials: ["Claim Structure Sheet", "Counterargument Guide"], assignments: ["Debate Prep"], homework: ["Argument Revision"] },
+    ],
+  },
+  programming: {
+    assignments: [
+      { label: "Overdue Assignments", summary: "Fixes needed", items: ["Loop trace corrections (was due Mon)", "Variable naming cleanup (was due Tue)"] },
+      { label: "Current Assignments", summary: "Due this week", items: ["Nested loop challenge (due Thu)", "Debugging reflection (due Fri)"] },
+      { label: "Past Assignments", summary: "Completed or submitted", items: ["Loop practice set (submitted)", "Tracing worksheet (graded)"] },
+    ],
+    announcements: [
+      { title: "Challenge Set Released", preview: "New practice problems for while-loops are now available.", date: "Mar 14, 2026" },
+      { title: "Lab Time Reminder", preview: "Bring your laptop for live debugging lab on Tuesday.", date: "Mar 10, 2026" },
+      { title: "Style Guide Update", preview: "Naming conventions were updated in the coding guide.", date: "Mar 6, 2026" },
+    ],
+    files: {
+      Syllabus: [{ name: "Intro Programming Syllabus.pdf", type: "PDF" }],
+      Assignments: [{ name: "Loop Challenge Set.pdf", type: "PDF" }],
+      Homework: [{ name: "Trace Practice Worksheet.pdf", type: "PDF" }],
+      Slides: [{ name: "Loops and Conditionals.pptx", type: "PPTX" }],
+    },
+    modules: [
+      { title: "Week 1", summary: "Loop Basics", materials: ["For Loop Notes", "Iteration Demo"], assignments: ["Loop Practice Set"], homework: ["Trace Table Exercise"] },
+      { title: "Week 2", summary: "Debugging", materials: ["Common Bugs Sheet", "Debugger Walkthrough"], assignments: ["Tracing Worksheet"], homework: ["Bug Fix Practice"] },
+      { title: "Week 3", summary: "Problem Decomposition", materials: ["Pseudocode Guide", "Function Planning"], assignments: ["Mini Coding Challenge"], homework: ["Refactor Exercise"] },
+    ],
+  },
+};
+
+const defaultModulesScheduleByCourse = {
+  chemistry: [
+    { date: "Monday, March 18", entries: [{ assignment: "Lab Safety Contract", due: "11:59 PM" }] },
+    { date: "Wednesday, March 20", entries: [{ assignment: "Lab Notebook Template", due: "11:59 PM" }] },
+    { date: "Tuesday, March 25", entries: [{ assignment: "Measurement and Significant Figures Quiz", due: "5:00 PM" }] },
+    { date: "Thursday, March 27", entries: [{ assignment: "First Experiment Write-up", due: "11:59 PM" }] },
+  ],
+  math: [
+    { date: "Tuesday, March 19", entries: [{ assignment: "Logic Quiz Review", due: "4:00 PM" }] },
+    { date: "Thursday, March 21", entries: [{ assignment: "Combinatorics Worksheet", due: "11:59 PM" }] },
+    { date: "Monday, March 24", entries: [{ assignment: "Induction Practice", due: "8:00 PM" }] },
+  ],
+  biology: [
+    { date: "Monday, March 17", entries: [{ assignment: "Cell Membrane Diagram", due: "3:00 PM" }] },
+    { date: "Wednesday, March 19", entries: [{ assignment: "Lab Observation Notes", due: "11:59 PM" }] },
+    { date: "Friday, March 21", entries: [{ assignment: "Cell Cycle Checkpoint", due: "2:00 PM" }] },
+  ],
+  literature: [
+    { date: "Tuesday, March 18", entries: [{ assignment: "Narrative Voice Paragraph", due: "9:00 PM" }] },
+    { date: "Thursday, March 20", entries: [{ assignment: "Reflection Response", due: "11:59 PM" }] },
+    { date: "Monday, March 24", entries: [{ assignment: "Seminar Prep Notes", due: "8:30 PM" }] },
+  ],
+  history: [
+    { date: "Wednesday, March 19", entries: [{ assignment: "Primary Source Analysis", due: "6:00 PM" }] },
+    { date: "Friday, March 21", entries: [{ assignment: "Debate Claim Sheet", due: "11:59 PM" }] },
+    { date: "Tuesday, March 25", entries: [{ assignment: "Route Timeline Revision", due: "7:00 PM" }] },
+  ],
+  programming: [
+    { date: "Monday, March 17", entries: [{ assignment: "Nested Loop Challenge", due: "11:59 PM" }] },
+    { date: "Wednesday, March 19", entries: [{ assignment: "Debugging Reflection", due: "10:00 PM" }] },
+    { date: "Friday, March 21", entries: [{ assignment: "Mini Coding Challenge", due: "11:59 PM" }] },
+  ],
+};
+
+function makeTabPlaceholders(courseTitle, courseKey) {
+  const seed = uniqueTabSeedByCourse[courseKey] || uniqueTabSeedByCourse.math;
   return {
     assignments: {
       title: "Assignments",
       description: `Track overdue, past, and current assignments for ${courseTitle}.`,
-      sections: [
-        {
-          label: "Overdue Assignments",
-          summary: "Needs immediate action",
-          items: [
-            "Lab report draft (was due Mon)",
-            "Problem set 3 (was due Tue)",
-          ],
-        },
-        {
-          label: "Current Assignments",
-          summary: "Due this week",
-          items: [
-            "Weekly quiz (due Fri)",
-            "Group discussion post (due Thu)",
-          ],
-        },
-        {
-          label: "Past Assignments",
-          summary: "Completed or submitted",
-          items: [
-            "Intro reading response (submitted)",
-            "Warm-up worksheet (feedback pending)",
-          ],
-        },
-      ],
+      sections: seed.assignments,
     },
     grades: {
       title: "Grades",
       description: `View overall class grade and assignment score details for ${courseTitle}.`,
-      records: [
-        {
-          name: "Lab Report 1",
-          dueDate: "Mar 5",
-          submittedDate: "Mar 5",
-          status: "Complete",
-          earned: 96,
-          total: 100,
-          teacherNotes: "Excellent method section; improve conclusion clarity.",
-        },
-        {
-          name: "Problem Set 2",
-          dueDate: "Mar 10",
-          submittedDate: "Mar 12",
-          status: "Late",
-          earned: 84,
-          total: 100,
-          teacherNotes: "Submitted late, so points were deducted. Good effort; watch algebraic simplification.",
-        },
-        {
-          name: "Quiz 3",
-          dueDate: "Mar 16",
-          submittedDate: "-",
-          status: "Missing",
-          earned: 0,
-          total: 100,
-          teacherNotes: "Not submitted. Missing work receives a zero.",
-        },
-      ],
+      records: [],
     },
     announcements: {
       title: "Announcements",
       description: `Teacher announcements for ${courseTitle}.`,
-      posts: [
-        {
-          title: "Lab 2 Safety Check",
-          preview: "Please submit your safety check form before lab time.",
-          date: "Mar 12, 2026",
-        },
-        {
-          title: "Guest Speaker This Friday",
-          preview: "We will have Dr. Patel speak on chromatography techniques.",
-          date: "Mar 10, 2026",
-        },
-        {
-          title: "Homework Correction",
-          preview: "The answer key has been updated; review questions 4 and 7.",
-          date: "Mar 8, 2026",
-        },
-      ],
+      posts: seed.announcements,
     },
     files: {
       title: "Files",
       description: `Class files and materials for ${courseTitle}.`,
-      folders: {
-        Syllabus: [
-          { name: "Course Syllabus.pdf", type: "PDF" },
-          { name: "Grading Guide.pdf", type: "PDF" },
-        ],
-        Assignments: [
-          { name: "Assignment 1 Instructions.docx", type: "DOCX" },
-          { name: "Assignment 2 Template.docx", type: "DOCX" },
-        ],
-        Homework: [
-          { name: "Homework Week 1.pdf", type: "PDF" },
-          { name: "Homework Week 2.pdf", type: "PDF" },
-        ],
-        Slides: [
-          { name: "Week 1 Slides.pptx", type: "PPTX" },
-          { name: "Week 2 Slides.pptx", type: "PPTX" },
-        ],
-      },
+      folders: seed.files,
     },
     modules: {
       title: "Modules",
       description: `Weekly modules and resources for ${courseTitle}.`,
-      weeks: [
-        {
-          title: "Week 1",
-          summary: "Intro and Lab Safety",
-          materials: ["Lab Safety Guide", "Lab Setup Video"],
-          assignments: ["Safety Contract", "Pre-lab Quiz"],
-          homework: ["Worksheet 1", "Lab Reflection"],
-        },
-        {
-          title: "Week 2",
-          summary: "Measurements and Data",
-          materials: ["Metric Units Notes", "Measurement Demo"],
-          assignments: ["Measurement Worksheet", "Problem Set 1"],
-          homework: ["Homework 2: Conversion", "Data Practice"],
-        },
-        {
-          title: "Week 3",
-          summary: "Experimental Design",
-          materials: ["Design Principles", "Sample Experiment"],
-          assignments: ["Design Proposal", "Peer Feedback"],
-          homework: ["Lab Report Outline"],
-        },
-      ],
+      weeks: seed.modules,
+      schedule: defaultModulesScheduleByCourse[courseKey] || [],
     },
   };
 }
@@ -256,9 +406,74 @@ const courseData = {
   },
 };
 
-Object.values(courseData).forEach((course) => {
-  course.tabs = makeTabPlaceholders(course.title);
+Object.entries(courseData).forEach(([courseKey, course]) => {
+  course.tabs = makeTabPlaceholders(course.title, courseKey);
+  course.tabs.grades.records = defaultGradeRecordsByCourse[courseKey] || [];
 });
+
+function computePercentFromGradeRecords(records) {
+  let totalEarned = 0;
+  let totalPossible = 0;
+  records.forEach((record) => {
+    const earned = record.status === "Missing" ? 0 : Number(record.earned ?? 0);
+    const total = Number(record.total ?? 100);
+    totalEarned += earned;
+    totalPossible += total;
+  });
+  return totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+}
+
+function letterGradeFromPercent(percent) {
+  if (percent >= 97) return "A+";
+  if (percent >= 93) return "A";
+  if (percent >= 90) return "A-";
+  if (percent >= 87) return "B+";
+  if (percent >= 83) return "B";
+  if (percent >= 80) return "B-";
+  if (percent >= 77) return "C+";
+  if (percent >= 73) return "C";
+  if (percent >= 70) return "C-";
+  if (percent >= 67) return "D+";
+  if (percent >= 63) return "D";
+  if (percent >= 60) return "D-";
+  return "F";
+}
+
+function getGradeRecordsForCourse(courseKey) {
+  const course = courseData[courseKey];
+  const tab = course?.tabs?.grades;
+  if (!tab) return [];
+  if (Array.isArray(tab.records) && tab.records.length) return tab.records;
+  if (tab.recordGrades && Array.isArray(tab.items)) {
+    return tab.items
+      .filter((item) => item && typeof item === "object" && "assignmentTitle" in item)
+      .map((item) => {
+        const dueIso = item.dueDate || "";
+        const dueDate = dueIso ? formatShortDate(dueIso) : "-";
+        const isMissing = item.pointsEarned == null;
+        const lateOffset = item.assignmentId
+          ? Number(lateSubmissionOffsetsByAssignmentId[item.assignmentId] || 0)
+          : 0;
+        const submittedIso = !isMissing && dueIso ? addDaysToIsoDate(dueIso, lateOffset) : "";
+        return {
+          name: item.assignmentTitle,
+          dueDate,
+          submittedDate: isMissing ? "-" : (submittedIso ? formatShortDate(submittedIso) : dueDate),
+          status: isMissing ? "Missing" : (lateOffset > 0 ? "Late" : "Complete"),
+          earned: isMissing ? 0 : Number(item.pointsEarned ?? 0),
+          total: Number(item.pointsPossible ?? 100),
+          teacherNotes: item.feedback || "No notes from teacher.",
+        };
+      });
+  }
+  return [];
+}
+
+function getCourseGradeSummary(courseKey) {
+  const records = getGradeRecordsForCourse(courseKey);
+  const percent = computePercentFromGradeRecords(records);
+  return { percent, letter: letterGradeFromPercent(percent) };
+}
 
 function escapeHtml(text) {
   const div = document.createElement("div");
@@ -269,6 +484,17 @@ function escapeHtml(text) {
 function formatAssignmentDate(isoDate) {
   const d = new Date(isoDate);
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function formatShortDate(isoDate) {
+  const d = new Date(isoDate);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function addDaysToIsoDate(isoDate, daysToAdd) {
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + daysToAdd);
+  return d.toISOString().slice(0, 10);
 }
 
 function getTeacherById(id) {
@@ -308,17 +534,30 @@ function applyRecordsToCourseData() {
     }
 
     if (list.length) {
+      const overdueItems = [];
+      const currentItems = [];
+      const pastItems = [];
+      list.forEach((a) => {
+        const grade = recordsAssignmentGrades.find(
+          (g) => g.assignmentId === a.id && g.studentId === currentStudentId
+        );
+        const dueLabel = `${a.title} (due ${formatShortDate(a.dueDate)} at ${a.dueTime})`;
+        if (grade && grade.pointsEarned != null) {
+          pastItems.push(`${a.title} (submitted, ${grade.pointsEarned}/${a.pointsPossible})`);
+          return;
+        }
+        const due = new Date(a.dueDate);
+        if (due < demoToday) overdueItems.push(`${a.title} (was due ${formatShortDate(a.dueDate)} at ${a.dueTime})`);
+        else currentItems.push(dueLabel);
+      });
       course.tabs.assignments = {
         title: "Assignments",
         description: `Assignments for ${course.title}.`,
-        items: list.map((a) => ({
-          title: a.title,
-          description: a.description,
-          dueDate: a.dueDate,
-          dueTime: a.dueTime,
-          pointsPossible: a.pointsPossible,
-          type: a.type,
-        })),
+        sections: [
+          { label: "Overdue Assignments", summary: "Needs immediate action", items: overdueItems.length ? overdueItems : ["No overdue assignments right now."] },
+          { label: "Current Assignments", summary: "Due soon", items: currentItems.length ? currentItems : ["No current assignments this week."] },
+          { label: "Past Assignments", summary: "Completed or submitted", items: pastItems.length ? pastItems : ["No completed assignments yet."] },
+        ],
       };
 
       const byDate = {};
@@ -333,7 +572,7 @@ function applyRecordsToCourseData() {
       course.tabs.modules = {
         title: "Modules (Calendar View)",
         description: `Assignments and due dates organized by date for ${course.title}.`,
-        items: course.tabs.modules.items,
+        weeks: course.tabs.modules.weeks || [],
         schedule: sortedDates.map((date) => ({ date, entries: byDate[date] })),
       };
     }
@@ -344,7 +583,9 @@ function applyRecordsToCourseData() {
         const a = getAssignmentById(g.assignmentId);
         return a && a.classId === classId
           ? {
+              assignmentId: a.id,
               assignmentTitle: a.title,
+              dueDate: a.dueDate,
               pointsEarned: g.pointsEarned,
               pointsPossible: a.pointsPossible,
               feedback: g.feedback,
@@ -352,14 +593,9 @@ function applyRecordsToCourseData() {
           : null;
       })
       .filter(Boolean);
-    const classGrade = recordsClassGrades.find(
-      (g) => g.studentId === currentStudentId && g.classId === classId
-    );
     course.tabs.grades = {
       title: "Grades",
-      description: classGrade
-        ? `Current grade: ${classGrade.percent}% (${classGrade.letterGrade}).`
-        : `Gradebook for ${course.title}.`,
+      description: `Gradebook for ${course.title}. Overall score updates from the assignment rows below.`,
       items: gradeRows.length
         ? gradeRows
         : ["No graded items posted yet."],
@@ -370,51 +606,60 @@ function applyRecordsToCourseData() {
     course.tabs.announcements = {
       title: "Announcements",
       description: `Announcements for ${course.title}.`,
-      items:
+      posts:
         announcements.length > 0
           ? announcements.map((n) => ({
               title: n.title,
-              body: n.body,
-              postedAt: n.postedAt,
+              preview: n.body,
+              date: n.postedAt
+                ? new Date(n.postedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                : "",
             }))
-          : course.tabs.announcements.items,
+          : course.tabs.announcements.posts,
       recordAnnouncements: announcements.length > 0,
     };
 
     const files = recordsFiles.filter((f) => f.classId === classId);
+    const folders = {};
+    files.forEach((f) => {
+      const folderName = f.type ? `${String(f.type).toUpperCase()} Files` : "Course Files";
+      if (!folders[folderName]) folders[folderName] = [];
+      folders[folderName].push({ name: f.name, type: String(f.type || "FILE").toUpperCase() });
+    });
     course.tabs.files = {
       title: "Files",
       description: `Course files for ${course.title}.`,
-      items:
-        files.length > 0
-          ? files.map((f) => ({ name: f.name, type: f.type, url: f.url }))
-          : course.tabs.files.items,
+      folders: files.length > 0 ? folders : course.tabs.files.folders,
       recordFiles: files.length > 0,
     };
   });
 }
 
-function updateChemistryCard() {
-  const classId = courseKeyToClassId.chemistry;
-  const cls = getClassById(classId);
+function updateCourseCardsGrades() {
+  const chemistryClassId = courseKeyToClassId.chemistry;
+  const cls = getClassById(chemistryClassId);
   const teacher = cls ? getTeacherById(cls.teacherId) : null;
-  const classGrade = recordsClassGrades.find(
-    (g) => g.studentId === currentStudentId && g.classId === classId
-  );
-  const card = document.querySelector('.class-card[data-course="chemistry"]');
-  if (!card) return;
-  const body = card.querySelector(".course-body");
-  if (!body) return;
-  if (cls) {
-    const h3 = body.querySelector("h3");
-    if (h3) h3.textContent = cls.name;
-    const ps = body.querySelectorAll("p");
-    if (teacher && ps[0]) ps[0].textContent = `${teacher.title} ${teacher.firstName} ${teacher.lastName}`;
-    if (cls.schedule && ps[1]) ps[1].textContent = cls.schedule.replace(/\s+(\d)/, " | $1");
+  const chemistryCard = document.querySelector('.class-card[data-course="chemistry"]');
+  if (chemistryCard) {
+    const body = chemistryCard.querySelector(".course-body");
+    if (body && cls) {
+      const h3 = body.querySelector("h3");
+      if (h3) h3.textContent = cls.name;
+      const ps = body.querySelectorAll("p");
+      if (teacher && ps[0]) ps[0].textContent = `${teacher.title} ${teacher.firstName} ${teacher.lastName}`;
+      if (cls.schedule && ps[1]) ps[1].textContent = cls.schedule.replace(/\s+(\d)/, " | $1");
+    }
   }
-  const gradeEl = body.querySelector(".course-grade");
-  if (gradeEl && classGrade)
-    gradeEl.textContent = `Grade: ${classGrade.percent}% (${classGrade.letterGrade})`;
+
+  document.querySelectorAll(".class-card").forEach((card) => {
+    const courseKey = card.dataset.course;
+    if (!courseKey || !courseData[courseKey]) return;
+    const summary = getCourseGradeSummary(courseKey);
+    const gradeEl = card.querySelector(".course-grade");
+    if (gradeEl) {
+      gradeEl.textContent = `Grade: ${summary.percent}% (${summary.letter})`;
+    }
+  });
 }
 
 async function loadRecords() {
@@ -446,7 +691,8 @@ async function loadRecords() {
     ] = results.map((r) => (Array.isArray(r) ? r : []));
     recordsLoaded = true;
     applyRecordsToCourseData();
-    updateChemistryCard();
+    updateCourseCardsGrades();
+    applyDashboardClassesForRole();
     if (currentCourse !== "home") renderActiveTab();
   } catch (e) {
     console.warn("Could not load records. Serve the app over HTTP (see README).", e);
@@ -454,6 +700,7 @@ async function loadRecords() {
 }
 
 loadRecords();
+updateCourseCardsGrades();
 
 function renderActiveTab() {
   if (currentCourse === "home") return;
@@ -536,10 +783,9 @@ function renderActiveTab() {
   else if (activeTab === "grades") {
     gradesPanel.classList.remove("hidden");
 
-    const records = tabData.records || [];
+    const records = getGradeRecordsForCourse(currentCourse);
 
-    let totalEarned = 0;
-    let totalPossible = 0;
+    const summary = getCourseGradeSummary(currentCourse);
 
     records.forEach((record) => {
       const earned =
@@ -548,9 +794,6 @@ function renderActiveTab() {
           : Number(record.earned ?? 0);
 
       const total = Number(record.total ?? 100);
-
-      totalEarned += earned;
-      totalPossible += total;
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -570,10 +813,7 @@ function renderActiveTab() {
       gradesTableBody.appendChild(tr);
     });
 
-    const overallPercent =
-      totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
-
-    overallGradeEl.textContent = `${overallPercent}%`;
+    overallGradeEl.textContent = `${summary.percent}%`;
   }
 
   // ANNOUNCEMENTS TAB ONLY
@@ -771,7 +1011,8 @@ function buildEventMapForActiveMonth() {
   if (year !== 2026 || month !== 2) return eventMap;
 
   Object.values(courseData).forEach((course) => {
-    course.tabs.modules.schedule.forEach((group) => {
+    const schedule = course.tabs?.modules?.schedule || [];
+    schedule.forEach((group) => {
       const match = group.date.match(/(\d{1,2})$/);
       if (!match) return;
       const day = Number(match[1]);
@@ -969,6 +1210,101 @@ function setChatOpen(isOpen) {
   });
 }
 
+function captureStudentDashboardCards() {
+  if (studentDashboardCards.length) return;
+  studentDashboardCards = Array.from(cards).map((card) => {
+    const iconEl = card.querySelector(".course-icon");
+    const titleEl = card.querySelector(".course-body h3");
+    const lines = card.querySelectorAll(".course-body p");
+    return {
+      icon: iconEl ? iconEl.textContent : "",
+      title: titleEl ? titleEl.textContent : "",
+      teacher: lines[0] ? lines[0].textContent : "",
+      schedule: lines[1] ? lines[1].textContent : "",
+      published: card.closest("#publishedCourseGrid") != null,
+    };
+  });
+}
+
+function applyDashboardClassesForRole() {
+  captureStudentDashboardCards();
+  const source = isTeacherView ? teacherDashboardCards : studentDashboardCards;
+  let publishedCount = 0;
+  let unpublishedCount = 0;
+  cards.forEach((card, index) => {
+    const info = source[index];
+    if (!info) return;
+    const iconEl = card.querySelector(".course-icon");
+    const titleEl = card.querySelector(".course-body h3");
+    const lines = card.querySelectorAll(".course-body p");
+    if (iconEl) iconEl.textContent = info.icon;
+    if (titleEl) titleEl.textContent = info.title;
+    if (lines[0]) lines[0].textContent = info.teacher;
+    if (lines[1]) lines[1].textContent = info.schedule;
+    const shouldBePublished = isTeacherView ? Boolean(info.published) : true;
+    if (shouldBePublished) {
+      publishedCount += 1;
+      if (publishedCourseGrid) publishedCourseGrid.appendChild(card);
+    } else {
+      unpublishedCount += 1;
+      if (unpublishedCourseGrid) unpublishedCourseGrid.appendChild(card);
+    }
+  });
+  if (publishedCoursesHeading) {
+    if (isTeacherView) {
+      publishedCoursesHeading.style.display = "";
+      publishedCoursesHeading.textContent = `Published CS Courses (${publishedCount})`;
+    } else {
+      publishedCoursesHeading.style.display = "none";
+    }
+  }
+  if (unpublishedCoursesHeading && isTeacherView) {
+    unpublishedCoursesHeading.textContent = isTeacherView
+      ? `Unpublished CS Courses (${unpublishedCount})`
+      : `Unpublished Courses (${unpublishedCount})`;
+  }
+  if (unpublishedCoursesGroup) {
+    unpublishedCoursesGroup.style.display = isTeacherView ? "" : "none";
+  }
+  if (publishedCourseDivider) {
+    publishedCourseDivider.style.display = isTeacherView ? "" : "none";
+  }
+}
+
+function setViewRole(teacherMode) {
+  isTeacherView = teacherMode;
+  document.body.classList.toggle("teacher-view", teacherMode);
+  if (homeSubtitle) {
+    homeSubtitle.textContent = `Spring 2026 | ${teacherMode ? "Teacher" : "Student"} View`;
+  }
+  if (profileToggle) {
+    profileToggle.textContent = teacherMode ? "TT" : "SS";
+    profileToggle.setAttribute(
+      "aria-label",
+      teacherMode ? "Teacher profile menu" : "Student profile menu"
+    );
+  }
+  if (teacherViewOption) {
+    teacherViewOption.textContent = teacherMode
+      ? "Switch to Student View"
+      : "Switch to Teacher View";
+  }
+  applyDashboardClassesForRole();
+}
+
+function closeProfileMenu() {
+  if (!profileMenu || !profileToggle) return;
+  profileMenu.classList.add("hidden");
+  profileToggle.setAttribute("aria-expanded", "false");
+}
+
+function toggleProfileMenu() {
+  if (!profileMenu || !profileToggle) return;
+  const willOpen = profileMenu.classList.contains("hidden");
+  profileMenu.classList.toggle("hidden", !willOpen);
+  profileToggle.setAttribute("aria-expanded", String(willOpen));
+}
+
 cards.forEach((card) => {
   card.addEventListener("click", () => {
     renderCourseDetail(card.dataset.course);
@@ -1024,6 +1360,43 @@ courseTabs.forEach((tab) => {
 });
 
 backToHome.addEventListener("click", () => showView("home"));
+
+if (profileToggle && profileMenu) {
+  profileToggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleProfileMenu();
+  });
+
+  profileMenu.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!profileMenu.contains(event.target) && !profileToggle.contains(event.target)) {
+      closeProfileMenu();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeProfileMenu();
+  });
+}
+
+if (teacherViewOption) {
+  teacherViewOption.addEventListener("click", () => {
+    setViewRole(!isTeacherView);
+    closeProfileMenu();
+  });
+}
+
+if (settingsOption) {
+  settingsOption.addEventListener("click", () => {
+    closeProfileMenu();
+  });
+}
+
+setViewRole(false);
 
 toggleButtons.forEach((btn) => {
   btn.addEventListener("click", () => {

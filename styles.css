@@ -24,7 +24,7 @@ body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .app-shell {
@@ -57,6 +57,13 @@ body {
   display: grid;
   place-items: center;
   font-weight: 800;
+}
+
+.profile-trigger {
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
 }
 
 .global-nav nav {
@@ -353,6 +360,74 @@ h1 {
   background: var(--primary-dark);
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.new-course-btn {
+  display: none;
+  border: 1px solid #c8d8dc;
+  background: #f6fbfb;
+  color: #29424a;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.new-course-btn:hover {
+  background: #e9f3f1;
+}
+
+body.teacher-view .new-course-btn {
+  display: inline-block;
+}
+
+.profile-menu-wrap {
+  position: relative;
+}
+
+.sidebar-profile-wrap .profile-menu {
+  top: calc(100% + 10px);
+  left: 0;
+  right: auto;
+}
+
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 170px;
+  border: 1px solid #d0e0dd;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(17, 43, 48, 0.14);
+  padding: 6px;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+}
+
+.profile-menu-item {
+  border: none;
+  background: transparent;
+  color: #29424a;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 8px 9px;
+  cursor: pointer;
+}
+
+.profile-menu-item:hover {
+  background: #edf5f3;
+}
+
 .dashboard-layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -364,11 +439,32 @@ h1 {
   font-size: 1.5rem;
 }
 
+.courses-group + .courses-group {
+  margin-top: 18px;
+}
+
+.course-divider {
+  border: 0;
+  border-top: 1px solid #d6e2df;
+  margin: 0 0 12px;
+}
+
 .course-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
   margin-bottom: 14px;
+}
+
+body.teacher-view #publishedCourseGrid,
+body.teacher-view #unpublishedCourseGrid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
+  justify-content: start;
+}
+
+body.teacher-view .course-card .course-body p:first-of-type,
+body.teacher-view .course-card .course-grade {
+  display: none;
 }
 
 .course-card {
@@ -382,9 +478,21 @@ h1 {
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  display: block;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+}
 
+.course-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 72px;
+  background: var(--card-top-bg, linear-gradient(130deg, #d8e8e6, #bcd1cd));
+  z-index: 0;
 }
 
 .course-card:hover {
@@ -396,12 +504,11 @@ h1 {
   justify-content: space-between;
   align-items: flex-start;
   min-height: 72px;
-  width: 100%;
   margin: 0;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  display: block;
-
+  display: flex;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .course-icon {
@@ -426,6 +533,8 @@ h1 {
 
 .course-body {
   padding: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .course-body h3 {
@@ -445,28 +554,28 @@ h1 {
   color: #24444e;
 }
 
-.theme-lagoon .course-top {
-  background: linear-gradient(130deg, #89c8c5, #5ca2ac);
+.theme-lagoon {
+  --card-top-bg: linear-gradient(130deg, #89c8c5, #5ca2ac);
 }
 
-.theme-sunrise .course-top {
-  background: linear-gradient(130deg, #ffd9a8, #f4b181);
+.theme-sunrise {
+  --card-top-bg: linear-gradient(130deg, #ffd9a8, #f4b181);
 }
 
-.theme-fern .course-top {
-  background: linear-gradient(130deg, #acd7b2, #7eb490);
+.theme-fern {
+  --card-top-bg: linear-gradient(130deg, #acd7b2, #7eb490);
 }
 
-.theme-dusk .course-top {
-  background: linear-gradient(130deg, #c6c7f1, #9ea0da);
+.theme-dusk {
+  --card-top-bg: linear-gradient(130deg, #c6c7f1, #9ea0da);
 }
 
-.theme-sky .course-top {
-  background: linear-gradient(130deg, #add7f2, #80bce0);
+.theme-sky {
+  --card-top-bg: linear-gradient(130deg, #add7f2, #80bce0);
 }
 
-.theme-pebble .course-top {
-  background: linear-gradient(130deg, #d7d4cb, #bcb7ac);
+.theme-pebble {
+  --card-top-bg: linear-gradient(130deg, #d7d4cb, #bcb7ac);
 }
 
 .school-feed {
@@ -1185,6 +1294,15 @@ h1 {
   .topbar,
   .page-topbar {
     flex-direction: column;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .sidebar-profile-wrap {
+    display: none;
   }
 
   .calendar-topbar {

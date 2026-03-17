@@ -12,7 +12,23 @@
 <body>
   <div class="app-shell" id="appShell">
     <aside class="global-nav" aria-label="Global navigation">
-      <div class="brand-pill">SS</div>
+      <div class="profile-menu-wrap sidebar-profile-wrap">
+        <button
+          class="brand-pill profile-trigger"
+          id="profileToggle"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="profileMenu"
+          aria-label="Open profile menu"
+        >
+          SS
+        </button>
+        <div class="profile-menu hidden" id="profileMenu" role="menu" aria-label="Profile menu">
+          <button id="teacherViewOption" class="profile-menu-item" type="button" role="menuitem">Switch to Teacher View</button>
+          <button id="settingsOption" class="profile-menu-item" type="button" role="menuitem">Settings</button>
+        </div>
+      </div>
       <nav>
         <a href="#" class="nav-icon active" id="navDashboard" aria-label="Dashboard">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg>
@@ -35,17 +51,24 @@
           <div>
             <p class="eyebrow">SchoolSmart Portal</p>
             <h1>Dashboard</h1>
-            <p class="subtitle">Spring 2026 | Student View</p>
+            <p class="subtitle" id="homeSubtitle">Spring 2026 | Student View</p>
           </div>
-          <button class="help-toggle" id="chatToggle" aria-expanded="false" aria-controls="chatPanel">
-            Open AI Study Helper
-          </button>
+          <div class="topbar-actions">
+            <button class="new-course-btn" id="startNewCourseBtn" type="button">
+              Start a New Course
+            </button>
+            <button class="help-toggle" id="chatToggle" aria-expanded="false" aria-controls="chatPanel">
+              Open AI Study Helper
+            </button>
+          </div>
         </header>
 
         <div class="dashboard-layout">
           <section class="courses-area">
-            <h2>Published Classes (6)</h2>
-            <div class="course-grid">
+            <div class="courses-group" id="publishedCoursesGroup">
+              <h2 id="publishedCoursesHeading">Published Courses (4)</h2>
+              <hr class="course-divider" />
+              <div class="course-grid" id="publishedCourseGrid">
               <button class="course-card theme-lagoon class-card" data-course="chemistry">
                 <div class="course-top">
                   <span class="course-icon">CH</span>
@@ -97,7 +120,13 @@
                   <p class="course-grade">Grade: 90% (A-)</p>
                 </div>
               </button>
+              </div>
+            </div>
 
+            <div class="courses-group" id="unpublishedCoursesGroup">
+              <h2 id="unpublishedCoursesHeading">Unpublished Courses (2)</h2>
+              <hr class="course-divider" />
+              <div class="course-grid" id="unpublishedCourseGrid">
               <button class="course-card theme-sky class-card" data-course="history">
                 <div class="course-top">
                   <span class="course-icon">HI</span>
@@ -123,6 +152,7 @@
                   <p class="course-grade">Grade: 91% (A-)</p>
                 </div>
               </button>
+              </div>
             </div>
           </section>
         </div>
