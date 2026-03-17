@@ -1402,6 +1402,91 @@ body.teacher-view .course-card .course-grade {
   border-bottom: none;
 }
 
+.assignment-review-item {
+  border: 1px solid #d9e6e3;
+  border-radius: 10px;
+  background: #f9fdfc;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.assignment-list .assignment-review-item {
+  border-bottom: 1px solid #d9e6e3;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.review-meta {
+  margin: 4px 0 0;
+  color: #4c656f;
+  font-size: 0.86rem;
+}
+
+.review-missed {
+  border: 1px solid #d5e3e1;
+  background: #eef7f5;
+  color: #31525b;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.review-teacher-note {
+  margin: 8px 0;
+  color: #38545d;
+  font-size: 0.88rem;
+}
+
+.review-details {
+  border-top: 1px dashed #d4e2df;
+  padding-top: 8px;
+}
+
+.review-details summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #2e5562;
+}
+
+.review-questions {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.review-question {
+  border: 1px solid #d9e5e2;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
+
+.review-question.correct {
+  border-left: 4px solid #60a983;
+}
+
+.review-question.wrong {
+  border-left: 4px solid #d07a7a;
+}
+
+.review-question h5 {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.review-question p {
+  margin: 3px 0;
+  font-size: 0.84rem;
+  color: #324c55;
+}
+
 #tabList {
   margin: 0;
   padding-left: 20px;

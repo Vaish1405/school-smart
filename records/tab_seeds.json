@@ -1,0 +1,884 @@
+{
+  "uniqueTabSeedByCourse": {
+    "chemistry": {
+      "assignments": [
+        {
+          "label": "Overdue Assignments",
+          "summary": "Safety and lab prep follow-up",
+          "items": [
+            "Lab station checklist update (was due Mon)",
+            "Goggles compliance form (was due Tue)"
+          ]
+        },
+        {
+          "label": "Current Assignments",
+          "summary": "Due this week",
+          "items": [
+            "Measurement conversion warmup (due Thu)",
+            "Pre-lab question set (due Fri)"
+          ]
+        },
+        {
+          "label": "Past Assignments",
+          "summary": "Submitted items",
+          "items": [
+            "Lab safety contract (submitted)",
+            "Notebook setup check (graded)"
+          ]
+        }
+      ],
+      "announcements": [
+        {
+          "title": "Lab Coat Reminder",
+          "preview": "Bring your lab coat and goggles for Wednesday's activity.",
+          "date": "Mar 14, 2026"
+        },
+        {
+          "title": "Bench Rotation Update",
+          "preview": "Partner benches were updated. Check seating before class.",
+          "date": "Mar 11, 2026"
+        },
+        {
+          "title": "Data Table Template Posted",
+          "preview": "Use the new table format for your first experiment write-up.",
+          "date": "Mar 8, 2026"
+        }
+      ],
+      "files": {
+        "Syllabus": [
+          {
+            "name": "Chemistry Syllabus.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Labs": [
+          {
+            "name": "Lab Rules Sheet.pdf",
+            "type": "PDF"
+          },
+          {
+            "name": "Data Table Template.docx",
+            "type": "DOCX"
+          }
+        ],
+        "Homework": [
+          {
+            "name": "Sig Figs Practice.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Slides": [
+          {
+            "name": "Intro Lab Safety.pptx",
+            "type": "PPTX"
+          }
+        ]
+      },
+      "modules": [
+        {
+          "title": "Week 1",
+          "summary": "Safety and Measurement Basics",
+          "materials": [
+            "Safety Protocol Handout",
+            "Measurement Demo"
+          ],
+          "assignments": [
+            "Safety Contract",
+            "Notebook Template"
+          ],
+          "homework": [
+            "Sig Fig Worksheet"
+          ]
+        },
+        {
+          "title": "Week 2",
+          "summary": "Data Recording",
+          "materials": [
+            "Observation Notes",
+            "Sample Data Tables"
+          ],
+          "assignments": [
+            "Pre-lab Questions"
+          ],
+          "homework": [
+            "Unit Conversion Practice"
+          ]
+        },
+        {
+          "title": "Week 3",
+          "summary": "First Experiment",
+          "materials": [
+            "Procedure Walkthrough",
+            "Report Rubric"
+          ],
+          "assignments": [
+            "Experiment Write-up"
+          ],
+          "homework": [
+            "Graphing Practice"
+          ]
+        }
+      ]
+    },
+    "math": {
+      "assignments": [
+        {
+          "label": "Overdue Assignments",
+          "summary": "Needs immediate action",
+          "items": [
+            "Proof rewrite draft (was due Mon)",
+            "Set notation corrections (was due Tue)"
+          ]
+        },
+        {
+          "label": "Current Assignments",
+          "summary": "Due this week",
+          "items": [
+            "Logic quiz review (due Thu)",
+            "Combinatorics worksheet (due Fri)"
+          ]
+        },
+        {
+          "label": "Past Assignments",
+          "summary": "Completed or submitted",
+          "items": [
+            "Truth table practice (submitted)",
+            "Induction checkpoint (graded)"
+          ]
+        }
+      ],
+      "announcements": [
+        {
+          "title": "Quiz Scope Posted",
+          "preview": "Quiz 4 covers implication, equivalence, and quantifiers.",
+          "date": "Mar 13, 2026"
+        },
+        {
+          "title": "Office Hours Added",
+          "preview": "Extra office hours on Thursday 4:00-5:00 PM.",
+          "date": "Mar 10, 2026"
+        },
+        {
+          "title": "Proof Style Guide",
+          "preview": "A sample direct-proof format is now in Files.",
+          "date": "Mar 7, 2026"
+        }
+      ],
+      "files": {
+        "Syllabus": [
+          {
+            "name": "Discrete Math Syllabus.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Assignments": [
+          {
+            "name": "Proof Set 4.docx",
+            "type": "DOCX"
+          }
+        ],
+        "Homework": [
+          {
+            "name": "Combinatorics HW.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Slides": [
+          {
+            "name": "Logic and Quantifiers.pptx",
+            "type": "PPTX"
+          }
+        ]
+      },
+      "modules": [
+        {
+          "title": "Week 1",
+          "summary": "Logic Foundations",
+          "materials": [
+            "Propositions Notes",
+            "Truth Table Guide"
+          ],
+          "assignments": [
+            "Logic Quiz Prep"
+          ],
+          "homework": [
+            "Truth Table Set"
+          ]
+        },
+        {
+          "title": "Week 2",
+          "summary": "Sets and Functions",
+          "materials": [
+            "Set Operations Notes",
+            "Function Examples"
+          ],
+          "assignments": [
+            "Set Proof Worksheet"
+          ],
+          "homework": [
+            "Set Builder Practice"
+          ]
+        },
+        {
+          "title": "Week 3",
+          "summary": "Proof Techniques",
+          "materials": [
+            "Direct vs Contrapositive",
+            "Induction Template"
+          ],
+          "assignments": [
+            "Induction Checkpoint"
+          ],
+          "homework": [
+            "Proof Revision"
+          ]
+        }
+      ]
+    },
+    "biology": {
+      "assignments": [
+        {
+          "label": "Overdue Assignments",
+          "summary": "Follow-up needed",
+          "items": [
+            "Microscope sketch labels (was due Mon)",
+            "Organelle comparison chart (was due Tue)"
+          ]
+        },
+        {
+          "label": "Current Assignments",
+          "summary": "Due this week",
+          "items": [
+            "Cell membrane diagram (due Thu)",
+            "Lab observation notes (due Fri)"
+          ]
+        },
+        {
+          "label": "Past Assignments",
+          "summary": "Completed or submitted",
+          "items": [
+            "Cell model worksheet (submitted)",
+            "Organelle quiz (graded)"
+          ]
+        }
+      ],
+      "announcements": [
+        {
+          "title": "Microscope Lab Prep",
+          "preview": "Review slide handling before Friday's practical.",
+          "date": "Mar 14, 2026"
+        },
+        {
+          "title": "Cell Cycle Diagram Resource",
+          "preview": "A printable guide is available in Files.",
+          "date": "Mar 9, 2026"
+        },
+        {
+          "title": "Lab Partner Rotation",
+          "preview": "Pairs updated for this week's microscope station.",
+          "date": "Mar 6, 2026"
+        }
+      ],
+      "files": {
+        "Syllabus": [
+          {
+            "name": "Biology 101 Syllabus.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Labs": [
+          {
+            "name": "Microscope Lab Guide.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Homework": [
+          {
+            "name": "Cell Function Practice.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Slides": [
+          {
+            "name": "Cell Organelles Overview.pptx",
+            "type": "PPTX"
+          }
+        ]
+      },
+      "modules": [
+        {
+          "title": "Week 1",
+          "summary": "Cell Structures",
+          "materials": [
+            "Organelle Chart",
+            "Cell Type Comparison"
+          ],
+          "assignments": [
+            "Cell Diagram"
+          ],
+          "homework": [
+            "Membrane Function Questions"
+          ]
+        },
+        {
+          "title": "Week 2",
+          "summary": "Microscopy Skills",
+          "materials": [
+            "Slide Prep Demo",
+            "Microscope Checklist"
+          ],
+          "assignments": [
+            "Lab Observation Log"
+          ],
+          "homework": [
+            "Vocabulary Review"
+          ]
+        },
+        {
+          "title": "Week 3",
+          "summary": "Cell Cycle",
+          "materials": [
+            "Mitosis Notes",
+            "Cell Cycle Animation"
+          ],
+          "assignments": [
+            "Cell Cycle Quiz"
+          ],
+          "homework": [
+            "Cycle Sequence Practice"
+          ]
+        }
+      ]
+    },
+    "literature": {
+      "assignments": [
+        {
+          "label": "Overdue Assignments",
+          "summary": "Revision needed",
+          "items": [
+            "Quote integration pass (was due Mon)",
+            "Theme draft polish (was due Tue)"
+          ]
+        },
+        {
+          "label": "Current Assignments",
+          "summary": "Due this week",
+          "items": [
+            "Narrative voice paragraph (due Thu)",
+            "Short reflection response (due Fri)"
+          ]
+        },
+        {
+          "label": "Past Assignments",
+          "summary": "Completed or submitted",
+          "items": [
+            "Reading annotation set (submitted)",
+            "Theme analysis (graded)"
+          ]
+        }
+      ],
+      "announcements": [
+        {
+          "title": "Discussion Prompt 5",
+          "preview": "Prepare one passage on point of view for seminar.",
+          "date": "Mar 15, 2026"
+        },
+        {
+          "title": "Essay Rubric Updated",
+          "preview": "The rubric now clarifies evidence and analysis criteria.",
+          "date": "Mar 11, 2026"
+        },
+        {
+          "title": "Reading Schedule",
+          "preview": "Chapter breakdown for next week is posted in Files.",
+          "date": "Mar 7, 2026"
+        }
+      ],
+      "files": {
+        "Syllabus": [
+          {
+            "name": "Modern Literature Syllabus.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Assignments": [
+          {
+            "name": "Narrative Voice Prompt.docx",
+            "type": "DOCX"
+          }
+        ],
+        "Reading": [
+          {
+            "name": "Short Fiction Packet.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Slides": [
+          {
+            "name": "Theme and Tone.pptx",
+            "type": "PPTX"
+          }
+        ]
+      },
+      "modules": [
+        {
+          "title": "Week 1",
+          "summary": "Narrative Perspective",
+          "materials": [
+            "POV Handout",
+            "Sample Excerpts"
+          ],
+          "assignments": [
+            "Voice Analysis"
+          ],
+          "homework": [
+            "Annotation Task"
+          ]
+        },
+        {
+          "title": "Week 2",
+          "summary": "Theme Development",
+          "materials": [
+            "Theme Tracker",
+            "Close Reading Notes"
+          ],
+          "assignments": [
+            "Theme Paragraph"
+          ],
+          "homework": [
+            "Reading Reflection"
+          ]
+        },
+        {
+          "title": "Week 3",
+          "summary": "Author Choices",
+          "materials": [
+            "Style Device Guide",
+            "Discussion Notes"
+          ],
+          "assignments": [
+            "Seminar Response"
+          ],
+          "homework": [
+            "Evidence Collection"
+          ]
+        }
+      ]
+    },
+    "history": {
+      "assignments": [
+        {
+          "label": "Overdue Assignments",
+          "summary": "Catch-up tasks",
+          "items": [
+            "Map label corrections (was due Mon)",
+            "Timeline citations (was due Tue)"
+          ]
+        },
+        {
+          "label": "Current Assignments",
+          "summary": "Due this week",
+          "items": [
+            "Primary source analysis (due Thu)",
+            "Debate claim sheet (due Fri)"
+          ]
+        },
+        {
+          "label": "Past Assignments",
+          "summary": "Completed or submitted",
+          "items": [
+            "Trade route map (submitted)",
+            "Source comparison (graded)"
+          ]
+        }
+      ],
+      "announcements": [
+        {
+          "title": "Debate Teams Posted",
+          "preview": "Check your team assignment for Thursday's debate.",
+          "date": "Mar 14, 2026"
+        },
+        {
+          "title": "Archive Source Packet",
+          "preview": "New source packet uploaded under Files.",
+          "date": "Mar 10, 2026"
+        },
+        {
+          "title": "Map Quiz Format",
+          "preview": "Map quiz includes route labeling and short response.",
+          "date": "Mar 8, 2026"
+        }
+      ],
+      "files": {
+        "Syllabus": [
+          {
+            "name": "Global History Syllabus.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Assignments": [
+          {
+            "name": "Source Analysis Template.docx",
+            "type": "DOCX"
+          }
+        ],
+        "Homework": [
+          {
+            "name": "Trade Network Questions.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Slides": [
+          {
+            "name": "Silk Road and Exchange.pptx",
+            "type": "PPTX"
+          }
+        ]
+      },
+      "modules": [
+        {
+          "title": "Week 1",
+          "summary": "Trade Networks",
+          "materials": [
+            "Silk Road Map",
+            "Exchange Notes"
+          ],
+          "assignments": [
+            "Route Map"
+          ],
+          "homework": [
+            "Trade Impact Questions"
+          ]
+        },
+        {
+          "title": "Week 2",
+          "summary": "Primary Sources",
+          "materials": [
+            "Source Evaluation Guide",
+            "Bias Checklist"
+          ],
+          "assignments": [
+            "Source Comparison"
+          ],
+          "homework": [
+            "Evidence Notes"
+          ]
+        },
+        {
+          "title": "Week 3",
+          "summary": "Debate and Argument",
+          "materials": [
+            "Claim Structure Sheet",
+            "Counterargument Guide"
+          ],
+          "assignments": [
+            "Debate Prep"
+          ],
+          "homework": [
+            "Argument Revision"
+          ]
+        }
+      ]
+    },
+    "programming": {
+      "assignments": [
+        {
+          "label": "Overdue Assignments",
+          "summary": "Fixes needed",
+          "items": [
+            "Loop trace corrections (was due Mon)",
+            "Variable naming cleanup (was due Tue)"
+          ]
+        },
+        {
+          "label": "Current Assignments",
+          "summary": "Due this week",
+          "items": [
+            "Nested loop challenge (due Thu)",
+            "Debugging reflection (due Fri)"
+          ]
+        },
+        {
+          "label": "Past Assignments",
+          "summary": "Completed or submitted",
+          "items": [
+            "Loop practice set (submitted)",
+            "Tracing worksheet (graded)"
+          ]
+        }
+      ],
+      "announcements": [
+        {
+          "title": "Challenge Set Released",
+          "preview": "New practice problems for while-loops are now available.",
+          "date": "Mar 14, 2026"
+        },
+        {
+          "title": "Lab Time Reminder",
+          "preview": "Bring your laptop for live debugging lab on Tuesday.",
+          "date": "Mar 10, 2026"
+        },
+        {
+          "title": "Style Guide Update",
+          "preview": "Naming conventions were updated in the coding guide.",
+          "date": "Mar 6, 2026"
+        }
+      ],
+      "files": {
+        "Syllabus": [
+          {
+            "name": "Intro Programming Syllabus.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Assignments": [
+          {
+            "name": "Loop Challenge Set.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Homework": [
+          {
+            "name": "Trace Practice Worksheet.pdf",
+            "type": "PDF"
+          }
+        ],
+        "Slides": [
+          {
+            "name": "Loops and Conditionals.pptx",
+            "type": "PPTX"
+          }
+        ]
+      },
+      "modules": [
+        {
+          "title": "Week 1",
+          "summary": "Loop Basics",
+          "materials": [
+            "For Loop Notes",
+            "Iteration Demo"
+          ],
+          "assignments": [
+            "Loop Practice Set"
+          ],
+          "homework": [
+            "Trace Table Exercise"
+          ]
+        },
+        {
+          "title": "Week 2",
+          "summary": "Debugging",
+          "materials": [
+            "Common Bugs Sheet",
+            "Debugger Walkthrough"
+          ],
+          "assignments": [
+            "Tracing Worksheet"
+          ],
+          "homework": [
+            "Bug Fix Practice"
+          ]
+        },
+        {
+          "title": "Week 3",
+          "summary": "Problem Decomposition",
+          "materials": [
+            "Pseudocode Guide",
+            "Function Planning"
+          ],
+          "assignments": [
+            "Mini Coding Challenge"
+          ],
+          "homework": [
+            "Refactor Exercise"
+          ]
+        }
+      ]
+    }
+  },
+  "defaultModulesScheduleByCourse": {
+    "chemistry": [
+      {
+        "date": "Monday, March 18",
+        "entries": [
+          {
+            "assignment": "Lab Safety Contract",
+            "due": "11:59 PM"
+          }
+        ]
+      },
+      {
+        "date": "Wednesday, March 20",
+        "entries": [
+          {
+            "assignment": "Lab Notebook Template",
+            "due": "11:59 PM"
+          }
+        ]
+      },
+      {
+        "date": "Tuesday, March 25",
+        "entries": [
+          {
+            "assignment": "Measurement and Significant Figures Quiz",
+            "due": "5:00 PM"
+          }
+        ]
+      },
+      {
+        "date": "Thursday, March 27",
+        "entries": [
+          {
+            "assignment": "First Experiment Write-up",
+            "due": "11:59 PM"
+          }
+        ]
+      }
+    ],
+    "math": [
+      {
+        "date": "Tuesday, March 19",
+        "entries": [
+          {
+            "assignment": "Logic Quiz Review",
+            "due": "4:00 PM"
+          }
+        ]
+      },
+      {
+        "date": "Thursday, March 21",
+        "entries": [
+          {
+            "assignment": "Combinatorics Worksheet",
+            "due": "11:59 PM"
+          }
+        ]
+      },
+      {
+        "date": "Monday, March 24",
+        "entries": [
+          {
+            "assignment": "Induction Practice",
+            "due": "8:00 PM"
+          }
+        ]
+      }
+    ],
+    "biology": [
+      {
+        "date": "Monday, March 17",
+        "entries": [
+          {
+            "assignment": "Cell Membrane Diagram",
+            "due": "3:00 PM"
+          }
+        ]
+      },
+      {
+        "date": "Wednesday, March 19",
+        "entries": [
+          {
+            "assignment": "Lab Observation Notes",
+            "due": "11:59 PM"
+          }
+        ]
+      },
+      {
+        "date": "Friday, March 21",
+        "entries": [
+          {
+            "assignment": "Cell Cycle Checkpoint",
+            "due": "2:00 PM"
+          }
+        ]
+      }
+    ],
+    "literature": [
+      {
+        "date": "Tuesday, March 18",
+        "entries": [
+          {
+            "assignment": "Narrative Voice Paragraph",
+            "due": "9:00 PM"
+          }
+        ]
+      },
+      {
+        "date": "Thursday, March 20",
+        "entries": [
+          {
+            "assignment": "Reflection Response",
+            "due": "11:59 PM"
+          }
+        ]
+      },
+      {
+        "date": "Monday, March 24",
+        "entries": [
+          {
+            "assignment": "Seminar Prep Notes",
+            "due": "8:30 PM"
+          }
+        ]
+      }
+    ],
+    "history": [
+      {
+        "date": "Wednesday, March 19",
+        "entries": [
+          {
+            "assignment": "Primary Source Analysis",
+            "due": "6:00 PM"
+          }
+        ]
+      },
+      {
+        "date": "Friday, March 21",
+        "entries": [
+          {
+            "assignment": "Debate Claim Sheet",
+            "due": "11:59 PM"
+          }
+        ]
+      },
+      {
+        "date": "Tuesday, March 25",
+        "entries": [
+          {
+            "assignment": "Route Timeline Revision",
+            "due": "7:00 PM"
+          }
+        ]
+      }
+    ],
+    "programming": [
+      {
+        "date": "Monday, March 17",
+        "entries": [
+          {
+            "assignment": "Nested Loop Challenge",
+            "due": "11:59 PM"
+          }
+        ]
+      },
+      {
+        "date": "Wednesday, March 19",
+        "entries": [
+          {
+            "assignment": "Debugging Reflection",
+            "due": "10:00 PM"
+          }
+        ]
+      },
+      {
+        "date": "Friday, March 21",
+        "entries": [
+          {
+            "assignment": "Mini Coding Challenge",
+            "due": "11:59 PM"
+          }
+        ]
+      }
+    ]
+  }
+}
