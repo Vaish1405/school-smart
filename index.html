@@ -229,12 +229,12 @@
     <aside class="chat-panel" id="chatPanel" aria-hidden="true">
       <div class="chat-header">
         <h3>AI Study Helper</h3>
-        <p>Ask about this current page</p>
+        <p>Custom chat UI backed by IBM agent API</p>
       </div>
 
       <div class="chat-messages" id="chatMessages">
         <div class="message bot">
-          Hi! Open a class card and ask me questions about that page's content.
+          Hi! I am your AI Study Helper. Ask about classes, modules, assignments, grades, or calendar.
         </div>
       </div>
 
@@ -243,7 +243,7 @@
         <input
           id="chatInput"
           type="text"
-          placeholder="Example: What is due this week?"
+          placeholder="Type your question..."
           autocomplete="off"
           required
         />
@@ -252,6 +252,32 @@
     </aside>
   </div>
 
+  <div id="ibm-root" aria-label="IBM chat assistant"></div>
+
   <script src="script.js"></script>
+  <script>
+    window.wxOConfiguration = {
+      orchestrationID: "74a2f9840fef429b8a3dfe1ca89069b1_e7380f9b-2bfd-4aa2-b4d8-0e9382c8c76d",
+      hostURL: "https://au-syd.watson-orchestrate.cloud.ibm.com",
+      rootElementID: "ibm-root",
+      deploymentPlatform: "ibmcloud",
+      crn: "crn:v1:bluemix:public:watsonx-orchestrate:au-syd:a/74a2f9840fef429b8a3dfe1ca89069b1:e7380f9b-2bfd-4aa2-b4d8-0e9382c8c76d::",
+      chatOptions: {
+        agentId: "f39a2000-f7c6-49c4-8018-6c175715f4ff",
+        agentEnvironmentId: "9c35af4e-5afc-41b6-9db7-535c5d88ae9b",
+      },
+    };
+
+    setTimeout(function () {
+      const script = document.createElement("script");
+      script.src = `${window.wxOConfiguration.hostURL}/wxochat/wxoLoader.js?embed=true`;
+      script.addEventListener("load", function () {
+        if (window.wxoLoader && typeof window.wxoLoader.init === "function") {
+          window.wxoLoader.init();
+        }
+      });
+      document.head.appendChild(script);
+    }, 0);
+  </script>
 </body>
 </html>
