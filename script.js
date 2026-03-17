@@ -39,8 +39,15 @@ const analyticsStudentSelect = document.getElementById("analyticsStudentSelect")
 const gradePieChart = document.getElementById("gradePieChart");
 const studentBarChart = document.getElementById("studentBarChart");
 const trendLineChart = document.getElementById("trendLineChart");
+const assignmentLevelCard = document.getElementById("assignmentLevelCard");
+const topicBarChart = document.getElementById("topicBarChart");
+const topicPerformanceCard = document.getElementById("topicPerformanceCard");
 const gradePieLegend = document.getElementById("gradePieLegend");
 const analyticsInsights = document.getElementById("analyticsInsights");
+const gradePieTitle = document.getElementById("gradePieTitle");
+const studentBarTitle = document.getElementById("studentBarTitle");
+const trendLineTitle = document.getElementById("trendLineTitle");
+const topicBarTitle = document.getElementById("topicBarTitle");
 
 const filesPanel = document.getElementById("filesPanel");
 const folderList = document.getElementById("folderList");
@@ -60,6 +67,9 @@ const unpublishedCourseGrid = document.getElementById("unpublishedCourseGrid");
 const unpublishedCoursesGroup = document.getElementById("unpublishedCoursesGroup");
 const publishedCourseDivider = document.querySelector("#publishedCoursesGroup .course-divider");
 const analyticsPanel = document.getElementById("analyticsPanel");
+const activeUserNameHome = document.getElementById("activeUserNameHome");
+const activeUserNameCalendar = document.getElementById("activeUserNameCalendar");
+const activeUserNameDetail = document.getElementById("activeUserNameDetail");
 
 const toggleButtons = [
   document.getElementById("chatToggle"),
@@ -770,8 +780,11 @@ function getStudentName(studentId) {
 function populateAnalyticsFilters() {
   if (!analyticsClassSelect || !analyticsStudentSelect) return;
 
+  const activeCourseClassId = courseKeyToClassId[currentCourse] || analyticsClassId;
   const enrolledClassIds = Array.from(new Set(recordsEnrollments.map((e) => e.classId)));
-  const classes = recordsClasses.filter((c) => enrolledClassIds.includes(c.id));
+  const classes = isTeacherView
+    ? recordsClasses.filter((c) => enrolledClassIds.includes(c.id))
+    : recordsClasses.filter((c) => c.id === activeCourseClassId);
 
   analyticsClassSelect.innerHTML = "";
   classes.forEach((cls) => {
@@ -786,10 +799,11 @@ function populateAnalyticsFilters() {
   }
   analyticsClassSelect.value = analyticsClassId;
 
-  const studentIdsForClass = recordsEnrollments
-    .filter((e) => e.classId === analyticsClassId)
-    .map((e) => e.studentId);
-  const classStudents = recordsStudents.filter((s) => studentIdsForClass.includes(s.id));
+  const classStudents = isTeacherView
+    ? recordsStudents.filter((s) =>
+        recordsEnrollments.some((e) => e.classId === analyticsClassId && e.studentId === s.id)
+      )
+    : recordsStudents.filter((s) => s.id === currentStudentId);
 
   analyticsStudentSelect.innerHTML = "";
   classStudents.forEach((student) => {
@@ -842,7 +856,7 @@ function drawPieChart(canvas, values, colors) {
   ctx.fill();
 }
 
-function drawBarChart(canvas, labels, values) {
+function drawBarChart(canvas, labels, values, options = {}) {
   const { ctx, width, height } = setupCanvas(canvas);
   const left = 40;
   const right = 16;
@@ -859,7 +873,8 @@ function drawBarChart(canvas, labels, values) {
   ctx.lineTo(left + chartW, top + chartH);
   ctx.stroke();
 
-  const max = 100;
+  const max = Number(options.max || 100);
+  const barColor = options.color || "#6aa5af";
   const slot = chartW / Math.max(values.length, 1);
   const barW = Math.max(16, slot * 0.55);
 
@@ -867,7 +882,7 @@ function drawBarChart(canvas, labels, values) {
     const x = left + i * slot + (slot - barW) / 2;
     const h = Math.max(0, (v / max) * chartH);
     const y = top + chartH - h;
-    ctx.fillStyle = "#6aa5af";
+    ctx.fillStyle = barColor;
     ctx.fillRect(x, y, barW, h);
     ctx.fillStyle = "#2f4c56";
     ctx.font = "11px Nunito";
@@ -878,7 +893,7 @@ function drawBarChart(canvas, labels, values) {
   });
 }
 
-function drawTrendChart(canvas, labels, studentValues, classValues) {
+function drawTrendChart(canvas, labels, studentValues, classValues, legendA = "Class Avg", legendB = "Student") {
   const { ctx, width, height } = setupCanvas(canvas);
   const left = 42;
   const right = 18;
@@ -959,11 +974,11 @@ function drawTrendChart(canvas, labels, studentValues, classValues) {
   ctx.fillStyle = "#38535e";
   ctx.fillRect(left + 8, top + 6, 10, 10);
   ctx.fillStyle = "#2f4c56";
-  ctx.fillText("Class Avg", left + 24, top + 15);
+  ctx.fillText(legendA, left + 24, top + 15);
   ctx.fillStyle = "#2f8d71";
   ctx.fillRect(left + 108, top + 6, 10, 10);
   ctx.fillStyle = "#2f4c56";
-  ctx.fillText("Student", left + 124, top + 15);
+  ctx.fillText(legendB, left + 124, top + 15);
 }
 
 function buildGradeDistribution(classId) {
@@ -1001,27 +1016,120 @@ function buildAssignmentSeries(classId, studentId) {
   return { labels, assignments, studentValues, classValues };
 }
 
-function renderAnalyticsInsights(classId, studentId, series) {
-  analyticsInsights.innerHTML = "";
-  const studentGrade = recordsClassGrades.find((g) => g.classId === classId && g.studentId === studentId);
-  const overall = studentGrade ? `${studentGrade.percent}% (${studentGrade.letterGrade})` : "Not available";
-  const missingCount = series.studentValues.filter((v) => v === 0).length;
-
-  let weakestIndex = 0;
-  series.studentValues.forEach((value, idx) => {
-    if (value < series.studentValues[weakestIndex]) weakestIndex = idx;
+function buildStudentOverallSeries(classId) {
+  const assignments = getClassAssignments(classId);
+  const studentIds = recordsEnrollments.filter((e) => e.classId === classId).map((e) => e.studentId);
+  const labels = studentIds.map((id) => {
+    const s = recordsStudents.find((row) => row.id === id);
+    return s ? `${s.firstName}` : id;
   });
-  const weakest = series.assignments[weakestIndex];
-  const weakestScore = series.studentValues[weakestIndex] || 0;
+  const values = studentIds.map((studentId) => {
+    const grades = recordsAssignmentGrades.filter(
+      (g) => g.studentId === studentId && assignments.some((a) => a.id === g.assignmentId)
+    );
+    const earned = grades.reduce((sum, g) => sum + Number(g.pointsEarned || 0), 0);
+    const possible = assignments.reduce((sum, a) => sum + Number(a.pointsPossible || 0), 0) || 1;
+    return Math.round((earned / possible) * 100);
+  });
+  return { labels, values };
+}
 
-  const messages = [
-    `${getStudentName(studentId)} current overall grade: ${overall}.`,
-    `Missing or unsubmitted assignments: ${missingCount}.`,
-    weakest
-      ? `Lowest assignment performance: "${weakest.title}" at ${weakestScore}%.`
-      : "No assignment analytics available yet.",
-    "Goal suggestion: Raise the lowest assignment category by 10-15% to improve overall trend.",
-  ];
+function buildTopicSeries(classId, studentId, teacherMode) {
+  const assignments = getClassAssignments(classId);
+  const topicMap = {};
+
+  assignments.forEach((assignment) => {
+    const topic = String(assignment.type || "other")
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+    if (!topicMap[topic]) topicMap[topic] = { earned: 0, possible: 0 };
+
+    if (teacherMode) {
+      const rows = recordsAssignmentGrades.filter(
+        (g) => g.assignmentId === assignment.id && g.pointsEarned != null
+      );
+      const avg = rows.length
+        ? rows.reduce((sum, r) => sum + Number(r.pointsEarned || 0), 0) / rows.length
+        : 0;
+      topicMap[topic].earned += avg;
+      topicMap[topic].possible += Number(assignment.pointsPossible || 0);
+    } else {
+      const row = recordsAssignmentGrades.find(
+        (g) => g.assignmentId === assignment.id && g.studentId === studentId
+      );
+      topicMap[topic].earned += Number(row?.pointsEarned || 0);
+      topicMap[topic].possible += Number(assignment.pointsPossible || 0);
+    }
+  });
+
+  const labels = Object.keys(topicMap);
+  const values = labels.map((label) => {
+    const item = topicMap[label];
+    return item.possible > 0 ? Math.round((item.earned / item.possible) * 100) : 0;
+  });
+
+  return { labels, values };
+}
+
+function renderAnalyticsInsights(classId, studentId, series, topicSeries) {
+  analyticsInsights.innerHTML = "";
+  let messages = [];
+
+  if (!isTeacherView) {
+    const studentGrade = recordsClassGrades.find((g) => g.classId === classId && g.studentId === studentId);
+    const overall = studentGrade ? `${studentGrade.percent}% (${studentGrade.letterGrade})` : "Not available";
+    const missingCount = series.studentValues.filter((v) => v === 0).length;
+    let weakestIndex = 0;
+    series.studentValues.forEach((value, idx) => {
+      if (value < series.studentValues[weakestIndex]) weakestIndex = idx;
+    });
+    const weakest = series.assignments[weakestIndex];
+    const weakestScore = series.studentValues[weakestIndex] || 0;
+    messages = [
+      `${getStudentName(studentId)} current overall grade: ${overall}.`,
+      `Missing or unsubmitted assignments: ${missingCount}.`,
+      weakest
+        ? `Lowest assignment performance: "${weakest.title}" at ${weakestScore}%.`
+        : "No assignment analytics available yet.",
+      topicSeries.labels.length
+        ? `Topic to focus this week: ${topicSeries.labels[topicSeries.values.indexOf(Math.min(...topicSeries.values))]}.`
+        : "Topic performance will appear as more graded work is available.",
+    ];
+  } else {
+    const studentSeries = buildStudentOverallSeries(classId);
+    const classAverage = studentSeries.values.length
+      ? Math.round(studentSeries.values.reduce((a, b) => a + b, 0) / studentSeries.values.length)
+      : 0;
+    let lowestStudentIdx = 0;
+    studentSeries.values.forEach((v, idx) => {
+      if (v < studentSeries.values[lowestStudentIdx]) lowestStudentIdx = idx;
+    });
+    let weakestAssignmentIdx = 0;
+    series.classValues.forEach((v, idx) => {
+      if (v < series.classValues[weakestAssignmentIdx]) weakestAssignmentIdx = idx;
+    });
+    const weakestAssignment = series.assignments[weakestAssignmentIdx];
+    const weakestTopicIdx = topicSeries.values.length
+      ? topicSeries.values.indexOf(Math.min(...topicSeries.values))
+      : -1;
+    const weakestTopic = weakestTopicIdx >= 0 ? topicSeries.labels[weakestTopicIdx] : "N/A";
+    const missingRows = recordsAssignmentGrades.filter(
+      (g) => g.pointsEarned == null && series.assignments.some((a) => a.id === g.assignmentId)
+    ).length;
+    const totalRows = series.assignments.length * Math.max(1, studentSeries.labels.length);
+    const missingRate = Math.round((missingRows / totalRows) * 100);
+
+    messages = [
+      `Class average performance: ${classAverage}%. Lowest student group is ${studentSeries.labels[lowestStudentIdx] || "N/A"} at ${studentSeries.values[lowestStudentIdx] || 0}%.`,
+      weakestAssignment
+        ? `Weakest assignment-level outcome: "${weakestAssignment.title}" with class average ${series.classValues[weakestAssignmentIdx]}%.`
+        : "Assignment-level trend needs more data.",
+      `Topic with lowest mastery: ${weakestTopic}. Missing submission rate: ${missingRate}%.`,
+      `Instructor suggestion: Add a 10-minute mini-lesson and worked example on ${weakestTopic}, then assign a short formative check in the next class.`,
+      "Instructor suggestion: Group students below 70% into a targeted support station and provide scaffolded practice.",
+    ];
+  }
 
   messages.forEach((text) => {
     const li = document.createElement("li");
@@ -1031,34 +1139,88 @@ function renderAnalyticsInsights(classId, studentId, series) {
 }
 
 function renderAnalytics() {
-  if (!analyticsPanel || !gradePieChart || !studentBarChart || !trendLineChart) return;
+  if (!analyticsPanel || !gradePieChart || !studentBarChart || !trendLineChart || !topicBarChart) return;
 
   if (!recordsLoaded) {
     drawPieChart(gradePieChart, [1], ["#d8e6e9"]);
     drawBarChart(studentBarChart, ["A1", "A2"], [0, 0]);
     drawTrendChart(trendLineChart, ["A1", "A2"], [0, 0], [0, 0]);
+    drawBarChart(topicBarChart, ["Topic"], [0]);
     if (gradePieLegend) gradePieLegend.innerHTML = "<span><i style='background:#d8e6e9'></i>Loading records...</span>";
     return;
   }
 
-  const bins = buildGradeDistribution(analyticsClassId);
-  const pieValues = [bins.A, bins.B, bins.C, bins.Df];
-  const pieColors = ["#4aa77a", "#62b3c8", "#e9b46b", "#d57a7a"];
-  drawPieChart(gradePieChart, pieValues, pieColors);
+  const series = buildAssignmentSeries(analyticsClassId, analyticsStudentId);
+  const topicSeries = buildTopicSeries(analyticsClassId, analyticsStudentId, isTeacherView);
 
-  if (gradePieLegend) {
-    gradePieLegend.innerHTML = "";
-    ["A (90-100)", "B (80-89)", "C (70-79)", "D/F (<70)"].forEach((label, idx) => {
-      const pill = document.createElement("span");
-      pill.innerHTML = `<i style="background:${pieColors[idx]}"></i>${label}: ${pieValues[idx]}`;
-      gradePieLegend.appendChild(pill);
-    });
+  if (!isTeacherView) {
+    if (assignmentLevelCard) assignmentLevelCard.classList.remove("hidden");
+    if (topicPerformanceCard) topicPerformanceCard.classList.add("hidden");
+    analyticsStudentId = currentStudentId;
+    if (analyticsStudentSelect) analyticsStudentSelect.disabled = true;
+    if (analyticsClassSelect) analyticsClassSelect.disabled = true;
+
+    const completed = series.studentValues.filter((v) => v > 0).length;
+    const missing = series.studentValues.filter((v) => v === 0).length;
+    drawPieChart(gradePieChart, [completed, missing || 0], ["#4aa77a", "#d57a7a"]);
+
+    if (gradePieLegend) {
+      gradePieLegend.innerHTML = "";
+      ["Completed", "Missing"].forEach((label, idx) => {
+        const val = idx === 0 ? completed : missing;
+        const color = idx === 0 ? "#4aa77a" : "#d57a7a";
+        const pill = document.createElement("span");
+        pill.innerHTML = `<i style="background:${color}"></i>${label}: ${val}`;
+        gradePieLegend.appendChild(pill);
+      });
+    }
+
+    if (gradePieTitle) gradePieTitle.textContent = "Your Completion Snapshot";
+    if (studentBarTitle) studentBarTitle.textContent = "Your Assignment Scores";
+    if (trendLineTitle) trendLineTitle.textContent = "Assignment Trend: You vs Class Average";
+    if (topicBarTitle) topicBarTitle.textContent = "Your Topic-wise Performance";
+
+    drawBarChart(studentBarChart, series.labels, series.studentValues, { color: "#5fa7a5" });
+    drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues, "Class Avg", "You");
+  } else {
+    if (assignmentLevelCard) assignmentLevelCard.classList.add("hidden");
+    if (topicPerformanceCard) topicPerformanceCard.classList.remove("hidden");
+    if (analyticsStudentSelect) analyticsStudentSelect.disabled = false;
+    if (analyticsClassSelect) analyticsClassSelect.disabled = false;
+
+    const bins = buildGradeDistribution(analyticsClassId);
+    const pieValues = [bins.A, bins.B, bins.C, bins.Df];
+    const pieColors = ["#4aa77a", "#62b3c8", "#e9b46b", "#d57a7a"];
+    drawPieChart(gradePieChart, pieValues, pieColors);
+
+    if (gradePieLegend) {
+      gradePieLegend.innerHTML = "";
+      ["A (90-100)", "B (80-89)", "C (70-79)", "D/F (<70)"].forEach((label, idx) => {
+        const pill = document.createElement("span");
+        pill.innerHTML = `<i style="background:${pieColors[idx]}"></i>${label}: ${pieValues[idx]}`;
+        gradePieLegend.appendChild(pill);
+      });
+    }
+
+    if (gradePieTitle) gradePieTitle.textContent = "Grade Distribution (Class)";
+    if (studentBarTitle) studentBarTitle.textContent = "Student-level Performance";
+    if (trendLineTitle) trendLineTitle.textContent = "Assignment-level Class Performance";
+    if (topicBarTitle) topicBarTitle.textContent = "Topic-wise Class Performance";
+
+    const studentSeries = buildStudentOverallSeries(analyticsClassId);
+    drawBarChart(studentBarChart, studentSeries.labels, studentSeries.values, { color: "#4d9aa8" });
+    drawTrendChart(
+      trendLineChart,
+      series.labels,
+      series.classValues,
+      new Array(series.classValues.length).fill(80),
+      "Class Avg",
+      "Target 80%"
+    );
+    drawBarChart(topicBarChart, topicSeries.labels, topicSeries.values, { color: "#7e9cb6" });
   }
 
-  const series = buildAssignmentSeries(analyticsClassId, analyticsStudentId);
-  drawBarChart(studentBarChart, series.labels, series.studentValues);
-  drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues);
-  renderAnalyticsInsights(analyticsClassId, analyticsStudentId, series);
+  renderAnalyticsInsights(analyticsClassId, analyticsStudentId, series, topicSeries);
 }
 updateCourseCardsGrades();
 
@@ -1644,6 +1806,17 @@ function applyDashboardClassesForRole() {
 function setViewRole(teacherMode) {
   isTeacherView = teacherMode;
   document.body.classList.toggle("teacher-view", teacherMode);
+  const teacherName = recordsTeachers[0]
+    ? `${recordsTeachers[0].title || ""} ${recordsTeachers[0].firstName || ""} ${recordsTeachers[0].lastName || ""}`.trim()
+    : "Dr. Nina Verma";
+  const student = recordsStudents.find((s) => s.id === currentStudentId);
+  const studentName = student ? `${student.firstName} ${student.lastName}` : "Jordan Chen";
+  const activeName = teacherMode ? teacherName : studentName;
+
+  [activeUserNameHome, activeUserNameCalendar, activeUserNameDetail].forEach((el) => {
+    if (el) el.textContent = activeName;
+  });
+
   if (homeSubtitle) {
     homeSubtitle.textContent = `Spring 2026 | ${teacherMode ? "Teacher" : "Student"} View`;
   }
@@ -1660,6 +1833,10 @@ function setViewRole(teacherMode) {
       : "Switch to Teacher View";
   }
   applyDashboardClassesForRole();
+  if (activeTab === "analytics") {
+    populateAnalyticsFilters();
+    renderAnalytics();
+  }
 }
 
 function closeProfileMenu() {

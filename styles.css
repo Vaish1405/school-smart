@@ -362,28 +362,39 @@ h1 {
 
 .topbar-actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: 10px;
+  max-width: none;
 }
 
-.new-course-btn {
-  display: none;
-  border: 1px solid #c8d8dc;
-  background: #f6fbfb;
-  color: #29424a;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-family: inherit;
-  font-weight: 700;
-  cursor: pointer;
+.topbar-actions .user-badge {
+  flex: 0 0 auto;
+  text-align: center;
+  align-self: flex-start;
 }
 
-.new-course-btn:hover {
-  background: #e9f3f1;
+.user-badge {
+  border: 1px solid #c9d9dd;
+  background: #f5fbfc;
+  color: #2e4b55;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 12px;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-body.teacher-view .new-course-btn {
-  display: inline-block;
+.calendar-topbar {
+  flex-wrap: wrap;
+}
+
+.calendar-topbar .user-badge {
+  margin-left: auto;
 }
 
 .profile-menu-wrap {
@@ -467,6 +478,19 @@ body.teacher-view .new-course-btn {
   color: #2f444d;
 }
 
+.analytics-controls select:disabled {
+  background: #f0f5f4;
+  color: #6c8188;
+}
+
+body:not(.teacher-view) .analytics-controls {
+  display: none;
+}
+
+body.teacher-view #analyticsStudentFilter {
+  display: none;
+}
+
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -500,6 +524,10 @@ body.teacher-view .new-course-btn {
 
 #trendLineChart {
   max-height: 200px;
+}
+
+#topicBarChart {
+  max-height: 145px;
 }
 
 .analytics-wide {
@@ -1412,6 +1440,12 @@ body.teacher-view .course-card .course-grade {
   .topbar-actions {
     width: 100%;
     flex-wrap: wrap;
+    max-width: none;
+  }
+
+  .topbar-actions .user-badge {
+    text-align: center;
+    align-self: flex-start;
   }
 
   .sidebar-profile-wrap {

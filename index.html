@@ -54,9 +54,7 @@
             <p class="subtitle" id="homeSubtitle">Spring 2026 | Student View</p>
           </div>
           <div class="topbar-actions">
-            <button class="new-course-btn" id="startNewCourseBtn" type="button">
-              Start a New Course
-            </button>
+            <span class="user-badge" id="activeUserNameHome">Jordan Chen</span>
             <button class="help-toggle" id="chatToggle" aria-expanded="false" aria-controls="chatPanel">
               Open AI Study Helper
             </button>
@@ -166,6 +164,7 @@
             <button class="calendar-btn" id="calendarNext" aria-label="Next month">&rarr;</button>
             <h1 id="calendarMonthLabel">March 2026</h1>
           </div>
+          <span class="user-badge" id="activeUserNameCalendar">Jordan Chen</span>
           <div class="calendar-view-switch" aria-label="Calendar view switch">
             <button class="calendar-btn">Week</button>
             <button class="calendar-btn active">Month</button>
@@ -227,9 +226,12 @@
               <h1 id="detailTitle">Course Title</h1>
             </div>
           </div>
-          <button class="help-toggle" id="chatToggleDetail" aria-expanded="false" aria-controls="chatPanel">
-            Open AI Study Helper
-          </button>
+          <div class="topbar-actions">
+            <span class="user-badge" id="activeUserNameDetail">Jordan Chen</span>
+            <button class="help-toggle" id="chatToggleDetail" aria-expanded="false" aria-controls="chatPanel">
+              Open AI Study Helper
+            </button>
+          </div>
         </header>
 
         <section class="course-layout">
@@ -308,7 +310,7 @@
                       Class
                       <select id="analyticsClassSelect"></select>
                     </label>
-                    <label>
+                    <label id="analyticsStudentFilter">
                       Student
                       <select id="analyticsStudentSelect"></select>
                     </label>
@@ -316,19 +318,24 @@
 
                   <article class="analytics-grid">
                     <section class="analytics-card">
-                      <h3>Grade Distribution (Class)</h3>
+                      <h3 id="gradePieTitle">Grade Distribution (Class)</h3>
                       <canvas id="gradePieChart" height="190"></canvas>
                       <div id="gradePieLegend" class="chart-legend"></div>
                     </section>
 
                     <section class="analytics-card">
-                      <h3>Student Assignment Scores</h3>
+                      <h3 id="studentBarTitle">Student Assignment Scores</h3>
                       <canvas id="studentBarChart" height="190"></canvas>
                     </section>
 
-                    <section class="analytics-card analytics-wide">
-                      <h3>Progress Trend: Student vs Class Average</h3>
+                    <section class="analytics-card analytics-wide" id="assignmentLevelCard">
+                      <h3 id="trendLineTitle">Progress Trend: Student vs Class Average</h3>
                       <canvas id="trendLineChart" height="200"></canvas>
+                    </section>
+
+                    <section class="analytics-card analytics-wide" id="topicPerformanceCard">
+                      <h3 id="topicBarTitle">Topic-wise Performance</h3>
+                      <canvas id="topicBarChart" height="145"></canvas>
                     </section>
 
                     <section class="analytics-card analytics-wide">
