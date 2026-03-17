@@ -702,14 +702,6 @@ async function loadRecords() {
 loadRecords();
 updateCourseCardsGrades();
 
-function appendMessage(text, role) {
-  const bubble = document.createElement("div");
-  bubble.className = `message ${role}`;
-  bubble.textContent = text;
-  chatMessages.appendChild(bubble);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
 function renderActiveTab() {
   if (currentCourse === "home") return;
 
@@ -1160,6 +1152,12 @@ function showView(view) {
   }
 }
 
+function currentViewName() {
+  if (!calendarView.classList.contains("hidden")) return "calendar";
+  if (!detailView.classList.contains("hidden")) return "course-detail";
+  return "home";
+}
+
 function activeContextText() {
   if (!calendarView.classList.contains("hidden")) {
     return calendarView.innerText.toLowerCase();
@@ -1170,48 +1168,36 @@ function activeContextText() {
     : detailView.innerText.toLowerCase();
 }
 
-function answerFromContext(question) {
-  const q = question.toLowerCase();
+function appendMessage(text, role) {
+  const bubble = document.createElement("div");
+  bubble.className = `message ${role}`;
+  bubble.textContent = text;
+  chatMessages.appendChild(bubble);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
-  if (!calendarView.classList.contains("hidden")) {
-    if (q.includes("due") || q.includes("deadline") || q.includes("calendar")) {
-      return "This calendar month view organizes assignments by date cells, with each event showing course and due time.";
-    }
+async function queryStudyHelperApi(question) {
+  const response = await fetch("/api/study-helper", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      question,
+      pageContext: activeContextText(),
+      currentView: currentViewName(),
+    }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data?.error || "Study helper API request failed.");
   }
 
-  if (!detailView.classList.contains("hidden") && currentCourse !== "home") {
-    const course = courseData[currentCourse];
-
-    if (q.includes("todo") || q.includes("due") || q.includes("deadline")) {
-      return course.todo;
-    }
-
-    if (q.includes("calendar") || q.includes("due date") || q.includes("due dates")) {
-      return `In Modules, assignments are organized by date (for example Monday, March 23, Wednesday, March 25, and Friday, March 27) with due times shown next to each item.`;
-    }
-
-    if (q.includes("assignments") || q.includes("grades") || q.includes("announcements") || q.includes("files") || q.includes("modules")) {
-      return `This course includes these tabs: Assignments, Grades, Announcements, Files, and Modules. The Modules tab now shows a calendar-style schedule with assignment due dates.`;
-    }
-
-    if (q.includes("what class") || q.includes("course name")) {
-      return `You are viewing ${course.title}.`;
-    }
+  const data = await response.json();
+  if (!data?.answer || typeof data.answer !== "string") {
+    throw new Error("No answer returned from study helper API.");
   }
 
-  if (q.includes("published classes") || q.includes("how many classes")) {
-    return "The home dashboard shows 6 published classes.";
-  }
-
-  const context = activeContextText();
-  const words = q.split(/\W+/).filter((w) => w.length > 3);
-  const overlap = words.filter((w) => context.includes(w));
-
-  if (overlap.length >= 2) {
-    return `I can see that in the current page context (for example: ${overlap.slice(0, 3).join(", ")}). Ask a more specific question for a precise answer.`;
-  }
-
-  return "I couldn't find that directly here yet. Ask about class tabs, deadlines, or dashboard tasks.";
+  return data.answer;
 }
 
 function setChatOpen(isOpen) {
@@ -1420,19 +1406,22 @@ toggleButtons.forEach((btn) => {
   });
 });
 
-chatForm.addEventListener("submit", (event) => {
+chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const question = chatInput.value.trim();
   if (!question) return;
 
   appendMessage(question, "user");
-  const response = answerFromContext(question);
-
-  window.setTimeout(() => {
-    appendMessage(response, "bot");
-  }, 180);
-
   chatInput.value = "";
+
+  try {
+    const answer = await queryStudyHelperApi(question);
+    appendMessage(answer, "bot");
+  } catch (error) {
+    const message = error?.message || "Unable to reach AI agent.";
+    appendMessage(`Agent error: ${message}`, "bot");
+  }
+
   chatInput.focus();
 });

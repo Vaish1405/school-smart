@@ -1220,6 +1220,34 @@ body.teacher-view .course-card .course-grade {
   cursor: pointer;
 }
 
+.chat-embed-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  min-height: 420px;
+}
+
+#ibm-root {
+  position: fixed;
+  left: 88px;
+  bottom: 14px;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  z-index: 40;
+}
+
+#ibm-root:empty {
+  display: block;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1297,5 +1325,10 @@ body.teacher-view .course-card .course-grade {
     height: 100vh;
     width: min(92vw, 390px);
     box-shadow: -10px 0 28px rgba(15, 36, 30, 0.18);
+  }
+
+  #ibm-root {
+    left: 10px;
+    bottom: 10px;
   }
 }

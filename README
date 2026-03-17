@@ -1,1 +1,39 @@
+# SchoolSmart MVP
 
+This project uses a custom in-page chatbot UI and a backend wrapper for IBM watsonx Orchestrate.
+
+## Integration Pattern
+
+Based on IBM's custom UI approach:
+- Frontend chat sends question to backend (`/api/study-helper`)
+- Backend gets IBM IAM token from API key (cached)
+- Backend calls your Orchestra agent API endpoint
+- Frontend displays returned answer
+
+## Setup
+
+1. Install dependencies:
+
+   npm install
+
+2. Create IBM credentials file:
+
+   cp ibm-credentials.env.example ibm-credentials.env
+
+3. Fill `ibm-credentials.env` values:
+
+   - `IBM_ORCHESTRA_API_URL`
+   - `IBM_ORCHESTRA_API_KEY`
+
+4. Start server:
+
+   npm start
+
+5. Open app:
+
+   http://localhost:3000
+
+## Notes
+
+- If your Orchestra endpoint expects a different payload shape, edit `buildPayload(...)` in `server.js`.
+- If your endpoint already accepts API key directly, set `IBM_ORCHESTRA_USE_IAM=false`.
