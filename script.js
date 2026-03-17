@@ -44,6 +44,22 @@ let currentCourse = "home";
 let activeTab = "assignments";
 let calendarDate = new Date(2026, 2, 1);
 
+// Records: only courses in courseKeyToClassId get real data (chemistry -> c1)
+const courseKeyToClassId = { chemistry: "c1" };
+const RECORDS_BASE = "records";
+let recordsTeachers = [];
+let recordsClasses = [];
+let recordsStudents = [];
+let recordsEnrollments = [];
+let recordsAssignments = [];
+let recordsAssignmentGrades = [];
+let recordsClassGrades = [];
+let recordsAnnouncements = [];
+let recordsFiles = [];
+let recordsLoaded = false;
+// Demo: current user (used for dashboard grade and Grades tab)
+let currentStudentId = "s1";
+
 function makeTabPlaceholders(courseTitle) {
   return {
     assignments: {
@@ -170,6 +186,201 @@ Object.values(courseData).forEach((course) => {
   course.tabs = makeTabPlaceholders(course.title);
 });
 
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatAssignmentDate(isoDate) {
+  const d = new Date(isoDate);
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function getTeacherById(id) {
+  return recordsTeachers.find((t) => t.id === id) || null;
+}
+function getClassById(id) {
+  return recordsClasses.find((c) => c.id === id) || null;
+}
+function getAssignmentById(id) {
+  return recordsAssignments.find((a) => a.id === id) || null;
+}
+
+function applyRecordsToCourseData() {
+  Object.entries(courseKeyToClassId).forEach(([courseKey, classId]) => {
+    const cls = getClassById(classId);
+    const teacher = cls ? getTeacherById(cls.teacherId) : null;
+    const list = recordsAssignments.filter((a) => a.classId === classId);
+    const course = courseData[courseKey];
+    if (!course) return;
+
+    if (cls) {
+      course.title = cls.name;
+      course.tag = "Chemistry";
+      if (cls.heading) course.heading = cls.heading;
+      if (cls.description) course.intro = cls.description;
+      const nextDue = list
+        .filter((a) => {
+          const grade = recordsAssignmentGrades.find(
+            (g) => g.assignmentId === a.id && g.studentId === currentStudentId
+          );
+          return !grade || grade.pointsEarned == null;
+        })
+        .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""))[0];
+      course.todo = nextDue
+        ? `Complete "${nextDue.title}" by ${formatAssignmentDate(nextDue.dueDate)} at ${nextDue.dueTime}.`
+        : "All assignments for this unit are complete.";
+    }
+
+    if (list.length) {
+      course.tabs.assignments = {
+        title: "Assignments",
+        description: `Assignments for ${course.title}.`,
+        items: list.map((a) => ({
+          title: a.title,
+          description: a.description,
+          dueDate: a.dueDate,
+          dueTime: a.dueTime,
+          pointsPossible: a.pointsPossible,
+          type: a.type,
+        })),
+      };
+
+      const byDate = {};
+      list.forEach((a) => {
+        const dateLabel = formatAssignmentDate(a.dueDate);
+        if (!byDate[dateLabel]) byDate[dateLabel] = [];
+        byDate[dateLabel].push({ assignment: a.title, due: a.dueTime });
+      });
+      const dateToIso = {};
+      list.forEach((a) => { dateToIso[formatAssignmentDate(a.dueDate)] = a.dueDate; });
+      const sortedDates = Object.keys(byDate).sort((a, b) => (dateToIso[a] || "").localeCompare(dateToIso[b] || ""));
+      course.tabs.modules = {
+        title: "Modules (Calendar View)",
+        description: `Assignments and due dates organized by date for ${course.title}.`,
+        items: course.tabs.modules.items,
+        schedule: sortedDates.map((date) => ({ date, entries: byDate[date] })),
+      };
+    }
+
+    const gradeRows = recordsAssignmentGrades
+      .filter((g) => g.studentId === currentStudentId)
+      .map((g) => {
+        const a = getAssignmentById(g.assignmentId);
+        return a && a.classId === classId
+          ? {
+              assignmentTitle: a.title,
+              pointsEarned: g.pointsEarned,
+              pointsPossible: a.pointsPossible,
+              feedback: g.feedback,
+            }
+          : null;
+      })
+      .filter(Boolean);
+    const classGrade = recordsClassGrades.find(
+      (g) => g.studentId === currentStudentId && g.classId === classId
+    );
+    course.tabs.grades = {
+      title: "Grades",
+      description: classGrade
+        ? `Current grade: ${classGrade.percent}% (${classGrade.letterGrade}).`
+        : `Gradebook for ${course.title}.`,
+      items: gradeRows.length
+        ? gradeRows
+        : ["No graded items posted yet."],
+      recordGrades: true,
+    };
+
+    const announcements = recordsAnnouncements.filter((n) => n.classId === classId);
+    course.tabs.announcements = {
+      title: "Announcements",
+      description: `Announcements for ${course.title}.`,
+      items:
+        announcements.length > 0
+          ? announcements.map((n) => ({
+              title: n.title,
+              body: n.body,
+              postedAt: n.postedAt,
+            }))
+          : course.tabs.announcements.items,
+      recordAnnouncements: announcements.length > 0,
+    };
+
+    const files = recordsFiles.filter((f) => f.classId === classId);
+    course.tabs.files = {
+      title: "Files",
+      description: `Course files for ${course.title}.`,
+      items:
+        files.length > 0
+          ? files.map((f) => ({ name: f.name, type: f.type, url: f.url }))
+          : course.tabs.files.items,
+      recordFiles: files.length > 0,
+    };
+  });
+}
+
+function updateChemistryCard() {
+  const classId = courseKeyToClassId.chemistry;
+  const cls = getClassById(classId);
+  const teacher = cls ? getTeacherById(cls.teacherId) : null;
+  const classGrade = recordsClassGrades.find(
+    (g) => g.studentId === currentStudentId && g.classId === classId
+  );
+  const card = document.querySelector('.class-card[data-course="chemistry"]');
+  if (!card) return;
+  const body = card.querySelector(".course-body");
+  if (!body) return;
+  if (cls) {
+    const h3 = body.querySelector("h3");
+    if (h3) h3.textContent = cls.name;
+    const ps = body.querySelectorAll("p");
+    if (teacher && ps[0]) ps[0].textContent = `${teacher.title} ${teacher.firstName} ${teacher.lastName}`;
+    if (cls.schedule && ps[1]) ps[1].textContent = cls.schedule.replace(/\s+(\d)/, " | $1");
+  }
+  const gradeEl = body.querySelector(".course-grade");
+  if (gradeEl && classGrade)
+    gradeEl.textContent = `Grade: ${classGrade.percent}% (${classGrade.letterGrade})`;
+}
+
+async function loadRecords() {
+  const files = [
+    "teachers.json",
+    "classes.json",
+    "students.json",
+    "enrollments.json",
+    "assignments.json",
+    "assignment_grades.json",
+    "class_grades.json",
+    "announcements.json",
+    "files.json",
+  ];
+  try {
+    const results = await Promise.all(
+      files.map((f) => fetch(`${RECORDS_BASE}/${f}`).then((r) => (r.ok ? r.json() : [])))
+    );
+    [
+      recordsTeachers,
+      recordsClasses,
+      recordsStudents,
+      recordsEnrollments,
+      recordsAssignments,
+      recordsAssignmentGrades,
+      recordsClassGrades,
+      recordsAnnouncements,
+      recordsFiles,
+    ] = results.map((r) => (Array.isArray(r) ? r : []));
+    recordsLoaded = true;
+    applyRecordsToCourseData();
+    updateChemistryCard();
+    if (currentCourse !== "home") renderActiveTab();
+  } catch (e) {
+    console.warn("Could not load records. Serve the app over HTTP (see README).", e);
+  }
+}
+
+loadRecords();
+
 function appendMessage(text, role) {
   const bubble = document.createElement("div");
   bubble.className = `message ${role}`;
@@ -218,7 +429,32 @@ function renderActiveTab() {
 
     tabData.items.forEach((item) => {
       const li = document.createElement("li");
-      li.textContent = item;
+      if (item && typeof item === "object" && "title" in item && "dueDate" in item) {
+        const dueStr = item.dueDate && item.dueTime
+          ? `Due ${new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} at ${item.dueTime}`
+          : "";
+        const ptsStr = item.pointsPossible != null ? ` (${item.pointsPossible} pts)` : "";
+        li.innerHTML = `<strong>${escapeHtml(item.title)}</strong>${dueStr ? ` — ${dueStr}${ptsStr}` : ""}` +
+          (item.description ? `<p class="assignment-desc">${escapeHtml(item.description)}</p>` : "");
+      } else if (tabData.recordGrades && item && typeof item === "object" && "assignmentTitle" in item) {
+        const pts = item.pointsEarned != null
+          ? `${item.pointsEarned}/${item.pointsPossible != null ? item.pointsPossible : "?"} pts`
+          : "—";
+        li.innerHTML =
+          `<strong>${escapeHtml(item.assignmentTitle)}</strong> — ${pts}` +
+          (item.feedback ? `<p class="assignment-desc">${escapeHtml(item.feedback)}</p>` : "");
+      } else if (tabData.recordAnnouncements && item && typeof item === "object" && "title" in item && "body" in item) {
+        const dateStr = item.postedAt
+          ? new Date(item.postedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          : "";
+        li.innerHTML =
+          `<strong>${escapeHtml(item.title)}</strong>${dateStr ? ` <span class="muted">${dateStr}</span>` : ""}` +
+          `<p class="assignment-desc">${escapeHtml(item.body)}</p>`;
+      } else if (tabData.recordFiles && item && typeof item === "object" && "name" in item) {
+        li.innerHTML = `<a href="${escapeHtml(item.url || "#")}">${escapeHtml(item.name)}</a>`;
+      } else {
+        li.textContent = typeof item === "string" ? item : "";
+      }
       tabList.appendChild(li);
     });
   }

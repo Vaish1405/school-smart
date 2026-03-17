@@ -1,0 +1,7 @@
+[
+  { "id": "cg1", "studentId": "s1", "classId": "c1", "percent": 94, "letterGrade": "A", "term": "Spring 2026" },
+  { "id": "cg2", "studentId": "s2", "classId": "c1", "percent": 95, "letterGrade": "A",  "term": "Spring 2026" },
+  { "id": "cg3", "studentId": "s3", "classId": "c1", "percent": 85, "letterGrade": "B",  "term": "Spring 2026" },
+  { "id": "cg4", "studentId": "s4", "classId": "c1", "percent": 88, "letterGrade": "B+", "term": "Spring 2026" },
+  { "id": "cg5", "studentId": "s5", "classId": "c1", "percent": 87, "letterGrade": "B+", "term": "Spring 2026" }
+]

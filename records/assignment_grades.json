@@ -1,0 +1,22 @@
+[
+  { "id": "g1",  "studentId": "s1", "assignmentId": "a1", "pointsEarned": 10,  "feedback": "Complete and on time." },
+  { "id": "g2",  "studentId": "s1", "assignmentId": "a2", "pointsEarned": 14,  "feedback": "Template filled out correctly." },
+  { "id": "g3",  "studentId": "s1", "assignmentId": "a3", "pointsEarned": 18,  "feedback": "Minor sig fig error in Q3." },
+  { "id": "g4",  "studentId": "s1", "assignmentId": "a4", "pointsEarned": null, "feedback": null },
+  { "id": "g5",  "studentId": "s2", "assignmentId": "a1", "pointsEarned": 9,   "feedback": "Signature date was missing." },
+  { "id": "g6",  "studentId": "s2", "assignmentId": "a2", "pointsEarned": 15,  "feedback": "Excellent." },
+  { "id": "g7",  "studentId": "s2", "assignmentId": "a3", "pointsEarned": 20,  "feedback": "Perfect score." },
+  { "id": "g8",  "studentId": "s2", "assignmentId": "a4", "pointsEarned": null, "feedback": null },
+  { "id": "g9",  "studentId": "s3", "assignmentId": "a1", "pointsEarned": 10,  "feedback": "Submitted on time." },
+  { "id": "g10", "studentId": "s3", "assignmentId": "a2", "pointsEarned": 12,  "feedback": "Header incomplete; resubmit optional." },
+  { "id": "g11", "studentId": "s3", "assignmentId": "a3", "pointsEarned": 16,  "feedback": "Review unit conversion." },
+  { "id": "g12", "studentId": "s3", "assignmentId": "a4", "pointsEarned": null, "feedback": null },
+  { "id": "g13", "studentId": "s4", "assignmentId": "a1", "pointsEarned": 8,   "feedback": "One day late; -2." },
+  { "id": "g14", "studentId": "s4", "assignmentId": "a2", "pointsEarned": 15,  "feedback": "Well done." },
+  { "id": "g15", "studentId": "s4", "assignmentId": "a3", "pointsEarned": 19,  "feedback": "Small rounding error." },
+  { "id": "g16", "studentId": "s4", "assignmentId": "a4", "pointsEarned": null, "feedback": null },
+  { "id": "g17", "studentId": "s5", "assignmentId": "a1", "pointsEarned": 10,  "feedback": "Complete." },
+  { "id": "g18", "studentId": "s5", "assignmentId": "a2", "pointsEarned": 13,  "feedback": "Good; add experiment number." },
+  { "id": "g19", "studentId": "s5", "assignmentId": "a3", "pointsEarned": null, "feedback": null },
+  { "id": "g20", "studentId": "s5", "assignmentId": "a4", "pointsEarned": null, "feedback": null }
+]
