@@ -1,3 +1,5 @@
 node_modules/
 .env
 ibm-credentials.env
+.venv/
+__pycache__/
