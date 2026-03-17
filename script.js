@@ -10,6 +10,7 @@ const detailView = document.getElementById("detailView");
 const cards = document.querySelectorAll(".class-card");
 const backToHome = document.getElementById("backToHome");
 const courseTabs = document.querySelectorAll(".course-tab");
+const tutorTabButton = document.querySelector('.course-tab[data-tab="tutor"]');
 
 const detailTag = document.getElementById("detailTag");
 const detailTitle = document.getElementById("detailTitle");
@@ -41,6 +42,8 @@ const studentBarChart = document.getElementById("studentBarChart");
 const trendLineChart = document.getElementById("trendLineChart");
 const gradePieLegend = document.getElementById("gradePieLegend");
 const analyticsInsights = document.getElementById("analyticsInsights");
+const tutorPanel = document.getElementById("tutorPanel");
+const tutorAssignmentList = document.getElementById("tutorAssignmentList");
 
 const filesPanel = document.getElementById("filesPanel");
 const folderList = document.getElementById("folderList");
@@ -363,6 +366,11 @@ function makeTabPlaceholders(courseTitle, courseKey) {
       weeks: seed.modules,
       schedule: defaultModulesScheduleByCourse[courseKey] || [],
     },
+    tutor: {
+      title: "Tutor",
+      description: `On-demand tutoring support for ${courseTitle}.`,
+      items: ["No tutor resources are configured for this course yet."],
+    },
     analytics: {
       title: "Analytics",
       description: `Progress analytics for ${courseTitle}.`,
@@ -425,6 +433,18 @@ const courseData = {
 Object.entries(courseData).forEach(([courseKey, course]) => {
   course.tabs = makeTabPlaceholders(course.title, courseKey);
   course.tabs.grades.records = defaultGradeRecordsByCourse[courseKey] || [];
+  if (courseKey === "chemistry") {
+    course.tabs.tutor = {
+      title: "Tutor",
+      description: "Chemistry tutoring support for lab safety, calculations, and report writing.",
+      items: [
+        "Live tutor hours: Tue/Thu 4:00-5:00 PM in Science 204.",
+        "Ask the Tutor: Bring one lab question and one sig-fig question each session.",
+        "Quick Help Topics: Unit conversion, significant figures, graph interpretation.",
+        "This Week Focus: Structuring your first experiment write-up (purpose, data, conclusion).",
+      ],
+    };
+  }
 });
 
 function computePercentFromGradeRecords(records) {
@@ -489,6 +509,39 @@ function getCourseGradeSummary(courseKey) {
   const records = getGradeRecordsForCourse(courseKey);
   const percent = computePercentFromGradeRecords(records);
   return { percent, letter: letterGradeFromPercent(percent) };
+}
+
+function getTutorAssignmentsForCourse(courseKey) {
+  const classId = courseKeyToClassId[courseKey];
+  if (!classId) return [];
+
+  const rows = recordsAssignments
+    .filter((a) => a.classId === classId)
+    .map((assignment) => {
+      const grade = recordsAssignmentGrades.find(
+        (g) => g.studentId === currentStudentId && g.assignmentId === assignment.id
+      );
+      const hasScore = grade && grade.pointsEarned != null;
+      const dueDateObj = new Date(assignment.dueDate);
+      const isPast = dueDateObj <= demoToday || hasScore;
+      if (!isPast) return null;
+
+      const total = Number(assignment.pointsPossible ?? 100);
+      const earned = hasScore ? Number(grade.pointsEarned) : 0;
+      const percent = total > 0 ? Math.round((earned / total) * 100) : 0;
+      const scoreText = hasScore ? `${earned}/${total} (${percent}%)` : "Not graded yet";
+
+      return {
+        title: assignment.title,
+        dueIso: assignment.dueDate,
+        dueDate: formatShortDate(assignment.dueDate),
+        scoreText,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.dueIso) - new Date(a.dueIso));
+
+  return rows;
 }
 
 function escapeHtml(text) {
@@ -1089,7 +1142,9 @@ function renderActiveTab() {
   folderList.innerHTML = "";
   fileItems.innerHTML = "";
   filesPanel.classList.add("hidden");
+  if (tutorAssignmentList) tutorAssignmentList.innerHTML = "";
   if (analyticsPanel) analyticsPanel.classList.add("hidden");
+  if (tutorPanel) tutorPanel.classList.add("hidden");
 
   assignmentsAccordion.classList.add("hidden");
   gradesPanel.classList.add("hidden");
@@ -1308,6 +1363,42 @@ function renderActiveTab() {
     });
   }
 
+  // TUTOR TAB ONLY
+  else if (activeTab === "tutor") {
+    if (tutorPanel) tutorPanel.classList.remove("hidden");
+    const tutorRows = getTutorAssignmentsForCourse(currentCourse);
+
+    if (tutorAssignmentList && tutorRows.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "announcement-empty";
+      empty.textContent = "No past assignments are available to study yet.";
+      tutorAssignmentList.appendChild(empty);
+    } else if (tutorAssignmentList) {
+      tutorRows.forEach((row) => {
+        const item = document.createElement("article");
+        item.className = "tutor-row";
+        item.innerHTML = `
+          <div class="tutor-row-left">
+            <div class="tutor-row-title">${escapeHtml(row.title)}</div>
+            <div class="tutor-row-meta">Due ${escapeHtml(row.dueDate)} | Score: ${escapeHtml(row.scoreText)}</div>
+          </div>
+          <button class="study-btn" type="button">Study</button>
+        `;
+
+        const studyBtn = item.querySelector(".study-btn");
+        if (studyBtn) {
+          studyBtn.addEventListener("click", () => {
+            setChatOpen(true);
+            chatInput.value = `Help me study for "${row.title}" in ${courseData[currentCourse].title}.`;
+            chatInput.focus();
+          });
+        }
+
+        tutorAssignmentList.appendChild(item);
+      });
+    }
+  }
+
   // ANALYTICS TAB ONLY
   else if (activeTab === "analytics") {
     if (analyticsPanel) analyticsPanel.classList.remove("hidden");
@@ -1364,6 +1455,7 @@ function renderCourseDetail(key) {
 
   currentCourse = key;
   activeTab = "assignments";
+  updateCourseTabVisibility();
 
   detailTag.textContent = course.tag;
   detailTitle.textContent = course.title;
@@ -1641,6 +1733,15 @@ function applyDashboardClassesForRole() {
   }
 }
 
+function updateCourseTabVisibility() {
+  if (!tutorTabButton) return;
+  const showTutorTab = !isTeacherView && currentCourse === "chemistry";
+  tutorTabButton.classList.toggle("hidden", !showTutorTab);
+  if (!showTutorTab && activeTab === "tutor") {
+    activeTab = "assignments";
+  }
+}
+
 function setViewRole(teacherMode) {
   isTeacherView = teacherMode;
   document.body.classList.toggle("teacher-view", teacherMode);
@@ -1659,7 +1760,9 @@ function setViewRole(teacherMode) {
       ? "Switch to Student View"
       : "Switch to Teacher View";
   }
+  updateCourseTabVisibility();
   applyDashboardClassesForRole();
+  if (currentCourse !== "home") renderActiveTab();
 }
 
 function closeProfileMenu() {

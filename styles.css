@@ -1047,6 +1047,61 @@ body.teacher-view .course-card .course-grade {
   margin: 10px 0;
 }
 
+.tutor-panel {
+  border: 1px solid #dbe6e4;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.tutor-assignment-list {
+  display: grid;
+  gap: 8px;
+}
+
+.tutor-row {
+  border: 1px solid #e1ebe8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #fcfffd;
+}
+
+.tutor-row-left {
+  min-width: 0;
+}
+
+.tutor-row-title {
+  font-weight: 800;
+  color: #1f3c47;
+  margin-bottom: 4px;
+}
+
+.tutor-row-meta {
+  font-size: 0.88rem;
+  color: #47606a;
+}
+
+.study-btn {
+  border: 1px solid #cddbd8;
+  background: #f8fbfa;
+  color: #2f5463;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.study-btn:hover {
+  background: #e9f3f1;
+}
+
 .grade-summary {
   display: flex;
   align-items: baseline;
