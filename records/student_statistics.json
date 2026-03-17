@@ -1,0 +1,13 @@
+{
+  "classes": {
+    "c1": {
+      "className": "Chemistry Lab Foundations",
+      "students": [
+        { "id": "s1", "name": "Jordan Chen", "average": 91.5, "attendance": 0.98, "recentScores": [96, 84, 92], "riskLevel": "low" },
+        { "id": "s2", "name": "Aisha Khan", "average": 85.2, "attendance": 0.93, "recentScores": [88, 82, 85], "riskLevel": "medium" },
+        { "id": "s3", "name": "Miguel Lopez", "average": 74.6, "attendance": 0.88, "recentScores": [70, 78, 76], "riskLevel": "high" },
+        { "id": "s4", "name": "Priya Patel", "average": 95.1, "attendance": 0.99, "recentScores": [98, 94, 93], "riskLevel": "low" }
+      ]
+    }
+  }
+}

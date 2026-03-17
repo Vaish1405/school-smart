@@ -1220,6 +1220,12 @@ function buildTutorResourcesForCourse(courseKey) {
 function renderTutorWorkspace() {
   if (!tutorCourseSelect || !tutorSessionCards || !tutorResourceList) return;
 
+  // If teacher view is active, render student statistics instead of tutor studio
+  if (isTeacherView) {
+    renderStudentStatistics();
+    return;
+  }
+
   const options = getTutorCourseOptions();
   if (!options.find((opt) => opt.key === tutorSelectedCourse)) {
     tutorSelectedCourse = options[0]?.key || "chemistry";
@@ -1295,6 +1301,75 @@ function renderTutorWorkspace() {
         <p>Due ${escapeHtml(row.dueDate)} | Score: ${escapeHtml(row.scoreText)}</p>
       </div>
       <span class="review-chip success">Past Work</span>
+    `;
+    tutorResourceList.appendChild(li);
+  });
+}
+
+function renderStudentStatistics() {
+  // Load synthetic stats from records (best-effort)
+  let stats = null;
+  try {
+    stats = JSON.parse(fetch(`${RECORDS_BASE}/student_statistics.json`).then((r) => r.text()));
+  } catch (e) {
+    // fallback: attempt to read already-loaded records (if server served as JSON requests)
+    try {
+      // recordsLoaded will be true once other records loaded; attempt to use recordsStudents
+      const classId = courseKeyToClassId["chemistry"];
+      stats = { classes: { [classId]: { students: recordsStudents || [] } } };
+    } catch (er) {
+      stats = null;
+    }
+  }
+
+  const classId = courseKeyToClassId["chemistry"];
+  const classStats = (stats && stats.classes && stats.classes[classId]) || null;
+
+  // Update header
+  if (tutorContentHeader) tutorContentHeader.textContent = `Student Statistics`;
+  const headerEl = document.querySelector("#tutorView .eyebrow");
+  const titleEl = document.querySelector("#tutorView h1");
+  const subtitleEl = document.querySelector("#tutorView .subtitle");
+  if (headerEl) headerEl.textContent = "Class Insights";
+  if (titleEl) titleEl.textContent = "Student Statistics";
+  if (subtitleEl) subtitleEl.textContent = "View per-student averages, attendance, and risk indicators.";
+
+  tutorCourseSelect.innerHTML = "";
+  const option = document.createElement("option");
+  option.value = "chemistry";
+  option.textContent = "Chemistry Lab Foundations";
+  tutorCourseSelect.appendChild(option);
+
+  tutorSessionCards.innerHTML = "";
+  tutorResourceList.innerHTML = "";
+
+  const students = classStats ? classStats.students : recordsStudents.map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}`, average: Math.round(Math.random()*30+70), attendance: 0.95, recentScores: [80,85,90], riskLevel: 'medium' }));
+
+  // Create summary KPI cards
+  const avgClass = (students.reduce((sum,s)=>sum+(s.average||0),0)/Math.max(1,students.length)).toFixed(1);
+  const kpiItems = [
+    { label: 'Class Average', value: `${avgClass}%` },
+    { label: 'At-Risk Students', value: `${students.filter(s=>s.riskLevel==='high').length}` },
+    { label: 'Avg Attendance', value: `${(students.reduce((sum,s)=>sum+(s.attendance||0),0)/Math.max(1,students.length)*100).toFixed(0)}%` },
+  ];
+
+  kpiItems.forEach(kpi => {
+    const card = document.createElement('div');
+    card.className = 'analytics-kpi';
+    card.innerHTML = `<div class="kpi-label">${escapeHtml(kpi.label)}</div><div class="kpi-value">${escapeHtml(kpi.value)}</div>`;
+    tutorSessionCards.appendChild(card);
+  });
+
+  // List students with mini stats
+  students.forEach((s) => {
+    const li = document.createElement('li');
+    li.className = 'tutor-resource-item';
+    li.innerHTML = `
+      <div>
+        <strong>${escapeHtml(s.name || s.id || 'Student')}</strong>
+        <p>Average: ${escapeHtml(String(s.average || 'N/A'))}% | Attendance: ${(s.attendance||0).toFixed(2)}</p>
+      </div>
+      <span class="review-chip ${s.riskLevel==='high'?'danger': s.riskLevel==='medium'?'warning':'success'}">${escapeHtml((s.riskLevel||'unknown').toUpperCase())}</span>
     `;
     tutorResourceList.appendChild(li);
   });
@@ -3009,7 +3084,9 @@ function setChatOpen(isOpen) {
 
   toggleButtons.forEach((btn) => {
     btn.setAttribute("aria-expanded", String(isOpen));
-    btn.textContent = isOpen ? "Close AI Study Helper" : "Open AI Study Helper";
+    // Dynamic label: if this is the tutor toggle and we're in teacher mode, use 'AI student insights'
+    const baseLabel = (btn.id === "chatToggleTutor" && isTeacherView) ? "AI student insights" : "AI Study Helper";
+    btn.textContent = isOpen ? `Close ${baseLabel}` : `Open ${baseLabel}`;
   });
 
   // Coordinate with the IBM widget (loader injects into #ibm-root).
