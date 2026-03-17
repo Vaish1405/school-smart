@@ -34,6 +34,13 @@ const navCalendar = document.getElementById("navCalendar");
 const navCourses = document.getElementById("navCourses");
 const navInbox = document.getElementById("navInbox");
 
+const filesPanel = document.getElementById("filesPanel");
+const folderList = document.getElementById("folderList");
+const fileItems = document.getElementById("fileItems");
+const selectedFolderTitle = document.getElementById("selectedFolderTitle");
+const selectedFolderDesc = document.getElementById("selectedFolderDesc");
+const modulesAccordion = document.getElementById("modulesAccordion");
+
 const toggleButtons = [
   document.getElementById("chatToggle"),
   document.getElementById("chatToggleCalendar"),
@@ -44,71 +51,154 @@ let currentCourse = "home";
 let activeTab = "assignments";
 let calendarDate = new Date(2026, 2, 1);
 
+// Records: only courses in courseKeyToClassId get real data (chemistry -> c1)
+const courseKeyToClassId = { chemistry: "c1" };
+const RECORDS_BASE = "records";
+let recordsTeachers = [];
+let recordsClasses = [];
+let recordsStudents = [];
+let recordsEnrollments = [];
+let recordsAssignments = [];
+let recordsAssignmentGrades = [];
+let recordsClassGrades = [];
+let recordsAnnouncements = [];
+let recordsFiles = [];
+let recordsLoaded = false;
+// Demo: current user (used for dashboard grade and Grades tab)
+let currentStudentId = "s1";
+
 function makeTabPlaceholders(courseTitle) {
   return {
     assignments: {
       title: "Assignments",
-      description: `Placeholder assignments for ${courseTitle}.`,
-      items: [
-        "Assignment 1: Intro activity (Draft)",
-        "Assignment 2: Weekly practice (Not yet graded)",
-        "Assignment 3: Reflection post (Opens next week)",
+      description: `Track overdue, past, and current assignments for ${courseTitle}.`,
+      sections: [
+        {
+          label: "Overdue Assignments",
+          summary: "Needs immediate action",
+          items: [
+            "Lab report draft (was due Mon)",
+            "Problem set 3 (was due Tue)",
+          ],
+        },
+        {
+          label: "Current Assignments",
+          summary: "Due this week",
+          items: [
+            "Weekly quiz (due Fri)",
+            "Group discussion post (due Thu)",
+          ],
+        },
+        {
+          label: "Past Assignments",
+          summary: "Completed or submitted",
+          items: [
+            "Intro reading response (submitted)",
+            "Warm-up worksheet (feedback pending)",
+          ],
+        },
       ],
     },
     grades: {
       title: "Grades",
-      description: `Placeholder gradebook entries for ${courseTitle}.`,
-      items: [
-        "Current grade: --",
-        "No graded items posted yet",
-        "Rubrics will appear after first submission",
+      description: `View overall class grade and assignment score details for ${courseTitle}.`,
+      records: [
+        {
+          name: "Lab Report 1",
+          dueDate: "Mar 5",
+          submittedDate: "Mar 5",
+          status: "Complete",
+          earned: 96,
+          total: 100,
+          teacherNotes: "Excellent method section; improve conclusion clarity.",
+        },
+        {
+          name: "Problem Set 2",
+          dueDate: "Mar 10",
+          submittedDate: "Mar 12",
+          status: "Late",
+          earned: 84,
+          total: 100,
+          teacherNotes: "Submitted late, so points were deducted. Good effort; watch algebraic simplification.",
+        },
+        {
+          name: "Quiz 3",
+          dueDate: "Mar 16",
+          submittedDate: "-",
+          status: "Missing",
+          earned: 0,
+          total: 100,
+          teacherNotes: "Not submitted. Missing work receives a zero.",
+        },
       ],
     },
     announcements: {
       title: "Announcements",
-      description: `Placeholder announcements feed for ${courseTitle}.`,
-      items: [
-        "Welcome announcement will be posted here",
-        "Weekly updates will appear in this tab",
-        "Deadline reminders will be pinned",
+      description: `Teacher announcements for ${courseTitle}.`,
+      posts: [
+        {
+          title: "Lab 2 Safety Check",
+          preview: "Please submit your safety check form before lab time.",
+          date: "Mar 12, 2026",
+        },
+        {
+          title: "Guest Speaker This Friday",
+          preview: "We will have Dr. Patel speak on chromatography techniques.",
+          date: "Mar 10, 2026",
+        },
+        {
+          title: "Homework Correction",
+          preview: "The answer key has been updated; review questions 4 and 7.",
+          date: "Mar 8, 2026",
+        },
       ],
     },
     files: {
       title: "Files",
-      description: `Placeholder files area for ${courseTitle}.`,
-      items: [
-        "Syllabus.pdf",
-        "Week-1-Slides.pdf",
-        "Template-Worksheet.docx",
-      ],
+      description: `Class files and materials for ${courseTitle}.`,
+      folders: {
+        Syllabus: [
+          { name: "Course Syllabus.pdf", type: "PDF" },
+          { name: "Grading Guide.pdf", type: "PDF" },
+        ],
+        Assignments: [
+          { name: "Assignment 1 Instructions.docx", type: "DOCX" },
+          { name: "Assignment 2 Template.docx", type: "DOCX" },
+        ],
+        Homework: [
+          { name: "Homework Week 1.pdf", type: "PDF" },
+          { name: "Homework Week 2.pdf", type: "PDF" },
+        ],
+        Slides: [
+          { name: "Week 1 Slides.pptx", type: "PPTX" },
+          { name: "Week 2 Slides.pptx", type: "PPTX" },
+        ],
+      },
     },
     modules: {
-      title: "Modules (Calendar View)",
-      description: `Assignments and due dates organized by date for ${courseTitle}.`,
-      items: [
-        "Module 1: Getting Started",
-        "Module 2: Core Concepts",
-        "Module 3: Practice and Review",
-      ],
-      schedule: [
+      title: "Modules",
+      description: `Weekly modules and resources for ${courseTitle}.`,
+      weeks: [
         {
-          date: "Monday, March 23",
-          entries: [
-            { assignment: "Reading Check", due: "11:59 PM" },
-          ],
+          title: "Week 1",
+          summary: "Intro and Lab Safety",
+          materials: ["Lab Safety Guide", "Lab Setup Video"],
+          assignments: ["Safety Contract", "Pre-lab Quiz"],
+          homework: ["Worksheet 1", "Lab Reflection"],
         },
         {
-          date: "Wednesday, March 25",
-          entries: [
-            { assignment: "Practice Assignment", due: "5:00 PM" },
-          ],
+          title: "Week 2",
+          summary: "Measurements and Data",
+          materials: ["Metric Units Notes", "Measurement Demo"],
+          assignments: ["Measurement Worksheet", "Problem Set 1"],
+          homework: ["Homework 2: Conversion", "Data Practice"],
         },
         {
-          date: "Friday, March 27",
-          entries: [
-            { assignment: "Weekly Quiz", due: "8:00 PM" },
-            { assignment: "Discussion Reply", due: "11:59 PM" },
-          ],
+          title: "Week 3",
+          summary: "Experimental Design",
+          materials: ["Design Principles", "Sample Experiment"],
+          assignments: ["Design Proposal", "Peer Feedback"],
+          homework: ["Lab Report Outline"],
         },
       ],
     },
@@ -170,6 +260,201 @@ Object.values(courseData).forEach((course) => {
   course.tabs = makeTabPlaceholders(course.title);
 });
 
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatAssignmentDate(isoDate) {
+  const d = new Date(isoDate);
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function getTeacherById(id) {
+  return recordsTeachers.find((t) => t.id === id) || null;
+}
+function getClassById(id) {
+  return recordsClasses.find((c) => c.id === id) || null;
+}
+function getAssignmentById(id) {
+  return recordsAssignments.find((a) => a.id === id) || null;
+}
+
+function applyRecordsToCourseData() {
+  Object.entries(courseKeyToClassId).forEach(([courseKey, classId]) => {
+    const cls = getClassById(classId);
+    const teacher = cls ? getTeacherById(cls.teacherId) : null;
+    const list = recordsAssignments.filter((a) => a.classId === classId);
+    const course = courseData[courseKey];
+    if (!course) return;
+
+    if (cls) {
+      course.title = cls.name;
+      course.tag = "Chemistry";
+      if (cls.heading) course.heading = cls.heading;
+      if (cls.description) course.intro = cls.description;
+      const nextDue = list
+        .filter((a) => {
+          const grade = recordsAssignmentGrades.find(
+            (g) => g.assignmentId === a.id && g.studentId === currentStudentId
+          );
+          return !grade || grade.pointsEarned == null;
+        })
+        .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""))[0];
+      course.todo = nextDue
+        ? `Complete "${nextDue.title}" by ${formatAssignmentDate(nextDue.dueDate)} at ${nextDue.dueTime}.`
+        : "All assignments for this unit are complete.";
+    }
+
+    if (list.length) {
+      course.tabs.assignments = {
+        title: "Assignments",
+        description: `Assignments for ${course.title}.`,
+        items: list.map((a) => ({
+          title: a.title,
+          description: a.description,
+          dueDate: a.dueDate,
+          dueTime: a.dueTime,
+          pointsPossible: a.pointsPossible,
+          type: a.type,
+        })),
+      };
+
+      const byDate = {};
+      list.forEach((a) => {
+        const dateLabel = formatAssignmentDate(a.dueDate);
+        if (!byDate[dateLabel]) byDate[dateLabel] = [];
+        byDate[dateLabel].push({ assignment: a.title, due: a.dueTime });
+      });
+      const dateToIso = {};
+      list.forEach((a) => { dateToIso[formatAssignmentDate(a.dueDate)] = a.dueDate; });
+      const sortedDates = Object.keys(byDate).sort((a, b) => (dateToIso[a] || "").localeCompare(dateToIso[b] || ""));
+      course.tabs.modules = {
+        title: "Modules (Calendar View)",
+        description: `Assignments and due dates organized by date for ${course.title}.`,
+        items: course.tabs.modules.items,
+        schedule: sortedDates.map((date) => ({ date, entries: byDate[date] })),
+      };
+    }
+
+    const gradeRows = recordsAssignmentGrades
+      .filter((g) => g.studentId === currentStudentId)
+      .map((g) => {
+        const a = getAssignmentById(g.assignmentId);
+        return a && a.classId === classId
+          ? {
+              assignmentTitle: a.title,
+              pointsEarned: g.pointsEarned,
+              pointsPossible: a.pointsPossible,
+              feedback: g.feedback,
+            }
+          : null;
+      })
+      .filter(Boolean);
+    const classGrade = recordsClassGrades.find(
+      (g) => g.studentId === currentStudentId && g.classId === classId
+    );
+    course.tabs.grades = {
+      title: "Grades",
+      description: classGrade
+        ? `Current grade: ${classGrade.percent}% (${classGrade.letterGrade}).`
+        : `Gradebook for ${course.title}.`,
+      items: gradeRows.length
+        ? gradeRows
+        : ["No graded items posted yet."],
+      recordGrades: true,
+    };
+
+    const announcements = recordsAnnouncements.filter((n) => n.classId === classId);
+    course.tabs.announcements = {
+      title: "Announcements",
+      description: `Announcements for ${course.title}.`,
+      items:
+        announcements.length > 0
+          ? announcements.map((n) => ({
+              title: n.title,
+              body: n.body,
+              postedAt: n.postedAt,
+            }))
+          : course.tabs.announcements.items,
+      recordAnnouncements: announcements.length > 0,
+    };
+
+    const files = recordsFiles.filter((f) => f.classId === classId);
+    course.tabs.files = {
+      title: "Files",
+      description: `Course files for ${course.title}.`,
+      items:
+        files.length > 0
+          ? files.map((f) => ({ name: f.name, type: f.type, url: f.url }))
+          : course.tabs.files.items,
+      recordFiles: files.length > 0,
+    };
+  });
+}
+
+function updateChemistryCard() {
+  const classId = courseKeyToClassId.chemistry;
+  const cls = getClassById(classId);
+  const teacher = cls ? getTeacherById(cls.teacherId) : null;
+  const classGrade = recordsClassGrades.find(
+    (g) => g.studentId === currentStudentId && g.classId === classId
+  );
+  const card = document.querySelector('.class-card[data-course="chemistry"]');
+  if (!card) return;
+  const body = card.querySelector(".course-body");
+  if (!body) return;
+  if (cls) {
+    const h3 = body.querySelector("h3");
+    if (h3) h3.textContent = cls.name;
+    const ps = body.querySelectorAll("p");
+    if (teacher && ps[0]) ps[0].textContent = `${teacher.title} ${teacher.firstName} ${teacher.lastName}`;
+    if (cls.schedule && ps[1]) ps[1].textContent = cls.schedule.replace(/\s+(\d)/, " | $1");
+  }
+  const gradeEl = body.querySelector(".course-grade");
+  if (gradeEl && classGrade)
+    gradeEl.textContent = `Grade: ${classGrade.percent}% (${classGrade.letterGrade})`;
+}
+
+async function loadRecords() {
+  const files = [
+    "teachers.json",
+    "classes.json",
+    "students.json",
+    "enrollments.json",
+    "assignments.json",
+    "assignment_grades.json",
+    "class_grades.json",
+    "announcements.json",
+    "files.json",
+  ];
+  try {
+    const results = await Promise.all(
+      files.map((f) => fetch(`${RECORDS_BASE}/${f}`).then((r) => (r.ok ? r.json() : [])))
+    );
+    [
+      recordsTeachers,
+      recordsClasses,
+      recordsStudents,
+      recordsEnrollments,
+      recordsAssignments,
+      recordsAssignmentGrades,
+      recordsClassGrades,
+      recordsAnnouncements,
+      recordsFiles,
+    ] = results.map((r) => (Array.isArray(r) ? r : []));
+    recordsLoaded = true;
+    applyRecordsToCourseData();
+    updateChemistryCard();
+    if (currentCourse !== "home") renderActiveTab();
+  } catch (e) {
+    console.warn("Could not load records. Serve the app over HTTP (see README).", e);
+  }
+}
+
+loadRecords();
+
 function renderActiveTab() {
   if (currentCourse === "home") return;
 
@@ -179,38 +464,281 @@ function renderActiveTab() {
   tabTitle.textContent = tabData.title;
   tabDescription.textContent = tabData.description;
 
+  const assignmentsAccordion = document.getElementById("assignmentsAccordion");
+  const gradesPanel = document.getElementById("gradesPanel");
+  const overallGradeEl = document.getElementById("overallGrade");
+  const gradesTableBody = document.querySelector("#gradesTable tbody");
+  const announcementSearch = document.getElementById("announcementSearch");
+  const announcementList = document.getElementById("announcementList");
+  const announcementsPanel = document.getElementById("announcementsPanel");
+
+  // Reset everything first
   tabList.innerHTML = "";
   calendarGroups.innerHTML = "";
+  assignmentsAccordion.innerHTML = "";
+  gradesTableBody.innerHTML = "";
+  announcementList.innerHTML = "";
+  modulesAccordion.innerHTML = "";
+  folderList.innerHTML = "";
+  fileItems.innerHTML = "";
+  filesPanel.classList.add("hidden");
 
-  if (activeTab === "modules" && tabData.schedule) {
-    tabList.classList.add("hidden");
-    calendarGroups.classList.remove("hidden");
+  assignmentsAccordion.classList.add("hidden");
+  gradesPanel.classList.add("hidden");
+  tabList.classList.add("hidden");
+  calendarGroups.classList.add("hidden");
+  announcementsPanel.classList.add("hidden");
+  modulesAccordion.classList.add("hidden");
 
-    tabData.schedule.forEach((group) => {
-      const groupEl = document.createElement("section");
-      groupEl.className = "calendar-group";
+  // ASSIGNMENTS TAB ONLY
+  if (activeTab === "assignments") {
+    assignmentsAccordion.classList.remove("hidden");
 
-      const heading = document.createElement("h4");
-      heading.textContent = group.date;
-      groupEl.appendChild(heading);
+    (tabData.sections || []).forEach((section, index) => {
+      const sectionEl = document.createElement("div");
+      sectionEl.className = "assignment-section";
 
-      const list = document.createElement("ul");
-      group.entries.forEach((entry) => {
+      const header = document.createElement("button");
+      header.className = "assignment-header";
+      header.setAttribute("aria-expanded", index === 0 ? "true" : "false");
+      header.innerHTML = `
+        <span>${section.label}</span>
+        <small>${section.summary}</small>
+        <span class="caret">${index === 0 ? "−" : "+"}</span>
+      `;
+      sectionEl.appendChild(header);
+
+      const listEl = document.createElement("ul");
+      listEl.className = `assignment-list ${index === 0 ? "open" : ""}`;
+
+      (section.items || []).forEach((item) => {
         const li = document.createElement("li");
-        li.innerHTML = `<span>${entry.assignment}</span><strong>Due ${entry.due}</strong>`;
-        list.appendChild(li);
+        li.textContent = item;
+        listEl.appendChild(li);
       });
 
-      groupEl.appendChild(list);
-      calendarGroups.appendChild(groupEl);
-    });
-  } else {
-    tabList.classList.remove("hidden");
-    calendarGroups.classList.add("hidden");
+      sectionEl.appendChild(listEl);
 
-    tabData.items.forEach((item) => {
+      header.addEventListener("click", () => {
+        const expanded = header.getAttribute("aria-expanded") === "true";
+        header.setAttribute("aria-expanded", String(!expanded));
+        listEl.classList.toggle("open", !expanded);
+
+        const caret = header.querySelector(".caret");
+        if (caret) caret.textContent = expanded ? "+" : "−";
+      });
+
+      assignmentsAccordion.appendChild(sectionEl);
+    });
+  }
+
+  // GRADES TAB ONLY
+  else if (activeTab === "grades") {
+    gradesPanel.classList.remove("hidden");
+
+    const records = tabData.records || [];
+
+    let totalEarned = 0;
+    let totalPossible = 0;
+
+    records.forEach((record) => {
+      const earned =
+        record.status === "Missing"
+          ? 0
+          : Number(record.earned ?? 0);
+
+      const total = Number(record.total ?? 100);
+
+      totalEarned += earned;
+      totalPossible += total;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${record.name}</td>
+        <td>${record.dueDate}</td>
+        <td>${record.submittedDate || "-"}</td>
+        <td>${record.status}</td>
+        <td>${earned}/${total}</td>
+        <td><button class="note-btn">View Notes</button></td>
+      `;
+
+      const noteBtn = tr.querySelector(".note-btn");
+      noteBtn.addEventListener("click", () => {
+        alert(`${record.name} notes:\n${record.teacherNotes || "No notes"}`);
+      });
+
+      gradesTableBody.appendChild(tr);
+    });
+
+    const overallPercent =
+      totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+
+    overallGradeEl.textContent = `${overallPercent}%`;
+  }
+
+  // ANNOUNCEMENTS TAB ONLY
+  else if (activeTab === "announcements") {
+    announcementsPanel.classList.remove("hidden");
+    announcementSearch.value = "";
+
+    const renderAnnouncements = (filter = "") => {
+      announcementList.innerHTML = "";
+      const normalizedFilter = filter.toLowerCase();
+      const posts = (tabData.posts || []).filter((post) => {
+        if (!normalizedFilter) return true;
+        return (
+          post.title.toLowerCase().includes(normalizedFilter) ||
+          post.preview.toLowerCase().includes(normalizedFilter)
+        );
+      });
+
+      if (posts.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "announcement-empty";
+        empty.textContent = "No announcements found.";
+        announcementList.appendChild(empty);
+        return;
+      }
+
+      posts.forEach((post) => {
+        const row = document.createElement("article");
+        row.className = "announcement-row";
+        row.innerHTML = `
+          <div class="announcement-left">
+            <div class="announcement-title">${post.title}</div>
+            <div class="announcement-preview">${post.preview}</div>
+          </div>
+          <div class="announcement-date">${post.date}</div>
+        `;
+        announcementList.appendChild(row);
+      });
+    };
+
+    renderAnnouncements();
+    announcementSearch.addEventListener("input", (e) => {
+      renderAnnouncements(e.target.value);
+    });
+  }
+
+  // FILES TAB ONLY
+  else if (activeTab === "files") {
+
+    filesPanel.classList.remove("hidden");
+    folderList.innerHTML = "";
+    fileItems.innerHTML = "";
+
+    const folders = tabData.folders || {};
+    const folderNames = Object.keys(folders);
+    const defaultFolder = folderNames[0] || "";
+    let activeFolder = defaultFolder;
+
+    const renderFiles = (folderName) => {
+      fileItems.innerHTML = "";
+      selectedFolderTitle.textContent = folderName;
+      selectedFolderDesc.textContent = `Open ${folderName.toLowerCase()} files`;      
+
+      (folders[folderName] || []).forEach((file) => {
+        const li = document.createElement("li");
+        li.className = "file-item";
+        li.innerHTML = `<strong>${file.name}</strong><span>${file.type}</span>`;
+        fileItems.appendChild(li);
+      });
+    };
+
+    folderNames.forEach((folderName) => {
+      const button = document.createElement("button");
+      button.className = `folder-btn${folderName === activeFolder ? " active" : ""}`;
+      button.textContent = folderName;
+      button.addEventListener("click", () => {
+        activeFolder = folderName;
+        document.querySelectorAll(".folder-btn").forEach((btn) => btn.classList.remove("active"));
+        button.classList.add("active");
+        renderFiles(folderName);
+      });
+      folderList.appendChild(button);
+    });
+
+    renderFiles(activeFolder);
+  }
+
+  // MODULES TAB ONLY
+  else if (activeTab === "modules") {
+    modulesAccordion.classList.remove("hidden");
+    const weeks = tabData.weeks || [];
+
+    weeks.forEach((week, index) => {
+      const weekEl = document.createElement("div");
+      weekEl.className = "module-week";
+
+      const header = document.createElement("button");
+      header.className = "module-week-header";
+      header.setAttribute("aria-expanded", index === 0 ? "true" : "false");
+      header.innerHTML = `
+        <span>${week.title}</span>
+        <small>${week.summary}</small>
+        <span class="caret">${index === 0 ? "−" : "+"}</span>
+      `;
+      weekEl.appendChild(header);
+
+      const content = document.createElement("div");
+      content.className = `module-week-content ${index === 0 ? "open" : ""}`;
+      const sectionTemplate = (label, items) => {
+        const sec = document.createElement("div");
+        sec.className = "module-section";
+        sec.innerHTML = `<h4>${label}</h4><ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+        return sec;
+      };
+
+      content.appendChild(sectionTemplate("Class Material", week.materials || []));
+      content.appendChild(sectionTemplate("Assignments", week.assignments || []));
+      content.appendChild(sectionTemplate("Homework", week.homework || []));
+
+      weekEl.appendChild(content);
+
+      header.addEventListener("click", () => {
+        const expanded = header.getAttribute("aria-expanded") === "true";
+        header.setAttribute("aria-expanded", String(!expanded));
+        content.classList.toggle("open", expanded ? false : true);
+        const caret = header.querySelector(".caret");
+        if (caret) caret.textContent = expanded ? "+" : "−";
+      });
+
+      modulesAccordion.appendChild(weekEl);
+    });
+  }
+
+  // OTHER TABS
+  else {
+    tabList.classList.remove("hidden");
+
+    (tabData.items || []).forEach((item) => {
       const li = document.createElement("li");
-      li.textContent = item;
+      if (item && typeof item === "object" && "title" in item && "dueDate" in item) {
+        const dueStr = item.dueDate && item.dueTime
+          ? `Due ${new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} at ${item.dueTime}`
+          : "";
+        const ptsStr = item.pointsPossible != null ? ` (${item.pointsPossible} pts)` : "";
+        li.innerHTML = `<strong>${escapeHtml(item.title)}</strong>${dueStr ? ` — ${dueStr}${ptsStr}` : ""}` +
+          (item.description ? `<p class="assignment-desc">${escapeHtml(item.description)}</p>` : "");
+      } else if (tabData.recordGrades && item && typeof item === "object" && "assignmentTitle" in item) {
+        const pts = item.pointsEarned != null
+          ? `${item.pointsEarned}/${item.pointsPossible != null ? item.pointsPossible : "?"} pts`
+          : "—";
+        li.innerHTML =
+          `<strong>${escapeHtml(item.assignmentTitle)}</strong> — ${pts}` +
+          (item.feedback ? `<p class="assignment-desc">${escapeHtml(item.feedback)}</p>` : "");
+      } else if (tabData.recordAnnouncements && item && typeof item === "object" && "title" in item && "body" in item) {
+        const dateStr = item.postedAt
+          ? new Date(item.postedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          : "";
+        li.innerHTML =
+          `<strong>${escapeHtml(item.title)}</strong>${dateStr ? ` <span class="muted">${dateStr}</span>` : ""}` +
+          `<p class="assignment-desc">${escapeHtml(item.body)}</p>`;
+      } else if (tabData.recordFiles && item && typeof item === "object" && "name" in item) {
+        li.innerHTML = `<a href="${escapeHtml(item.url || "#")}">${escapeHtml(item.name)}</a>`;
+      } else {
+        li.textContent = typeof item === "string" ? item : "";
+      }
       tabList.appendChild(li);
     });
   }

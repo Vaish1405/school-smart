@@ -1,0 +1,42 @@
+[
+  {
+    "id": "s1",
+    "firstName": "Jordan",
+    "lastName": "Chen",
+    "email": "jordan.chen@schoolsmart.edu",
+    "educationLevel": "High School",
+    "gradeLevel": 11
+  },
+  {
+    "id": "s2",
+    "firstName": "Alex",
+    "lastName": "Rivera",
+    "email": "alex.rivera@schoolsmart.edu",
+    "educationLevel": "High School",
+    "gradeLevel": 11
+  },
+  {
+    "id": "s3",
+    "firstName": "Sam",
+    "lastName": "Williams",
+    "email": "sam.williams@schoolsmart.edu",
+    "educationLevel": "High School",
+    "gradeLevel": 11
+  },
+  {
+    "id": "s4",
+    "firstName": "Morgan",
+    "lastName": "Lee",
+    "email": "morgan.lee@schoolsmart.edu",
+    "educationLevel": "High School",
+    "gradeLevel": 11
+  },
+  {
+    "id": "s5",
+    "firstName": "Casey",
+    "lastName": "Nguyen",
+    "email": "casey.nguyen@schoolsmart.edu",
+    "educationLevel": "High School",
+    "gradeLevel": 11
+  }
+]

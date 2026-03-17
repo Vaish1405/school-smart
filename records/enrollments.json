@@ -1,0 +1,7 @@
+[
+  { "id": "e1", "studentId": "s1", "classId": "c1", "enrolledAt": "2026-01-08" },
+  { "id": "e2", "studentId": "s2", "classId": "c1", "enrolledAt": "2026-01-08" },
+  { "id": "e3", "studentId": "s3", "classId": "c1", "enrolledAt": "2026-01-08" },
+  { "id": "e4", "studentId": "s4", "classId": "c1", "enrolledAt": "2026-01-08" },
+  { "id": "e5", "studentId": "s5", "classId": "c1", "enrolledAt": "2026-01-08" }
+]

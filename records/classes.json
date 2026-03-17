@@ -1,0 +1,12 @@
+[
+  {
+    "id": "c1",
+    "name": "Chemistry Lab Foundations",
+    "teacherId": "t1",
+    "schedule": "Mon/Wed 10:00 AM",
+    "term": "Spring 2026",
+    "room": "Science 204",
+    "heading": "Lab Safety and First Experiment Setup",
+    "description": "This course introduces lab safety procedures, scientific notation in measurements, and foundational experiment documentation."
+  }
+]

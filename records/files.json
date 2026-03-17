@@ -1,0 +1,23 @@
+[
+  {
+    "id": "f1",
+    "classId": "c1",
+    "name": "Syllabus.pdf",
+    "type": "pdf",
+    "url": "#"
+  },
+  {
+    "id": "f2",
+    "classId": "c1",
+    "name": "Week-1-Slides.pdf",
+    "type": "pdf",
+    "url": "#"
+  },
+  {
+    "id": "f3",
+    "classId": "c1",
+    "name": "Lab-Notebook-Template.docx",
+    "type": "doc",
+    "url": "#"
+  }
+]

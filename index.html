@@ -218,6 +218,58 @@
             <section class="tab-content">
               <h3 id="tabTitle">Assignments</h3>
               <p id="tabDescription"></p>
+
+              <div id="assignmentsAccordion" class="assignments-accordion hidden"></div>
+
+              <div id="gradesPanel" class="grades-panel hidden">
+                <div class="grade-summary">
+                  <div>
+                    <p class="mini-label">Overall Course Grade</p>
+                    <h3 id="overallGrade">--</h3>
+                  </div>
+                </div>
+                <div class="grade-table-wrap">
+                  <div class="grade-table-legend">Assignments</div>
+                  <table id="gradesTable" class="grade-table">
+                    <thead>
+                      <tr>
+                        <th>Assignment</th>
+                        <th>Due</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Teacher Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="announcementsPanel" class="announcements-panel hidden">
+                <div class="announcement-search-row">
+                  <input id="announcementSearch" type="search" placeholder="Search announcements..." />
+                </div>
+                <div id="announcementList" class="announcement-list"></div>
+              </div>
+
+              <div id="filesPanel" class="files-panel hidden">
+                <div class="files-grid">
+                  <aside class="file-folders" id="folderList"></aside>
+                  <div class="file-items">
+                    <div class="file-head">
+                      <div>
+                        <p class="mini-label">Folder</p>
+                        <h3 id="selectedFolderTitle">Syllabus</h3>
+                      </div>
+                      <p id="selectedFolderDesc" class="mini-label">Open class resources and handouts.</p>
+                    </div>
+                    <ul id="fileItems" class="file-list"></ul>
+                  </div>
+                </div>
+              </div>
+
+              <div id="modulesAccordion" class="modules-accordion hidden"></div>
               <ul id="tabList"></ul>
               <div id="calendarGroups" class="calendar-groups hidden"></div>
             </section>
