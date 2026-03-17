@@ -243,6 +243,118 @@ def _clean_agent_answer(answer: str) -> str:
     return cleaned or text
 
 
+def _extract_json_block(answer: str) -> str:
+    text = (answer or "").strip()
+    if not text:
+        return ""
+
+    # Preserve already-valid JSON payloads exactly.
+    if text.startswith("{") or text.startswith("["):
+        try:
+            json.loads(text)
+            return text
+        except Exception:  # noqa: BLE001
+            pass
+
+    # Also support fenced JSON payloads.
+    fenced_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", text, flags=re.IGNORECASE)
+    if fenced_match:
+        inner = fenced_match.group(1).strip()
+        if inner.startswith("{") or inner.startswith("["):
+            try:
+                json.loads(inner)
+                return inner
+            except Exception:  # noqa: BLE001
+                return ""
+    return ""
+
+
+def _extract_last_balanced_object(text: str) -> str:
+    s = (text or "").strip()
+    if not s:
+        return ""
+
+    in_string = False
+    escape = False
+    depth = 0
+    start = -1
+    candidates: list[str] = []
+
+    for idx, ch in enumerate(s):
+        if escape:
+            escape = False
+            continue
+        if ch == "\\" and in_string:
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "{":
+            if depth == 0:
+                start = idx
+            depth += 1
+            continue
+        if ch == "}":
+            if depth == 0:
+                continue
+            depth -= 1
+            if depth == 0 and start != -1:
+                candidates.append(s[start : idx + 1].strip())
+                start = -1
+
+    return candidates[-1] if candidates else ""
+
+
+def _repair_common_json_issues(text: str) -> str:
+    s = (text or "").strip()
+    if not s:
+        return ""
+
+    # Normalize common unicode punctuation that can appear in model output.
+    s = s.replace("\u201c", '"').replace("\u201d", '"').replace("\u2018", "'").replace("\u2019", "'")
+
+    # Quote unquoted string values for known keys in the Future Pathways schema.
+    key_pattern = r'(course_name|summary_title|summary_text|title|why|id|outcome)'
+    value_pattern = r'([A-Za-z][^,\]\}\n"]*)'
+    s = re.sub(
+        rf'("(?:(?:{key_pattern}))"\s*:\s*){value_pattern}',
+        lambda m: f'{m.group(1)}{json.dumps(m.group(2).strip())}',
+        s,
+        flags=re.IGNORECASE,
+    )
+
+    return s
+
+
+def _normalize_json_answer(answer: str) -> str:
+    # 1) Direct JSON or fenced JSON.
+    direct = _extract_json_block(answer)
+    if direct:
+        return direct
+
+    # 2) Last balanced JSON object candidate.
+    candidate = _extract_last_balanced_object(answer)
+    if candidate:
+        try:
+            json.loads(candidate)
+            return candidate
+        except Exception:  # noqa: BLE001
+            pass
+
+        repaired = _repair_common_json_issues(candidate)
+        if repaired:
+            try:
+                json.loads(repaired)
+                return repaired
+            except Exception:  # noqa: BLE001
+                pass
+
+    return ""
+
+
 async def _get_iam_token() -> str:
     # IBM IAM tokens are short-lived; this simple cache avoids frequent token calls.
     import time
@@ -391,6 +503,10 @@ async def study_helper(payload: StudyHelperRequest) -> JSONResponse:
     answer = _extract_first_text(data)
     if not answer:
         raise HTTPException(status_code=502, detail={"error": "No answer text in IBM response", "raw": data})
+
+    json_answer = _normalize_json_answer(answer)
+    if json_answer:
+        return JSONResponse({"answer": json_answer})
 
     return JSONResponse({"answer": _clean_agent_answer(answer)})
 
