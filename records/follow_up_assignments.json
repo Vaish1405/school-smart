@@ -1,0 +1,60 @@
+[
+  {
+    "id": "fu_1773765841689514300",
+    "studentId": "s1",
+    "courseKey": "chemistry",
+    "classId": "c1",
+    "createdAt": "2026-03-17T16:44:01.689541Z",
+    "dueDate": "2026-03-20",
+    "sourceAssignmentId": "a1",
+    "sourceAssignmentTitle": "Lab Safety Contract",
+    "title": "Follow-up: Lab Safety Contract (Safety)",
+    "summary": "Based on performance in Lab Safety Contract, complete this quick follow-up before 2026-03-20.",
+    "studyGuide": {
+      "title": "Lab Safety Contract: quick refresher",
+      "markdown": "## Follow-up focus: Safety\n\n**Source:** Lab Safety Contract\n\nRead the lab safety guidelines and sign the safety contract acknowledging that you understand proper handling of chemicals, use of personal protective equipment, and emergency procedures. Upload the signed contract as a PDF.\n\n### What to do\n- Review the key idea(s)\n- Take the short quiz\n- Re-attempt one similar problem and explain your steps\n"
+    },
+    "quiz": {
+      "title": "Follow-up Quiz",
+      "questions": [
+        {
+          "id": "fu_a1_1",
+          "prompt": "What is the most likely source of error in this lab setup?",
+          "choices": [
+            "Uncontrolled variables and inconsistent measurement steps",
+            "Only recording mistakes affect results",
+            "Round to match the least precise measurement used",
+            "A claim linked to data trend and one limitation"
+          ],
+          "correctChoiceIndex": 0,
+          "explanation": "In labs, setup consistency and controlled variables matter as much as note accuracy."
+        },
+        {
+          "id": "fu_a1_2",
+          "prompt": "How should significant figures be applied in the final result?",
+          "choices": [
+            "Round to match the least precise measurement used",
+            "Always keep all calculator digits",
+            "Uncontrolled variables and inconsistent measurement steps",
+            "A claim linked to data trend and one limitation"
+          ],
+          "correctChoiceIndex": 0,
+          "explanation": "Scientific reporting requires precision that matches measurement limits, not calculator output."
+        },
+        {
+          "id": "fu_a1_3",
+          "prompt": "Which part of the conclusion best supports your hypothesis?",
+          "choices": [
+            "A claim linked to data trend and one limitation",
+            "A summary sentence without data reference",
+            "Uncontrolled variables and inconsistent measurement steps",
+            "Round to match the least precise measurement used"
+          ],
+          "correctChoiceIndex": 0,
+          "explanation": "Strong conclusions tie claim to evidence and acknowledge at least one limitation."
+        }
+      ]
+    },
+    "status": "assigned"
+  }
+]
