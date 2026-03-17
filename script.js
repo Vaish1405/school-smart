@@ -11,6 +11,7 @@ const cards = document.querySelectorAll(".class-card");
 const backToHome = document.getElementById("backToHome");
 const courseTabs = document.querySelectorAll(".course-tab");
 const tutorTabButton = document.querySelector('.course-tab[data-tab="tutor"]');
+const careerTabButton = document.querySelector('.course-tab[data-tab="career"]');
 
 const detailTag = document.getElementById("detailTag");
 const detailTitle = document.getElementById("detailTitle");
@@ -91,19 +92,24 @@ let currentCourse = "home";
 let activeTab = "assignments";
 let calendarDate = new Date(2026, 2, 1);
 let isTeacherView = false;
+let currentCourseDisplayTitle = "";
 
 const teacherDashboardCards = [
-  { icon: "CS1", title: "Intro to Programming - Period 1", teacher: "Prof. Aaron Bell", schedule: "Mon/Wed | 8:00 AM", published: true },
-  { icon: "CS2", title: "Intro to Programming - Period 2", teacher: "Prof. Aaron Bell", schedule: "Mon/Wed | 9:30 AM", published: true },
-  { icon: "DS", title: "Data Structures", teacher: "Prof. Aaron Bell", schedule: "Tue/Thu | 10:00 AM", published: true },
-  { icon: "AL", title: "Algorithms", teacher: "Prof. Aaron Bell", schedule: "Tue/Thu | 1:00 PM", published: true },
-  { icon: "WD", title: "Web Development", teacher: "Prof. Aaron Bell", schedule: "Wed/Fri | 11:00 AM", published: false },
-  { icon: "SE", title: "Software Engineering", teacher: "Prof. Aaron Bell", schedule: "Fri | 2:30 PM", published: false },
+  { icon: "CH1", title: "Chemistry Lab Foundations - Period 1", teacher: "Dr. Nina Verma", schedule: "Mon/Wed | 8:00 AM", published: true },
+  { icon: "CH2", title: "Chemistry Lab Foundations - Period 2", teacher: "Dr. Nina Verma", schedule: "Mon/Wed | 9:30 AM", published: true },
+  { icon: "ORG", title: "Organic Chemistry Lab", teacher: "Dr. Nina Verma", schedule: "Tue/Thu | 10:00 AM", published: true },
+  { icon: "ANA", title: "Analytical Chemistry", teacher: "Dr. Nina Verma", schedule: "Tue/Thu | 1:00 PM", published: true },
+  { icon: "PHY", title: "Physical Chemistry", teacher: "Dr. Nina Verma", schedule: "Wed/Fri | 11:00 AM", published: false },
+  { icon: "CHE", title: "Chemistry Seminar", teacher: "Dr. Nina Verma", schedule: "Fri | 2:30 PM", published: false },
 ];
+const teacherCourseTitleToClassId = {
+  "Chemistry Lab Foundations - Period 1": "c1",
+};
 
 let studentDashboardCards = [];
 let analyticsClassId = "c1";
 let analyticsStudentId = "s1";
+const ALL_STUDENTS_VALUE = "__all__";
 
 // Records: only courses in courseKeyToClassId get real data (chemistry -> c1)
 const courseKeyToClassId = { chemistry: "c1" };
@@ -806,6 +812,50 @@ function getCourseGradeSummary(courseKey) {
   return { percent, letter: letterGradeFromPercent(percent) };
 }
 
+function getTeacherClassIdForActiveCourse() {
+  const title = (currentCourseDisplayTitle || "").trim();
+  if (teacherCourseTitleToClassId[title]) return teacherCourseTitleToClassId[title];
+  return courseKeyToClassId[currentCourse] || null;
+}
+
+function getTeacherGradeRowsForClass(classId) {
+  const enrolledStudentIds = recordsEnrollments
+    .filter((e) => e.classId === classId)
+    .map((e) => e.studentId);
+
+  const students = recordsStudents.filter((s) => enrolledStudentIds.includes(s.id));
+  const rows = students.map((student) => {
+    const classGrade = recordsClassGrades.find(
+      (g) => g.classId === classId && g.studentId === student.id
+    );
+    return {
+      studentName: `${student.firstName} ${student.lastName}`,
+      studentId: student.id,
+      term: classGrade?.term || "-",
+      percent: classGrade?.percent ?? null,
+      letter: classGrade?.letterGrade || "-",
+    };
+  });
+
+  if (rows.length === 0) {
+    const gradeOnlyRows = recordsClassGrades
+      .filter((g) => g.classId === classId)
+      .map((g) => {
+        const s = recordsStudents.find((x) => x.id === g.studentId);
+        return {
+          studentName: s ? `${s.firstName} ${s.lastName}` : g.studentId,
+          studentId: g.studentId,
+          term: g.term || "-",
+          percent: g.percent ?? null,
+          letter: g.letterGrade || "-",
+        };
+      });
+    return gradeOnlyRows;
+  }
+
+  return rows;
+}
+
 function getTutorAssignmentsForCourse(courseKey) {
   const classId = courseKeyToClassId[courseKey];
   if (!classId) return [];
@@ -817,7 +867,7 @@ function getTutorAssignmentsForCourse(courseKey) {
         (g) => g.studentId === currentStudentId && g.assignmentId === assignment.id
       );
       const hasScore = grade && grade.pointsEarned != null;
-      const dueDateObj = new Date(assignment.dueDate);
+      const dueDateObj = parseIsoDateLocal(assignment.dueDate);
       const isPast = dueDateObj <= demoToday || hasScore;
       if (!isPast) return null;
 
@@ -834,7 +884,7 @@ function getTutorAssignmentsForCourse(courseKey) {
       };
     })
     .filter(Boolean)
-    .sort((a, b) => new Date(b.dueIso) - new Date(a.dueIso));
+    .sort((a, b) => (b.dueIso || "").localeCompare(a.dueIso || ""));
 
   return rows;
 }
@@ -845,20 +895,29 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function parseIsoDateLocal(isoDate) {
+  const [y, m, d] = String(isoDate || "").split("-").map(Number);
+  if (!y || !m || !d) return new Date(isoDate);
+  return new Date(y, m - 1, d);
+}
+
 function formatAssignmentDate(isoDate) {
-  const d = new Date(isoDate);
+  const d = parseIsoDateLocal(isoDate);
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
 function formatShortDate(isoDate) {
-  const d = new Date(isoDate);
+  const d = parseIsoDateLocal(isoDate);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function addDaysToIsoDate(isoDate, daysToAdd) {
-  const d = new Date(isoDate);
+  const d = parseIsoDateLocal(isoDate);
   d.setDate(d.getDate() + daysToAdd);
-  return d.toISOString().slice(0, 10);
+  const yyyy = String(d.getFullYear());
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function getTeacherById(id) {
@@ -1144,6 +1203,13 @@ function populateAnalyticsFilters() {
     : recordsStudents.filter((s) => s.id === currentStudentId);
 
   analyticsStudentSelect.innerHTML = "";
+  if (isTeacherView) {
+    const allOption = document.createElement("option");
+    allOption.value = ALL_STUDENTS_VALUE;
+    allOption.textContent = "All students";
+    analyticsStudentSelect.appendChild(allOption);
+  }
+
   classStudents.forEach((student) => {
     const option = document.createElement("option");
     option.value = student.id;
@@ -1151,7 +1217,10 @@ function populateAnalyticsFilters() {
     analyticsStudentSelect.appendChild(option);
   });
 
-  if (!classStudents.find((s) => s.id === analyticsStudentId)) {
+  if (isTeacherView) {
+    const exists = analyticsStudentId === ALL_STUDENTS_VALUE || classStudents.some((s) => s.id === analyticsStudentId);
+    if (!exists) analyticsStudentId = ALL_STUDENTS_VALUE;
+  } else if (!classStudents.find((s) => s.id === analyticsStudentId)) {
     analyticsStudentId = classStudents[0]?.id || currentStudentId;
   }
   analyticsStudentSelect.value = analyticsStudentId;
@@ -1410,7 +1479,7 @@ function buildTopicSeries(classId, studentId, teacherMode) {
   return { labels, values };
 }
 
-function renderAnalyticsInsights(classId, studentId, series, topicSeries) {
+function renderAnalyticsInsights(classId, studentId, series, topicSeries, teacherAllMode = true) {
   analyticsInsights.innerHTML = "";
   let messages = [];
 
@@ -1434,7 +1503,7 @@ function renderAnalyticsInsights(classId, studentId, series, topicSeries) {
         ? `Topic to focus this week: ${topicSeries.labels[topicSeries.values.indexOf(Math.min(...topicSeries.values))]}.`
         : "Topic performance will appear as more graded work is available.",
     ];
-  } else {
+  } else if (teacherAllMode) {
     const studentSeries = buildStudentOverallSeries(classId);
     const classAverage = studentSeries.values.length
       ? Math.round(studentSeries.values.reduce((a, b) => a + b, 0) / studentSeries.values.length)
@@ -1467,6 +1536,27 @@ function renderAnalyticsInsights(classId, studentId, series, topicSeries) {
       `Instructor suggestion: Add a 10-minute mini-lesson and worked example on ${weakestTopic}, then assign a short formative check in the next class.`,
       "Instructor suggestion: Group students below 70% into a targeted support station and provide scaffolded practice.",
     ];
+  } else {
+    const studentGrade = recordsClassGrades.find((g) => g.classId === classId && g.studentId === studentId);
+    const overall = studentGrade ? `${studentGrade.percent}% (${studentGrade.letterGrade})` : "Not available";
+    const missingCount = series.studentValues.filter((v) => v === 0).length;
+    let weakestIndex = 0;
+    series.studentValues.forEach((value, idx) => {
+      if (value < series.studentValues[weakestIndex]) weakestIndex = idx;
+    });
+    const weakest = series.assignments[weakestIndex];
+    const weakestScore = series.studentValues[weakestIndex] || 0;
+    const studentName = getStudentName(studentId);
+    messages = [
+      `${studentName} overall grade: ${overall}.`,
+      `${studentName} missing or unsubmitted assignments: ${missingCount}.`,
+      weakest
+        ? `Lowest assignment for ${studentName}: "${weakest.title}" at ${weakestScore}%.`
+        : "No assignment analytics available yet.",
+      topicSeries.labels.length
+        ? `Coaching focus for ${studentName}: ${topicSeries.labels[topicSeries.values.indexOf(Math.min(...topicSeries.values))]}.`
+        : "Topic performance will appear as more graded work is available.",
+    ];
   }
 
   messages.forEach((text) => {
@@ -1488,8 +1578,10 @@ function renderAnalytics() {
     return;
   }
 
-  const series = buildAssignmentSeries(analyticsClassId, analyticsStudentId);
-  const topicSeries = buildTopicSeries(analyticsClassId, analyticsStudentId, isTeacherView);
+  const analyticsStudentValue = analyticsStudentId || (isTeacherView ? ALL_STUDENTS_VALUE : currentStudentId);
+  const teacherAllMode = isTeacherView && analyticsStudentValue === ALL_STUDENTS_VALUE;
+  const series = buildAssignmentSeries(analyticsClassId, teacherAllMode ? currentStudentId : analyticsStudentValue);
+  const topicSeries = buildTopicSeries(analyticsClassId, teacherAllMode ? currentStudentId : analyticsStudentValue, isTeacherView && teacherAllMode);
 
   if (!isTeacherView) {
     if (assignmentLevelCard) assignmentLevelCard.classList.remove("hidden");
@@ -1521,44 +1613,71 @@ function renderAnalytics() {
     drawBarChart(studentBarChart, series.labels, series.studentValues, { color: "#5fa7a5" });
     drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues, "Class Avg", "You");
   } else {
-    if (assignmentLevelCard) assignmentLevelCard.classList.add("hidden");
+    if (assignmentLevelCard) assignmentLevelCard.classList.toggle("hidden", teacherAllMode);
     if (topicPerformanceCard) topicPerformanceCard.classList.remove("hidden");
     if (analyticsStudentSelect) analyticsStudentSelect.disabled = false;
     if (analyticsClassSelect) analyticsClassSelect.disabled = false;
 
-    const bins = buildGradeDistribution(analyticsClassId);
-    const pieValues = [bins.A, bins.B, bins.C, bins.Df];
-    const pieColors = ["#4aa77a", "#62b3c8", "#e9b46b", "#d57a7a"];
-    drawPieChart(gradePieChart, pieValues, pieColors);
+    if (teacherAllMode) {
+      const bins = buildGradeDistribution(analyticsClassId);
+      const pieValues = [bins.A, bins.B, bins.C, bins.Df];
+      const pieColors = ["#4aa77a", "#62b3c8", "#e9b46b", "#d57a7a"];
+      drawPieChart(gradePieChart, pieValues, pieColors);
 
-    if (gradePieLegend) {
-      gradePieLegend.innerHTML = "";
-      ["A (90-100)", "B (80-89)", "C (70-79)", "D/F (<70)"].forEach((label, idx) => {
-        const pill = document.createElement("span");
-        pill.innerHTML = `<i style="background:${pieColors[idx]}"></i>${label}: ${pieValues[idx]}`;
-        gradePieLegend.appendChild(pill);
-      });
+      if (gradePieLegend) {
+        gradePieLegend.innerHTML = "";
+        ["A (90-100)", "B (80-89)", "C (70-79)", "D/F (<70)"].forEach((label, idx) => {
+          const pill = document.createElement("span");
+          pill.innerHTML = `<i style="background:${pieColors[idx]}"></i>${label}: ${pieValues[idx]}`;
+          gradePieLegend.appendChild(pill);
+        });
+      }
+
+      if (gradePieTitle) gradePieTitle.textContent = "Grade Distribution (Class)";
+      if (studentBarTitle) studentBarTitle.textContent = "Student-level Performance";
+      if (trendLineTitle) trendLineTitle.textContent = "Assignment-level Class Performance";
+      if (topicBarTitle) topicBarTitle.textContent = "Topic-wise Class Performance";
+
+      const studentSeries = buildStudentOverallSeries(analyticsClassId);
+      drawBarChart(studentBarChart, studentSeries.labels, studentSeries.values, { color: "#4d9aa8" });
+      drawTrendChart(
+        trendLineChart,
+        series.labels,
+        series.classValues,
+        new Array(series.classValues.length).fill(80),
+        "Class Avg",
+        "Target 80%"
+      );
+      drawBarChart(topicBarChart, topicSeries.labels, topicSeries.values, { color: "#7e9cb6" });
+    } else {
+      const selectedName = getStudentName(analyticsStudentValue);
+      const completed = series.studentValues.filter((v) => v > 0).length;
+      const missing = series.studentValues.filter((v) => v === 0).length;
+      drawPieChart(gradePieChart, [completed, missing || 0], ["#4aa77a", "#d57a7a"]);
+
+      if (gradePieLegend) {
+        gradePieLegend.innerHTML = "";
+        ["Completed", "Missing"].forEach((label, idx) => {
+          const val = idx === 0 ? completed : missing;
+          const color = idx === 0 ? "#4aa77a" : "#d57a7a";
+          const pill = document.createElement("span");
+          pill.innerHTML = `<i style="background:${color}"></i>${label}: ${val}`;
+          gradePieLegend.appendChild(pill);
+        });
+      }
+
+      if (gradePieTitle) gradePieTitle.textContent = `${selectedName}: Completion Snapshot`;
+      if (studentBarTitle) studentBarTitle.textContent = `${selectedName}: Assignment Scores`;
+      if (trendLineTitle) trendLineTitle.textContent = `${selectedName}: You vs Class Average`;
+      if (topicBarTitle) topicBarTitle.textContent = `${selectedName}: Topic-wise Performance`;
+
+      drawBarChart(studentBarChart, series.labels, series.studentValues, { color: "#5fa7a5" });
+      drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues, "Class Avg", selectedName);
+      drawBarChart(topicBarChart, topicSeries.labels, topicSeries.values, { color: "#7e9cb6" });
     }
-
-    if (gradePieTitle) gradePieTitle.textContent = "Grade Distribution (Class)";
-    if (studentBarTitle) studentBarTitle.textContent = "Student-level Performance";
-    if (trendLineTitle) trendLineTitle.textContent = "Assignment-level Class Performance";
-    if (topicBarTitle) topicBarTitle.textContent = "Topic-wise Class Performance";
-
-    const studentSeries = buildStudentOverallSeries(analyticsClassId);
-    drawBarChart(studentBarChart, studentSeries.labels, studentSeries.values, { color: "#4d9aa8" });
-    drawTrendChart(
-      trendLineChart,
-      series.labels,
-      series.classValues,
-      new Array(series.classValues.length).fill(80),
-      "Class Avg",
-      "Target 80%"
-    );
-    drawBarChart(topicBarChart, topicSeries.labels, topicSeries.values, { color: "#7e9cb6" });
   }
 
-  renderAnalyticsInsights(analyticsClassId, analyticsStudentId, series, topicSeries);
+  renderAnalyticsInsights(analyticsClassId, analyticsStudentValue, series, topicSeries, teacherAllMode);
 }
 updateCourseCardsGrades();
 
@@ -1680,12 +1799,15 @@ function renderActiveTab() {
   if (!tabData) return;
 
   tabTitle.textContent = tabData.title;
-  tabDescription.textContent = tabData.description;
+  tabDescription.textContent = isTeacherView
+    ? getTeacherTabDescription(activeTab, currentCourseDisplayTitle || courseData[currentCourse].title)
+    : tabData.description;
 
   const assignmentsAccordion = document.getElementById("assignmentsAccordion");
   const gradesPanel = document.getElementById("gradesPanel");
   const overallGradeEl = document.getElementById("overallGrade");
   const gradesTableBody = document.querySelector("#gradesTable tbody");
+  const gradesTableHeaders = document.querySelectorAll("#gradesTable thead th");
   const announcementSearch = document.getElementById("announcementSearch");
   const announcementList = document.getElementById("announcementList");
   const announcementsPanel = document.getElementById("announcementsPanel");
@@ -1758,37 +1880,81 @@ function renderActiveTab() {
   else if (activeTab === "grades") {
     gradesPanel.classList.remove("hidden");
 
-    const records = getGradeRecordsForCourse(currentCourse);
-
-    const summary = getCourseGradeSummary(currentCourse);
-
-    records.forEach((record) => {
-      const earned =
-        record.status === "Missing"
-          ? 0
-          : Number(record.earned ?? 0);
-
-      const total = Number(record.total ?? 100);
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${record.name}</td>
-        <td>${record.dueDate}</td>
-        <td>${record.submittedDate || "-"}</td>
-        <td>${record.status}</td>
-        <td>${earned}/${total}</td>
-        <td><button class="note-btn">View Notes</button></td>
-      `;
-
-      const noteBtn = tr.querySelector(".note-btn");
-      noteBtn.addEventListener("click", () => {
-        alert(`${record.name} notes:\n${record.teacherNotes || "No notes"}`);
+    if (isTeacherView) {
+      const headers = ["Student", "Student ID", "Term", "Percent", "Letter", "Notes"];
+      gradesTableHeaders.forEach((th, idx) => {
+        if (headers[idx]) th.textContent = headers[idx];
       });
 
-      gradesTableBody.appendChild(tr);
-    });
+      const classId = getTeacherClassIdForActiveCourse();
+      const rows = classId ? getTeacherGradeRowsForClass(classId) : [];
 
-    overallGradeEl.textContent = `${summary.percent}%`;
+      if (rows.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="6">No student gradebook data available for this class yet.</td>`;
+        gradesTableBody.appendChild(tr);
+        overallGradeEl.textContent = "--";
+      } else {
+        let totalPercent = 0;
+        let gradedCount = 0;
+
+        rows.forEach((row) => {
+          if (typeof row.percent === "number") {
+            totalPercent += row.percent;
+            gradedCount += 1;
+          }
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${escapeHtml(row.studentName)}</td>
+            <td>${escapeHtml(row.studentId)}</td>
+            <td>${escapeHtml(row.term)}</td>
+            <td>${row.percent == null ? "-" : `${row.percent}%`}</td>
+            <td>${escapeHtml(row.letter)}</td>
+            <td>${row.percent == null ? "Grade not posted" : "Posted"}</td>
+          `;
+          gradesTableBody.appendChild(tr);
+        });
+
+        const avg = gradedCount > 0 ? Math.round(totalPercent / gradedCount) : null;
+        overallGradeEl.textContent = avg == null ? "--" : `${avg}%`;
+      }
+    } else {
+      const headers = ["Assignment", "Due", "Submitted", "Status", "Score", "Teacher Notes"];
+      gradesTableHeaders.forEach((th, idx) => {
+        if (headers[idx]) th.textContent = headers[idx];
+      });
+
+      const records = getGradeRecordsForCourse(currentCourse);
+      const summary = getCourseGradeSummary(currentCourse);
+
+      records.forEach((record) => {
+        const earned =
+          record.status === "Missing"
+            ? 0
+            : Number(record.earned ?? 0);
+
+        const total = Number(record.total ?? 100);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${record.name}</td>
+          <td>${record.dueDate}</td>
+          <td>${record.submittedDate || "-"}</td>
+          <td>${record.status}</td>
+          <td>${earned}/${total}</td>
+          <td><button class="note-btn">View Notes</button></td>
+        `;
+
+        const noteBtn = tr.querySelector(".note-btn");
+        noteBtn.addEventListener("click", () => {
+          alert(`${record.name} notes:\n${record.teacherNotes || "No notes"}`);
+        });
+
+        gradesTableBody.appendChild(tr);
+      });
+
+      overallGradeEl.textContent = `${summary.percent}%`;
+    }
   }
 
   // ANNOUNCEMENTS TAB ONLY
@@ -2014,18 +2180,22 @@ function renderActiveTab() {
   });
 }
 
-function renderCourseDetail(key) {
+function renderCourseDetail(key, cardEl = null) {
   const course = courseData[key];
   if (!course) return;
 
   currentCourse = key;
   activeTab = "assignments";
   updateCourseTabVisibility();
+  const teacherCardTitle = cardEl?.dataset?.displayTitle || "";
+  currentCourseDisplayTitle = isTeacherView && teacherCardTitle ? teacherCardTitle : course.title;
 
-  detailTag.textContent = course.tag;
-  detailTitle.textContent = course.title;
-  detailHeading.textContent = course.heading;
-  detailIntro.textContent = course.intro;
+  detailTag.textContent = isTeacherView ? "Chemistry" : course.tag;
+  detailTitle.textContent = currentCourseDisplayTitle;
+  detailHeading.textContent = isTeacherView ? `${currentCourseDisplayTitle} Overview` : course.heading;
+  detailIntro.textContent = isTeacherView
+    ? `Teacher workspace for ${currentCourseDisplayTitle}. Manage assignments, student progress, files, and announcements.`
+    : course.intro;
 
   renderActiveTab();
 }
@@ -2268,6 +2438,7 @@ function applyDashboardClassesForRole() {
     if (titleEl) titleEl.textContent = info.title;
     if (lines[0]) lines[0].textContent = info.teacher;
     if (lines[1]) lines[1].textContent = info.schedule;
+    card.dataset.displayTitle = info.title;
     const shouldBePublished = isTeacherView ? Boolean(info.published) : true;
     if (shouldBePublished) {
       publishedCount += 1;
@@ -2280,14 +2451,14 @@ function applyDashboardClassesForRole() {
   if (publishedCoursesHeading) {
     if (isTeacherView) {
       publishedCoursesHeading.style.display = "";
-      publishedCoursesHeading.textContent = `Published CS Courses (${publishedCount})`;
+      publishedCoursesHeading.textContent = `Published Chemistry Courses (${publishedCount})`;
     } else {
       publishedCoursesHeading.style.display = "none";
     }
   }
   if (unpublishedCoursesHeading && isTeacherView) {
     unpublishedCoursesHeading.textContent = isTeacherView
-      ? `Unpublished CS Courses (${unpublishedCount})`
+      ? `Unpublished Chemistry Courses (${unpublishedCount})`
       : `Unpublished Courses (${unpublishedCount})`;
   }
   if (unpublishedCoursesGroup) {
@@ -2299,12 +2470,36 @@ function applyDashboardClassesForRole() {
 }
 
 function updateCourseTabVisibility() {
-  if (!tutorTabButton) return;
   const showTutorTab = !isTeacherView && currentCourse === "chemistry";
-  tutorTabButton.classList.toggle("hidden", !showTutorTab);
-  if (!showTutorTab && activeTab === "tutor") {
+  if (tutorTabButton) {
+    tutorTabButton.classList.toggle("hidden", !showTutorTab);
+  }
+  const showCareerTab = !isTeacherView;
+  if (careerTabButton) {
+    careerTabButton.classList.toggle("hidden", !showCareerTab);
+  }
+  if ((!showTutorTab && activeTab === "tutor") || (!showCareerTab && activeTab === "career")) {
     activeTab = "assignments";
   }
+}
+
+function getTeacherTabDescription(tabKey, courseTitle) {
+  if (tabKey === "assignments") return `Manage assignments and due dates for ${courseTitle}.`;
+  if (tabKey === "grades") return `Review grading details for ${courseTitle}.`;
+  if (tabKey === "announcements") return `Post and manage announcements for ${courseTitle}.`;
+  if (tabKey === "files") return `Manage course files for ${courseTitle}.`;
+  if (tabKey === "modules") return `Organize modules and weekly content for ${courseTitle}.`;
+  if (tabKey === "analytics") return `View class performance analytics for ${courseTitle}.`;
+  return `Course workspace for ${courseTitle}.`;
+}
+
+function navigateToPage(path, params = {}) {
+  const query = new URLSearchParams(params);
+  if (isTeacherView && path !== "teacher.html") {
+    query.set("view", "teacher");
+  }
+  const qs = query.toString();
+  window.location.href = qs ? `${path}?${qs}` : path;
 }
 
 function setViewRole(teacherMode) {
@@ -2360,29 +2555,32 @@ function toggleProfileMenu() {
 
 cards.forEach((card) => {
   card.addEventListener("click", () => {
-    renderCourseDetail(card.dataset.course);
-    showView("detail");
+    const params = { course: card.dataset.course || "chemistry" };
+    if (isTeacherView && card.dataset.displayTitle) {
+      params.title = card.dataset.displayTitle;
+    }
+    navigateToPage("course.html", params);
   });
 });
 
 navDashboard.addEventListener("click", (event) => {
   event.preventDefault();
-  showView("home");
+  navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
 });
 
 navCalendar.addEventListener("click", (event) => {
   event.preventDefault();
-  showView("calendar");
+  navigateToPage("calendar.html");
 });
 
 navCourses.addEventListener("click", (event) => {
   event.preventDefault();
-  showView("home");
+  navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
 });
 
 navInbox.addEventListener("click", (event) => {
   event.preventDefault();
-  showView("home");
+  navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
 });
 
 calendarPrev.addEventListener("click", () => {
@@ -2412,7 +2610,9 @@ courseTabs.forEach((tab) => {
   });
 });
 
-backToHome.addEventListener("click", () => showView("home"));
+backToHome.addEventListener("click", () => {
+  navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
+});
 
 if (profileToggle && profileMenu) {
   profileToggle.addEventListener("click", (event) => {
@@ -2438,7 +2638,11 @@ if (profileToggle && profileMenu) {
 
 if (teacherViewOption) {
   teacherViewOption.addEventListener("click", () => {
-    setViewRole(!isTeacherView);
+    if (isTeacherView) {
+      window.location.href = "index.html";
+    } else {
+      navigateToPage("teacher.html");
+    }
     closeProfileMenu();
   });
 }
@@ -2449,7 +2653,30 @@ if (settingsOption) {
   });
 }
 
-setViewRole(false);
+function initPageRoute() {
+  const pageName = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+  if (pageName === "calendar.html") {
+    showView("calendar");
+    return;
+  }
+  if (pageName === "course.html") {
+    const params = new URLSearchParams(window.location.search);
+    const courseKey = params.get("course") || "chemistry";
+    const title = params.get("title");
+    const courseCardLike = title ? { dataset: { displayTitle: title } } : null;
+    renderCourseDetail(courseKey, courseCardLike);
+    showView("detail");
+    return;
+  }
+  showView("home");
+}
+
+const pageName = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+const pageParams = new URLSearchParams(window.location.search);
+const initialTeacherMode = pageName === "teacher.html" || pageParams.get("view") === "teacher";
+
+setViewRole(initialTeacherMode);
+initPageRoute();
 
 toggleButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
