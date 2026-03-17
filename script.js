@@ -3,6 +3,8 @@ const chatPanel = document.getElementById("chatPanel");
 const chatForm = document.getElementById("chatForm");
 const chatInput = document.getElementById("chatInput");
 const chatMessages = document.getElementById("chatMessages");
+const chatAttachments = document.getElementById("chatAttachments");
+const chatAttachmentCount = document.getElementById("chatAttachmentCount");
 
 const homeView = document.getElementById("homeView");
 const calendarView = document.getElementById("calendarView");
@@ -935,7 +937,40 @@ function appendMessage(text, role) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-async function queryStudyHelperApi(question) {
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const commaIndex = result.indexOf(",");
+      const base64 = commaIndex >= 0 ? result.slice(commaIndex + 1) : result;
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error(`Unable to read file: ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function collectAttachmentPayload() {
+  if (!chatAttachments || !chatAttachments.files?.length) return [];
+
+  const files = Array.from(chatAttachments.files);
+  const attachments = [];
+
+  for (const file of files) {
+    const data = await fileToBase64(file);
+    attachments.push({
+      name: file.name,
+      mimeType: file.type || "application/octet-stream",
+      data,
+      size: file.size || 0,
+    });
+  }
+
+  return attachments;
+}
+
+async function queryStudyHelperApi(question, attachments = []) {
   const response = await fetch("/api/study-helper", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -943,12 +978,19 @@ async function queryStudyHelperApi(question) {
       question,
       pageContext: activeContextText(),
       currentView: currentViewName(),
+      attachments,
     }),
   });
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(data?.error || "Study helper API request failed.");
+    const details =
+      data?.hint ||
+      data?.details?.error?.message ||
+      data?.details?.message ||
+      data?.error ||
+      "Study helper API request failed.";
+    throw new Error(details);
   }
 
   const data = await response.json();
@@ -957,6 +999,22 @@ async function queryStudyHelperApi(question) {
   }
 
   return data.answer;
+}
+
+function updateAttachmentLabel() {
+  if (!chatAttachmentCount || !chatAttachments) return;
+  const count = chatAttachments.files?.length || 0;
+  if (!count) {
+    chatAttachmentCount.textContent = "No files selected";
+    return;
+  }
+
+  if (count === 1) {
+    chatAttachmentCount.textContent = chatAttachments.files[0].name;
+    return;
+  }
+
+  chatAttachmentCount.textContent = `${count} files selected`;
 }
 
 function setChatOpen(isOpen) {
@@ -1039,16 +1097,28 @@ chatForm.addEventListener("submit", async (event) => {
   const question = chatInput.value.trim();
   if (!question) return;
 
+  const attachments = await collectAttachmentPayload();
   appendMessage(question, "user");
+  if (attachments.length) {
+    appendMessage(`Attached: ${attachments.map((a) => a.name).join(", ")}`, "user");
+  }
   chatInput.value = "";
 
   try {
-    const answer = await queryStudyHelperApi(question);
+    const answer = await queryStudyHelperApi(question, attachments);
     appendMessage(answer, "bot");
   } catch (error) {
     const message = error?.message || "Unable to reach AI agent.";
     appendMessage(`Agent error: ${message}`, "bot");
   }
 
+  if (chatAttachments) {
+    chatAttachments.value = "";
+    updateAttachmentLabel();
+  }
   chatInput.focus();
 });
+
+if (chatAttachments) {
+  chatAttachments.addEventListener("change", updateAttachmentLabel);
+}

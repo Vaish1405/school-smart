@@ -1,35 +1,34 @@
 # SchoolSmart LMS
 
-A student portal demo with dashboard, course details, calendar, and an in-app AI Study Helper. Assignment data for **Chemistry Lab Foundations** is loaded from `records/assignments.json`.
+A student portal MVP with dashboard, course details, calendar, and an in-app AI Study Helper.
 
-## How to run the UI
+## AI Helper setup (Gemini)
 
-The app is static HTML/CSS/JS. To use it (and to load `records/assignments.json`), you need to serve the project over **HTTP**, not open `index.html` as a file (`file://`). Here are simple ways to do it.
+1. Copy `ibm-credentials.env.example` to `ibm-credentials.env`.
+2. Add your `GEMINI_API_KEY` in `ibm-credentials.env`.
+3. Keep or change `GEMINI_MODEL` as needed.
 
-### Option 1: Node.js (npx)
+The top-right custom chat panel now calls `/api/study-helper`, which is backed by Gemini and supports:
+- text questions
+- image uploads
+- document uploads (for supported mime types)
 
-From the project root:
+## Run the app
 
-```bash
-npx --yes serve .
-```
-
-Then open **http://localhost:3000** in your browser (or the URL shown in the terminal).
-
-### Option 2: Python 3
-
-From the project root:
+From project root:
 
 ```bash
-python -m http.server 8000
+npm install
+npm start
 ```
 
-Then open **http://localhost:8000**.
+Then open:
 
-### Option 3: VS Code / Cursor
+```text
+http://127.0.0.1:3000
+```
 
-If you have the **Live Server** extension, right‑click `index.html` → **Open with Live Server**. It will serve the folder and open the app in the browser.
+## Notes
 
----
-
-After the app is running, open **Chemistry Lab Foundations** from the dashboard to see assignments and modules loaded from `records/assignments.json`. Other courses still use placeholder data.
+- The left-side IBM embedded widget is still loaded by script in `index.html`.
+- The custom AI Study Helper (top-right panel) is Gemini-backed.

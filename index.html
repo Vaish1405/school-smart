@@ -281,7 +281,7 @@
     <aside class="chat-panel" id="chatPanel" aria-hidden="true">
       <div class="chat-header">
         <h3>AI Study Helper</h3>
-        <p>Custom chat UI backed by IBM agent API</p>
+        <p>Custom chat UI powered by Gemini</p>
       </div>
 
       <div class="chat-messages" id="chatMessages">
@@ -292,10 +292,15 @@
 
       <form class="chat-input-row" id="chatForm">
         <label for="chatInput" class="sr-only">Ask your question</label>
+        <div class="chat-upload-row">
+          <label class="upload-btn" for="chatAttachments">Attach docs/images</label>
+          <input id="chatAttachments" type="file" multiple />
+          <span id="chatAttachmentCount" class="attachment-count">No files selected</span>
+        </div>
         <input
           id="chatInput"
           type="text"
-          placeholder="Type your question..."
+          placeholder="Ask about the page or uploaded files..."
           autocomplete="off"
           required
         />

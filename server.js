@@ -1,203 +1,197 @@
 import express from "express";
 import dotenv from "dotenv";
 
-dotenv.config({ path: "ibm-credentials.env" });
+dotenv.config();
+dotenv.config({ path: "ibm-credentials.env", override: true });
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "127.0.0.1";
 
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "30mb" }));
 app.use(express.static("."));
 
-const ORCHESTRA_API_URL =
-  process.env.IBM_ORCHESTRA_API_URL ||
-  process.env.ORCHESTRATE_URL ||
-  "";
-const API_KEY =
-  process.env.IBM_ORCHESTRA_API_KEY ||
-  process.env.ORCHESTRATE_APIKEY ||
-  process.env.ORCHESTRATE_IAM_APIKEY ||
-  "";
-const IAM_TOKEN_URL = process.env.IBM_ORCHESTRA_IAM_TOKEN_URL || "https://iam.cloud.ibm.com/identity/token";
-const ORCHESTRATE_AUTH_TYPE = (process.env.ORCHESTRATE_AUTH_TYPE || "").toLowerCase();
-const USE_IAM =
-  (process.env.IBM_ORCHESTRA_USE_IAM || "").toLowerCase() === "true" ||
-  ORCHESTRATE_AUTH_TYPE === "iam" ||
-  ((process.env.IBM_ORCHESTRA_USE_IAM || "").toLowerCase() !== "false" && !ORCHESTRATE_AUTH_TYPE);
-const TIMEOUT_MS = Number(process.env.IBM_ORCHESTRA_TIMEOUT_MS || 20000);
-const SIMULATE_CHAT = (process.env.IBM_ORCHESTRA_SIMULATE || "false").toLowerCase() === "true";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+const GEMINI_API_BASE = process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com/v1beta";
+const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 45000);
+const MAX_ATTACHMENTS = Number(process.env.GEMINI_MAX_ATTACHMENTS || 8);
+const MAX_FILE_BYTES = Number(process.env.GEMINI_MAX_FILE_BYTES || 7_000_000);
 
-const AGENT_ID = process.env.IBM_ORCHESTRA_AGENT_ID || "";
-const AGENT_ENV_ID = process.env.IBM_ORCHESTRA_AGENT_ENV_ID || "";
-const ORCHESTRATION_ID = process.env.IBM_ORCHESTRA_ORCHESTRATION_ID || "";
-
-let iamTokenCache = {
-  token: "",
-  expiresAt: 0,
-};
-
-function extractAnswer(payload) {
-  if (!payload || typeof payload !== "object") return "";
-
-  if (typeof payload.answer === "string" && payload.answer.trim()) return payload.answer;
-  if (typeof payload.response === "string" && payload.response.trim()) return payload.response;
-  if (typeof payload.output === "string" && payload.output.trim()) return payload.output;
-  if (typeof payload.text === "string" && payload.text.trim()) return payload.text;
-
-  const content = payload?.choices?.[0]?.message?.content;
-  if (typeof content === "string" && content.trim()) return content;
-
-  const outputText =
-    payload?.result?.output_text ||
-    payload?.result?.text ||
-    payload?.data?.answer ||
-    payload?.data?.response;
-
-  if (typeof outputText === "string" && outputText.trim()) return outputText;
-
-  return "";
+function cleanText(value) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
-async function fetchIamToken() {
-  const now = Date.now();
-  if (iamTokenCache.token && iamTokenCache.expiresAt > now + 60_000) {
-    return iamTokenCache.token;
-  }
-
-  const body = new URLSearchParams({
-    grant_type: "urn:ibm:params:oauth:grant-type:apikey",
-    apikey: API_KEY,
-  });
-
-  const response = await fetch(IAM_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body,
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data?.access_token) {
-    throw new Error(`IAM token request failed: ${JSON.stringify(data)}`);
-  }
-
-  const expiresInMs = Number(data.expires_in || 3600) * 1000;
-  iamTokenCache = {
-    token: data.access_token,
-    expiresAt: now + expiresInMs,
-  };
-
-  return iamTokenCache.token;
+function truncate(text, max = 12000) {
+  if (!text || text.length <= max) return text;
+  return `${text.slice(0, max)}...`;
 }
 
-function buildPayload({ question, pageContext, currentView }) {
-  const payload = {
-    input: question,
-    question,
-    messages: [
+function mimeAllowed(mimeType) {
+  if (!mimeType) return false;
+  return (
+    mimeType.startsWith("image/") ||
+    mimeType === "application/pdf" ||
+    mimeType === "text/plain" ||
+    mimeType === "text/markdown" ||
+    mimeType === "text/csv" ||
+    mimeType === "application/json" ||
+    mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  );
+}
+
+function extractGeminiText(payload) {
+  const parts = payload?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return "";
+  return parts
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .join("\n")
+    .trim();
+}
+
+function parseGeminiError(payload) {
+  const message =
+    payload?.error?.message ||
+    payload?.message ||
+    "";
+  return typeof message === "string" ? message : "";
+}
+
+function normalizeAttachments(raw) {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .slice(0, MAX_ATTACHMENTS)
+    .map((item) => ({
+      name: cleanText(item?.name) || "attachment",
+      mimeType: cleanText(item?.mimeType).toLowerCase(),
+      data: cleanText(item?.data),
+      size: Number(item?.size || 0),
+    }))
+    .filter((item) => item.data && item.mimeType && mimeAllowed(item.mimeType) && item.size <= MAX_FILE_BYTES);
+}
+
+function buildGeminiBody({ question, pageContext, currentView, attachments }) {
+  const promptText = [
+    "You are the AI Study Helper for a learning management system.",
+    "Use the current page context and any uploaded files/images to answer accurately.",
+    "If the answer is not in the context or uploads, say what is missing.",
+    `Current view: ${currentView || "unknown"}`,
+    "",
+    `Question: ${question}`,
+    "",
+    `Page context: ${truncate(pageContext || "", 14000)}`,
+  ].join("\n");
+
+  const parts = [{ text: promptText }];
+  attachments.forEach((file) => {
+    parts.push({
+      inlineData: {
+        mimeType: file.mimeType,
+        data: file.data,
+      },
+    });
+  });
+
+  return {
+    contents: [
       {
         role: "user",
-        content: question,
+        parts,
       },
     ],
-    context: pageContext || "",
-    metadata: {
-      source: "school-smart-ai-study-helper",
-      view: currentView || "unknown",
+    generationConfig: {
+      temperature: 0.3,
+      topK: 30,
+      topP: 0.9,
+      maxOutputTokens: 1024,
     },
   };
-
-  if (AGENT_ID || AGENT_ENV_ID) {
-    payload.chatOptions = {
-      ...(AGENT_ID ? { agentId: AGENT_ID } : {}),
-      ...(AGENT_ENV_ID ? { agentEnvironmentId: AGENT_ENV_ID } : {}),
-    };
-
-    payload.agent_id = AGENT_ID || undefined;
-    payload.agent_environment_id = AGENT_ENV_ID || undefined;
-  }
-
-  if (ORCHESTRATION_ID) {
-    payload.orchestrationID = ORCHESTRATION_ID;
-    payload.orchestration_id = ORCHESTRATION_ID;
-  }
-
-  return payload;
 }
 
-app.post("/api/study-helper", async (req, res) => {
-  const { question, pageContext, currentView } = req.body || {};
+async function handleStudyHelperRequest(req, res) {
+  const question = cleanText(req.body?.question);
+  const pageContext = cleanText(req.body?.pageContext);
+  const currentView = cleanText(req.body?.currentView);
+  const attachments = normalizeAttachments(req.body?.attachments);
 
-  if (!question || typeof question !== "string") {
+  if (!question) {
     return res.status(400).json({ error: "Missing 'question'." });
   }
 
-  if (SIMULATE_CHAT) {
-    const viewLabel = currentView || "current page";
-    const snippet = (pageContext || "").slice(0, 180).replace(/\s+/g, " ").trim();
-    return res.json({
-      answer: `Simulated IBM response for ${viewLabel}: You asked "${question}". I can see page context like "${snippet || "no context provided"}".`,
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({
+      error: "Gemini config missing. Set GEMINI_API_KEY in ibm-credentials.env.",
     });
   }
 
-  if (!ORCHESTRA_API_URL || !API_KEY) {
-    return res.status(500).json({
-      error: "IBM Orchestra config missing. Set IBM_ORCHESTRA_API_URL and IBM_ORCHESTRA_API_KEY.",
-    });
-  }
+  const candidateModels = Array.from(
+    new Set([
+      GEMINI_MODEL,
+      "gemini-2.5-flash-lite",
+      "gemini-flash-lite-latest",
+      "gemini-2.5-flash",
+      "gemini-flash-latest",
+    ].filter(Boolean))
+  );
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
   try {
-    const authValue = USE_IAM
-      ? `Bearer ${await fetchIamToken()}`
-      : `Bearer ${API_KEY}`;
+    let lastFailure = null;
 
-    const response = await fetch(ORCHESTRA_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authValue,
-      },
-      body: JSON.stringify(buildPayload({ question, pageContext, currentView })),
-      signal: controller.signal,
-    });
+    for (const model of candidateModels) {
+      const endpoint = `${GEMINI_API_BASE}/models/${model}:generateContent?key=${encodeURIComponent(
+        GEMINI_API_KEY
+      )}`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildGeminiBody({ question, pageContext, currentView, attachments })),
+        signal: controller.signal,
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        lastFailure = { model, status: response.status, payload };
+        continue;
+      }
+
+      const answer = extractGeminiText(payload);
+      if (!answer) {
+        return res.status(502).json({
+          error: "No answer text returned by Gemini.",
+          raw: payload,
+        });
+      }
+
+      clearTimeout(timeout);
+      return res.json({ answer, model });
+    }
 
     clearTimeout(timeout);
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: "IBM Orchestra request failed.",
-        details: data,
-      });
-    }
-
-    const answer = extractAnswer(data);
-    if (!answer) {
-      return res.status(502).json({
-        error: "No answer text found in IBM Orchestra response.",
-        raw: data,
-      });
-    }
-
-    return res.json({ answer });
+    const lastErrorMessage = parseGeminiError(lastFailure?.payload);
+    return res.status(lastFailure?.status || 502).json({
+      error: "Gemini request failed.",
+      details: lastFailure?.payload || {},
+      hint: lastErrorMessage || "Check GEMINI_MODEL and API key permissions.",
+    });
   } catch (error) {
     clearTimeout(timeout);
     return res.status(500).json({
-      error: "Unable to reach IBM Orchestra API.",
+      error: "Unable to reach Gemini API.",
       details: error?.message || String(error),
     });
   }
-});
+}
+
+app.post("/api/study-helper", handleStudyHelperRequest);
+app.post("/api/get-helper", handleStudyHelperRequest);
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, provider: "gemini" });
 });
 
 app.listen(port, host, () => {
