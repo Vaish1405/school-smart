@@ -3185,6 +3185,9 @@ function setViewRole(teacherMode) {
       ? "Switch to Student View"
       : "Switch to Teacher View";
   }
+  if (navCareer) {
+    navCareer.classList.toggle("hidden", teacherMode);
+  }
   updateCourseTabVisibility();
   applyDashboardClassesForRole();
   if (currentCourse !== "home") renderActiveTab();
@@ -3241,6 +3244,10 @@ if (navTutor) {
 if (navCareer) {
   navCareer.addEventListener("click", (event) => {
     event.preventDefault();
+    if (isTeacherView) {
+      navigateToPage("teacher.html");
+      return;
+    }
     navigateToPage("dashboard.html", { tab: "career" });
   });
 }
@@ -3318,7 +3325,7 @@ if (settingsOption) {
 function initPageRoute() {
   const pageName = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
   const routeParams = new URLSearchParams(window.location.search);
-  if (routeParams.get("tab") === "career") {
+  if (routeParams.get("tab") === "career" && !initialTeacherMode) {
     showView("career");
     return;
   }
