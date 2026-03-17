@@ -210,6 +210,7 @@
             <button class="course-tab" data-tab="announcements" type="button">Announcements</button>
             <button class="course-tab" data-tab="files" type="button">Files</button>
             <button class="course-tab" data-tab="modules" type="button">Modules</button>
+            <button class="course-tab" data-tab="analytics" type="button">Analytics</button>
           </aside>
 
           <article class="course-main">
@@ -270,6 +271,43 @@
               </div>
 
               <div id="modulesAccordion" class="modules-accordion hidden"></div>
+              <div id="analyticsPanel" class="analytics-panel hidden">
+                <section class="analytics-layout">
+                  <article class="analytics-controls">
+                    <label>
+                      Class
+                      <select id="analyticsClassSelect"></select>
+                    </label>
+                    <label>
+                      Student
+                      <select id="analyticsStudentSelect"></select>
+                    </label>
+                  </article>
+
+                  <article class="analytics-grid">
+                    <section class="analytics-card">
+                      <h3>Grade Distribution (Class)</h3>
+                      <canvas id="gradePieChart" height="190"></canvas>
+                      <div id="gradePieLegend" class="chart-legend"></div>
+                    </section>
+
+                    <section class="analytics-card">
+                      <h3>Student Assignment Scores</h3>
+                      <canvas id="studentBarChart" height="190"></canvas>
+                    </section>
+
+                    <section class="analytics-card analytics-wide">
+                      <h3>Progress Trend: Student vs Class Average</h3>
+                      <canvas id="trendLineChart" height="200"></canvas>
+                    </section>
+
+                    <section class="analytics-card analytics-wide">
+                      <h3>Performance Insights</h3>
+                      <ul id="analyticsInsights" class="insight-list"></ul>
+                    </section>
+                  </article>
+                </section>
+              </div>
               <ul id="tabList"></ul>
               <div id="calendarGroups" class="calendar-groups hidden"></div>
             </section>

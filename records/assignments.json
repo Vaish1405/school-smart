@@ -38,5 +38,65 @@
     "dueTime": "11:59 PM",
     "pointsPossible": 30,
     "type": "report"
+  },
+  {
+    "id": "a5",
+    "classId": "c1",
+    "title": "Acids and Bases Worksheet",
+    "description": "Complete practice problems on pH, pOH, and identifying acids vs bases in common lab substances.",
+    "dueDate": "2026-03-31",
+    "dueTime": "11:59 PM",
+    "pointsPossible": 15,
+    "type": "worksheet"
+  },
+  {
+    "id": "a6",
+    "classId": "c1",
+    "title": "Titration Lab Quiz",
+    "description": "Short quiz covering titration setup, indicator choice, and endpoint identification.",
+    "dueDate": "2026-04-03",
+    "dueTime": "5:00 PM",
+    "pointsPossible": 25,
+    "type": "quiz"
+  },
+  {
+    "id": "a7",
+    "classId": "c1",
+    "title": "Lab Reflection Journal",
+    "description": "Write a one-page reflection on your most recent lab including what worked and what to improve.",
+    "dueDate": "2026-04-07",
+    "dueTime": "11:59 PM",
+    "pointsPossible": 20,
+    "type": "journal"
+  },
+  {
+    "id": "a8",
+    "classId": "c1",
+    "title": "Data Analysis Exercise",
+    "description": "Analyze class experiment data and submit charts with a short interpretation.",
+    "dueDate": "2026-04-10",
+    "dueTime": "8:00 PM",
+    "pointsPossible": 20,
+    "type": "analysis"
+  },
+  {
+    "id": "a9",
+    "classId": "c1",
+    "title": "Stoichiometry Problem Set",
+    "description": "Solve stoichiometry word problems and show all balancing and unit conversion steps.",
+    "dueDate": "2026-04-14",
+    "dueTime": "11:59 PM",
+    "pointsPossible": 30,
+    "type": "problem-set"
+  },
+  {
+    "id": "a10",
+    "classId": "c1",
+    "title": "Unit Review Checkpoint",
+    "description": "Checkpoint assessment covering safety, measurements, acids-bases, and stoichiometry basics.",
+    "dueDate": "2026-04-17",
+    "dueTime": "6:00 PM",
+    "pointsPossible": 15,
+    "type": "checkpoint"
   }
 ]
