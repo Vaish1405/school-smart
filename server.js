@@ -1,5 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 dotenv.config({ path: "ibm-credentials.env" });
 
@@ -128,6 +130,34 @@ function buildPayload({ question, pageContext, currentView }) {
   return payload;
 }
 
+async function readRecordsJson(filename) {
+  const p = path.join(process.cwd(), "records", filename);
+  const raw = await fs.readFile(p, "utf8");
+  return JSON.parse(raw);
+}
+
+function safeJsonFromText(text) {
+  if (!text || typeof text !== "string") return null;
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // Try to extract the first {...} block.
+    const start = trimmed.indexOf("{");
+    const end = trimmed.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      const maybe = trimmed.slice(start, end + 1);
+      try {
+        return JSON.parse(maybe);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
 app.post("/api/study-helper", async (req, res) => {
   const { question, pageContext, currentView } = req.body || {};
 
@@ -187,6 +217,153 @@ app.post("/api/study-helper", async (req, res) => {
     }
 
     return res.json({ answer });
+  } catch (error) {
+    clearTimeout(timeout);
+    return res.status(500).json({
+      error: "Unable to reach IBM Orchestra API.",
+      details: error?.message || String(error),
+    });
+  }
+});
+
+app.post("/api/tutor-session", async (req, res) => {
+  const { courseKey, studentId } = req.body || {};
+  if (!courseKey || typeof courseKey !== "string") {
+    return res.status(400).json({ error: "Missing 'courseKey'." });
+  }
+
+  // Minimal mapping for this demo (UI uses courseKey -> classId).
+  const courseKeyToClassId = { chemistry: "c1" };
+  const classId = courseKeyToClassId[courseKey] || courseKey;
+
+  const [classes, assignments, grades] = await Promise.all([
+    readRecordsJson("classes.json").catch(() => []),
+    readRecordsJson("assignments.json").catch(() => []),
+    readRecordsJson("assignment_grades.json").catch(() => []),
+  ]);
+
+  const cls = Array.isArray(classes) ? classes.find((c) => c.id === classId) : null;
+  const classAssignments = Array.isArray(assignments)
+    ? assignments.filter((a) => a.classId === classId).slice(0, 8)
+    : [];
+  const studentGrades = Array.isArray(grades) && studentId
+    ? grades.filter((g) => g.studentId === studentId)
+    : [];
+
+  const sessionSchema = {
+    sessionId: "string",
+    courseKey: "string",
+    classId: "string",
+    title: "string",
+    summary: "string",
+    focusAreas: [{ title: "string", reason: "string" }],
+    steps: [{
+      title: "string",
+      minutes: "number",
+      instructions: ["string"],
+      quickCheck: ["string"],
+    }],
+    chatPrompt: "string",
+  };
+
+  const contextObj = {
+    courseKey,
+    classId,
+    class: cls || null,
+    assignments: classAssignments,
+    grades: studentGrades,
+    today: new Date().toISOString().slice(0, 10),
+  };
+
+  const prompt = [
+    `Create a single study session plan for the student for this course.`,
+    ``,
+    `Return ONLY valid JSON (no markdown, no backticks) matching this shape:`,
+    JSON.stringify(sessionSchema, null, 2),
+    ``,
+    `Rules:`,
+    `- title: short, action-oriented`,
+    `- summary: 1-2 sentences`,
+    `- focusAreas: 2-4 items`,
+    `- steps: 3-6 steps, each with minutes and 2-4 instructions`,
+    `- quickCheck: 2-4 questions per step`,
+    `- chatPrompt: a single paragraph the UI can paste into the tutor chat to start the session`,
+    `- Use course name and assignment titles when relevant.`,
+    ``,
+    `Context JSON:`,
+    JSON.stringify(contextObj),
+  ].join("\n");
+
+  if (SIMULATE_CHAT) {
+    const mock = {
+      sessionId: `sess_${Date.now()}`,
+      courseKey,
+      classId,
+      title: `Study Session: ${cls?.name || courseKey}`,
+      summary: "Simulated study session generated locally.",
+      focusAreas: [
+        { title: "Key concepts review", reason: "Based on recent assignments and pacing." },
+        { title: "Practice + self-check", reason: "Build confidence through short checks." },
+      ],
+      steps: [
+        { title: "Warm-up recall", minutes: 10, instructions: ["List 5 key terms from the last unit."], quickCheck: ["What is one common mistake to avoid?"] },
+        { title: "Targeted practice", minutes: 20, instructions: ["Do 3 practice problems aligned to the rubric."], quickCheck: ["Which step felt hardest and why?"] },
+        { title: "Wrap-up plan", minutes: 10, instructions: ["Write a 3-point checklist for next submission."], quickCheck: ["What will you do differently next time?"] },
+      ],
+      chatPrompt: `Start a focused 40-minute study session for ${cls?.name || courseKey}. Ask me questions step-by-step and quiz me briefly after each section.`,
+    };
+    return res.json(mock);
+  }
+
+  if (!ORCHESTRA_API_URL || !API_KEY) {
+    return res.status(500).json({
+      error: "IBM Orchestra config missing. Set IBM_ORCHESTRA_API_URL and IBM_ORCHESTRA_API_KEY.",
+    });
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const authValue = USE_IAM
+      ? `Bearer ${await fetchIamToken()}`
+      : `Bearer ${API_KEY}`;
+
+    const response = await fetch(ORCHESTRA_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authValue,
+      },
+      body: JSON.stringify(buildPayload({ question: prompt, pageContext: JSON.stringify(contextObj), currentView: "tutor-session" })),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: "IBM Orchestra request failed.",
+        details: data,
+      });
+    }
+
+    const answerText = extractAnswer(data);
+    const parsed = safeJsonFromText(answerText);
+    if (!parsed || typeof parsed !== "object") {
+      return res.status(502).json({
+        error: "Orchestrate did not return valid JSON for tutor session.",
+        expectedShape: sessionSchema,
+        rawText: answerText,
+      });
+    }
+
+    // Ensure required fields exist (soft defaults).
+    parsed.sessionId = parsed.sessionId || `sess_${Date.now()}`;
+    parsed.courseKey = parsed.courseKey || courseKey;
+    parsed.classId = parsed.classId || classId;
+    return res.json(parsed);
   } catch (error) {
     clearTimeout(timeout);
     return res.status(500).json({

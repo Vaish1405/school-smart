@@ -118,6 +118,10 @@ let isTeacherView = false;
 let currentCourseDisplayTitle = "";
 let tutorSelectedCourse = "chemistry";
 let careerSelectedCourse = "chemistry";
+let tutorSessionCacheByCourse = {};
+let tutorActiveTrackByCourse = {};
+let tutorUserTriggeredByCourse = {};
+let tutorTrackSelectedByCourse = {};
 
 const teacherDashboardCards = [
   { icon: "CH1", title: "Chemistry Lab Foundations - Period 1", teacher: "Dr. Nina Verma", schedule: "Mon/Wed | 8:00 AM", published: true },
@@ -1220,6 +1224,18 @@ function buildTutorResourcesForCourse(courseKey) {
 function renderTutorWorkspace() {
   if (!tutorCourseSelect || !tutorSessionCards || !tutorResourceList) return;
 
+  const resourcePanel = tutorResourceList.closest(".tutor-panel");
+  const resourceHeader = document.getElementById("tutorResourceHeader");
+  const createBtn = createStudySessionBtn;
+  let spinner = document.getElementById("tutorCreateSpinner");
+  if (!spinner && createBtn && createBtn.parentElement) {
+    spinner = document.createElement("span");
+    spinner.id = "tutorCreateSpinner";
+    spinner.className = "tutor-spinner-inline hidden";
+    spinner.setAttribute("aria-hidden", "true");
+    createBtn.insertAdjacentElement("afterend", spinner);
+  }
+
   const options = getTutorCourseOptions();
   if (!options.find((opt) => opt.key === tutorSelectedCourse)) {
     tutorSelectedCourse = options[0]?.key || "chemistry";
@@ -1242,9 +1258,52 @@ function renderTutorWorkspace() {
   tutorSessionCards.innerHTML = "";
   tutorResourceList.innerHTML = "";
 
+  const sessionStatus = tutorSessionCacheByCourse[tutorSelectedCourse]?.status;
+  // Button + spinner state.
+  if (createBtn) createBtn.disabled = sessionStatus === "loading";
+  if (spinner) spinner.classList.toggle("hidden", sessionStatus !== "loading");
+  if (sessionStatus === "loading") {
+    tutorSessionCards.innerHTML = `
+      <div class="tutor-loading">
+        <div class="tutor-spinner" aria-hidden="true"></div>
+        <div>
+          <strong>Creating study session…</strong>
+          <p class="subtitle">Generating Practice + Sharpen tracks.</p>
+        </div>
+      </div>
+    `;
+  }
+
   const dbTutorData = getTutorStudioDataForCourse(tutorSelectedCourse);
-  const tutorRows = getTutorAssignmentsForCourse(tutorSelectedCourse);
   const studyCards = Array.isArray(dbTutorData.sessions) ? dbTutorData.sessions : [];
+
+  const hasAiSession = tutorSessionCacheByCourse[tutorSelectedCourse]?.status === "ready";
+
+  const isUserTriggered = !!tutorUserTriggeredByCourse[tutorSelectedCourse];
+  const showAiSession = isUserTriggered && hasAiSession;
+  const isTrackSelected = !!tutorTrackSelectedByCourse[tutorSelectedCourse];
+
+  // Hide the entire resources panel until we have real content.
+  if (resourcePanel) {
+    resourcePanel.classList.toggle("hidden", !showAiSession || !isTrackSelected);
+  }
+  if (resourceHeader) {
+    resourceHeader.classList.toggle("hidden", !showAiSession || !isTrackSelected);
+  }
+
+  // Clean empty state: don't show placeholder sessions/resources until we have real data.
+  if (!showAiSession && sessionStatus !== "loading") {
+    tutorSessionCards.innerHTML = `
+      <div class="tutor-loading">
+        <div>
+          <strong>No active study session yet.</strong>
+          <p class="subtitle">Click “Create Study Session” to generate Practice + Sharpen.</p>
+        </div>
+      </div>
+    `;
+    // Leave resources empty (no placeholder quizzes/questions).
+    return;
+  }
 
   studyCards.forEach((card) => {
     const item = document.createElement("article");
@@ -1252,27 +1311,198 @@ function renderTutorWorkspace() {
     item.innerHTML = `
       <h4>${escapeHtml(card.title)}</h4>
       <p>${escapeHtml(card.desc)}</p>
-      <button class="study-btn" type="button">Start Session</button>
+      <button class="study-btn" type="button">${escapeHtml(card.cta || "Start Session")}</button>
     `;
     const btn = item.querySelector("button");
     if (btn) {
       btn.addEventListener("click", () => {
-        setChatOpen(true);
-        const promptTemplate = String(card.prompt || "").trim();
-        if (promptTemplate) {
-          chatInput.value = promptTemplate
-            .replace(/\{courseTitle\}/g, selectedCourse?.title || "this course")
-            .replace(/\{courseKey\}/g, tutorSelectedCourse);
-        } else {
-          chatInput.value = `Start a ${card.title.toLowerCase()} for ${selectedCourse?.title || "this course"}.`;
+        if (card.track) {
+          tutorActiveTrackByCourse[tutorSelectedCourse] = card.track;
+          tutorTrackSelectedByCourse[tutorSelectedCourse] = true;
+          renderTutorTrackDetails(tutorSelectedCourse);
         }
-        chatInput.focus();
+        const promptTemplate = String(card.prompt || "").trim();
+        if (chatInput) {
+          if (promptTemplate) {
+            chatInput.value = promptTemplate
+              .replace(/\{courseTitle\}/g, selectedCourse?.title || "this course")
+              .replace(/\{courseKey\}/g, tutorSelectedCourse);
+          } else {
+            chatInput.value = `Start a ${card.title.toLowerCase()} for ${selectedCourse?.title || "this course"}.`;
+          }
+        }
       });
     }
     tutorSessionCards.appendChild(item);
   });
 
-  const resources = buildTutorResourcesForCourse(tutorSelectedCourse);
+  // Prefer AI-generated Practice/Sharpen content when available; otherwise fall back.
+  // Only populate resources after user chooses Practice/Sharpen.
+  if (showAiSession && isTrackSelected) {
+    renderTutorTrackDetails(tutorSelectedCourse);
+  }
+}
+
+function clearTutorSessionUi(courseKey) {
+  if (!courseKey) return;
+  tutorSessionCacheByCourse[courseKey] = { status: "idle" };
+  tutorActiveTrackByCourse[courseKey] = "practice";
+  tutorTrackSelectedByCourse[courseKey] = false;
+  if (dbTutorStudioByCourse[courseKey] && typeof dbTutorStudioByCourse[courseKey] === "object") {
+    dbTutorStudioByCourse[courseKey].sessions = [];
+  }
+}
+
+async function ensureTutorStudySession(courseKey, opts = {}) {
+  if (!courseKey) return;
+  const force = !!opts.force;
+  if (tutorSessionCacheByCourse[courseKey]?.status === "loading") return;
+  if (!force && tutorSessionCacheByCourse[courseKey]?.status === "ready") return;
+
+  tutorSessionCacheByCourse[courseKey] = { status: "loading" };
+  renderTutorWorkspace();
+
+  try {
+    const res = await fetch("/api/tutor-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ courseKey, studentId: currentStudentId, keyword: "TUTOR_STUDIO_REVIEW" }),
+    });
+
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data) throw new Error(data?.error || "Tutor session request failed.");
+
+    applyTutorSessionToUi(courseKey, data);
+  } catch (e) {
+    const message = e?.message || String(e);
+    tutorSessionCacheByCourse[courseKey] = { status: "error", error: message };
+    console.warn("Tutor session generation failed.", e);
+
+    // UX fallback: still show Practice/Sharpen layout so the UI is testable even
+    // when the backend isn't running or returns non-JSON.
+    const fallback = buildTutorSessionFallback(courseKey, message);
+    applyTutorSessionToUi(courseKey, fallback);
+  }
+}
+
+function applyTutorSessionToUi(courseKey, data) {
+  if (!courseKey || !data) return;
+
+  // Inject into tutor studio data so existing UI can render cards.
+  if (!dbTutorStudioByCourse[courseKey] || typeof dbTutorStudioByCourse[courseKey] !== "object") {
+    dbTutorStudioByCourse[courseKey] = {};
+  }
+
+  const practice = data.practice || {};
+  const sharpen = data.sharpen || {};
+  const practiceTitle = practice.title || "Practice";
+  const sharpenTitle = sharpen.title || "Sharpen";
+
+  dbTutorStudioByCourse[courseKey].sessions = [
+    {
+      track: "practice",
+      title: practiceTitle,
+      desc: practice.summary || "Study guide + quick quiz on weaker topics.",
+      cta: "Start Practice",
+      prompt: practice.chatPrompt || "",
+    },
+    {
+      track: "sharpen",
+      title: sharpenTitle,
+      desc: sharpen.summary || "Harder quiz to strengthen your strong areas.",
+      cta: "Start Sharpen",
+      prompt: sharpen.chatPrompt || "",
+    },
+  ];
+
+  // Default to Practice track when a new course loads.
+  if (!tutorActiveTrackByCourse[courseKey]) tutorActiveTrackByCourse[courseKey] = "practice";
+
+  tutorSessionCacheByCourse[courseKey] = { status: "ready", session: data };
+  renderTutorWorkspace();
+}
+
+function buildTutorSessionFallback(courseKey, errorMessage) {
+  const courseTitle = courseData[courseKey]?.title || courseKey;
+  const stamp = new Date().toISOString();
+  const err = (errorMessage || "").slice(0, 140);
+
+  return {
+    sessionId: `sess_client_${Date.now()}`,
+    courseKey,
+    classId: courseKeyToClassId[courseKey] || null,
+    generatedAt: stamp,
+    practice: {
+      title: "Practice (fallback)",
+      summary: err ? `Backend unavailable (${err}). Showing local fallback session.` : "Showing local fallback session.",
+      studyGuide: {
+        title: "Practice Study Guide (fallback)",
+        markdown: `## ${courseTitle}: Practice\n\n- Review what you've covered so far\n- Focus on areas you've struggled with\n\n### Quick check\n- Explain one key concept in your own words\n- Do 3 practice problems and self-check`,
+      },
+      quiz: { title: "Practice Quiz (fallback)", questions: [] },
+      chatPrompt: `Start PRACTICE for ${courseTitle}. Ask a few easier questions first, then quiz me.`,
+    },
+    sharpen: {
+      title: "Sharpen (fallback)",
+      summary: "Harder questions in areas you’ve been doing well in.",
+      quiz: { title: "Sharpen Quiz (fallback)", questions: [] },
+      chatPrompt: `Start SHARPEN for ${courseTitle}. Ask me harder multiple-choice questions and explain mistakes.`,
+    },
+  };
+}
+
+function buildTutorTrackResources(courseKey) {
+  const session = tutorSessionCacheByCourse[courseKey]?.session;
+  if (!session) return buildTutorResourcesForCourse(courseKey);
+  const track = tutorActiveTrackByCourse[courseKey] || "practice";
+  const payload = track === "sharpen" ? session.sharpen : session.practice;
+  if (!payload) return buildTutorResourcesForCourse(courseKey);
+
+  const resources = [];
+
+  if (payload.studyGuide?.markdown) {
+    const suggestedTitle = suggestStudyGuideTitle(courseKey, payload.studyGuide);
+    resources.push({
+      type: "Study Guide",
+      title: suggestedTitle,
+      meta: String(payload.studyGuide.markdown).slice(0, 180).replace(/\s+/g, " ").trim() + "…",
+      action: "open-study-guide",
+    });
+  }
+
+  const quiz = payload.quiz || {};
+  const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+  resources.push({
+    type: "Quiz",
+    title: quiz.title || (track === "sharpen" ? "Sharpen Quiz" : "Practice Quiz"),
+    meta: `${questions.length || 0} question(s)`,
+    action: "open-quiz",
+  });
+
+  return resources;
+}
+
+function renderTutorTrackDetails(courseKey) {
+  // Re-render resources list to reflect current track selection.
+  if (!tutorResourceList) return;
+  tutorResourceList.innerHTML = "";
+  const header = document.getElementById("tutorResourceHeader");
+  const panel = tutorResourceList.closest(".tutor-panel");
+
+  const session = tutorSessionCacheByCourse[courseKey]?.session;
+  const track = tutorActiveTrackByCourse[courseKey] || "practice";
+  const trackTitle =
+    track === "sharpen"
+      ? (session?.sharpen?.title || "Sharpen")
+      : (session?.practice?.title || "Practice");
+  if (header) {
+    header.textContent = trackTitle;
+    header.classList.remove("hidden");
+  }
+  if (panel) panel.classList.remove("hidden");
+  tutorTrackSelectedByCourse[courseKey] = true;
+
+  const resources = buildTutorTrackResources(courseKey);
   resources.forEach((resource) => {
     const li = document.createElement("li");
     li.className = "tutor-resource-item";
@@ -1283,19 +1513,12 @@ function renderTutorWorkspace() {
       </div>
       <span class="review-chip neutral">${escapeHtml(resource.type)}</span>
     `;
-    tutorResourceList.appendChild(li);
-  });
-
-  tutorRows.slice(0, 4).forEach((row) => {
-    const li = document.createElement("li");
-    li.className = "tutor-resource-item";
-    li.innerHTML = `
-      <div>
-        <strong>${escapeHtml(row.title)}</strong>
-        <p>Due ${escapeHtml(row.dueDate)} | Score: ${escapeHtml(row.scoreText)}</p>
-      </div>
-      <span class="review-chip success">Past Work</span>
-    `;
+    li.tabIndex = 0;
+    li.style.cursor = "pointer";
+    li.addEventListener("click", () => handleTutorResourceClick(courseKey, resource));
+    li.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") handleTutorResourceClick(courseKey, resource);
+    });
     tutorResourceList.appendChild(li);
   });
 }
@@ -1304,6 +1527,278 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+function renderMarkdownToHtml(md) {
+  const raw = String(md || "");
+  const lines = raw.replace(/\r\n/g, "\n").split("\n");
+  const out = [];
+  let inList = false;
+  let inCode = false;
+  let codeLines = [];
+
+  const flushList = () => {
+    if (!inList) return;
+    out.push("</ul>");
+    inList = false;
+  };
+  const flushCode = () => {
+    if (!inCode) return;
+    const code = escapeHtml(codeLines.join("\n"));
+    out.push(`<pre class="tutor-modal-pre"><code>${code}</code></pre>`);
+    inCode = false;
+    codeLines = [];
+  };
+
+  const inline = (s) => {
+    let html = escapeHtml(s);
+    // bold
+    html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    // inline code
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    return html;
+  };
+
+  for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      if (inCode) {
+        flushCode();
+      } else {
+        flushList();
+        inCode = true;
+      }
+      continue;
+    }
+    if (inCode) {
+      codeLines.push(line);
+      continue;
+    }
+
+    const t = line.trim();
+    if (!t) {
+      flushList();
+      out.push('<div class="tutor-md-spacer"></div>');
+      continue;
+    }
+
+    const heading = t.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushList();
+      const level = heading[1].length;
+      const tag = level === 1 ? "h3" : level === 2 ? "h4" : "h5";
+      out.push(`<${tag} class="tutor-md-h">${inline(heading[2])}</${tag}>`);
+      continue;
+    }
+
+    const li = t.match(/^-\s+(.+)$/);
+    if (li) {
+      if (!inList) {
+        out.push('<ul class="tutor-md-list">');
+        inList = true;
+      }
+      out.push(`<li>${inline(li[1])}</li>`);
+      continue;
+    }
+
+    flushList();
+    out.push(`<p class="tutor-md-p">${inline(t)}</p>`);
+  }
+
+  flushCode();
+  flushList();
+  return out.join("\n");
+}
+
+function suggestStudyGuideTitle(courseKey, studyGuide) {
+  const courseTitle = courseData[courseKey]?.title || courseKey;
+  const classId = courseKeyToClassId[courseKey];
+  const assignments = classId ? getClassAssignments(classId) : [];
+
+  // Choose the next upcoming assignment (relative to demoToday if defined).
+  const nowIso = (typeof demoToday !== "undefined" && demoToday instanceof Date)
+    ? demoToday.toISOString().slice(0, 10)
+    : new Date().toISOString().slice(0, 10);
+
+  const next = assignments.find((a) => (a.dueDate || "") >= nowIso) || assignments[0];
+  const dueText = next?.dueDate ? formatShortDate(next.dueDate) : null;
+
+  const md = String(studyGuide?.markdown || "");
+  const topics = md
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith("- "))
+    .map((l) => l.replace(/^-+\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const topicText = topics.length ? `: ${topics.join(", ")}` : "";
+  const dueSuffix = dueText ? ` (Next due ${dueText})` : "";
+  return `${courseTitle}${topicText}${dueSuffix}`;
+}
+
+function getTutorActivePayload(courseKey) {
+  const session = tutorSessionCacheByCourse[courseKey]?.session;
+  if (!session) return null;
+  const track = tutorActiveTrackByCourse[courseKey] || "practice";
+  return track === "sharpen" ? session.sharpen : session.practice;
+}
+
+function ensureTutorModal() {
+  let overlay = document.getElementById("tutorModalOverlay");
+  if (overlay) return overlay;
+
+  overlay = document.createElement("div");
+  overlay.id = "tutorModalOverlay";
+  overlay.className = "tutor-modal-overlay hidden";
+  overlay.innerHTML = `
+    <div class="tutor-modal" role="dialog" aria-modal="true">
+      <div class="tutor-modal-head">
+        <h3 id="tutorModalTitle">Details</h3>
+        <button type="button" class="tutor-modal-close" id="tutorModalClose" aria-label="Close">×</button>
+      </div>
+      <div class="tutor-modal-body" id="tutorModalBody"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const closeBtn = document.getElementById("tutorModalClose");
+  const close = () => overlay.classList.add("hidden");
+  closeBtn?.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+  return overlay;
+}
+
+function openTutorModal(title, htmlBody) {
+  const overlay = ensureTutorModal();
+  const t = document.getElementById("tutorModalTitle");
+  const b = document.getElementById("tutorModalBody");
+  if (t) t.textContent = title || "Details";
+  if (b) b.innerHTML = htmlBody || "";
+  overlay.classList.remove("hidden");
+}
+
+function handleTutorResourceClick(courseKey, resource) {
+  const payload = getTutorActivePayload(courseKey);
+  if (!payload) return;
+
+  if (resource.action === "open-study-guide") {
+    const guide = payload.studyGuide || {};
+    const title = resource.title || guide.title || "Study Guide";
+    const md = String(guide.markdown || "");
+    openTutorModal(
+      title,
+      `<div class="tutor-md">${renderMarkdownToHtml(md)}</div>`
+    );
+    return;
+  }
+
+  if (resource.action === "open-quiz") {
+    const quiz = payload.quiz || {};
+    const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+    const startIndex = typeof resource.questionIndex === "number" ? resource.questionIndex : 0;
+    openQuizModal(quiz.title || resource.title || "Quiz", questions, startIndex);
+  }
+}
+
+function openQuizModal(title, questions, startIndex) {
+  const qs = Array.isArray(questions) ? questions : [];
+  let idx = Math.max(0, Math.min(startIndex || 0, Math.max(0, qs.length - 1)));
+
+  const render = () => {
+    if (!qs.length) {
+      openTutorModal(title, `<p class="subtitle">No questions were provided for this quiz.</p>`);
+      return;
+    }
+    const q = qs[idx] || {};
+    const choices = Array.isArray(q.choices) ? q.choices : [];
+    const choiceHtml = choices
+      .map(
+        (c, i) => `
+          <label class="tutor-quiz-choice">
+            <input type="radio" name="tutorQuizChoice" value="${i}" />
+            <span>${escapeHtml(String(c))}</span>
+          </label>`
+      )
+      .join("");
+
+    openTutorModal(
+      title,
+      `
+        <div class="tutor-quiz">
+          <p class="mini-label">Question ${idx + 1} of ${qs.length}</p>
+          <h4 class="tutor-quiz-q">${escapeHtml(String(q.prompt || "Question"))}</h4>
+          <div class="tutor-quiz-choices">${choiceHtml}</div>
+          <div class="tutor-quiz-actions">
+            <button type="button" class="study-btn" id="tutorQuizCheck">Check answer</button>
+            <button type="button" class="study-btn" id="tutorQuizPrev" ${idx === 0 ? "disabled" : ""}>Prev</button>
+            <button type="button" class="study-btn" id="tutorQuizNext" ${idx === qs.length - 1 ? "disabled" : ""}>Next</button>
+          </div>
+          <div class="tutor-quiz-result" id="tutorQuizResult"></div>
+        </div>
+      `
+    );
+
+    const prev = document.getElementById("tutorQuizPrev");
+    const next = document.getElementById("tutorQuizNext");
+    const check = document.getElementById("tutorQuizCheck");
+    const result = document.getElementById("tutorQuizResult");
+
+    prev?.addEventListener("click", () => {
+      idx = Math.max(0, idx - 1);
+      render();
+    });
+    next?.addEventListener("click", () => {
+      idx = Math.min(qs.length - 1, idx + 1);
+      render();
+    });
+    check?.addEventListener("click", () => {
+      const selected = document.querySelector('input[name="tutorQuizChoice"]:checked');
+      const selectedIndex = selected ? Number(selected.value) : -1;
+      const correctIndex = typeof q.correctChoiceIndex === "number" ? q.correctChoiceIndex : -1;
+      const isCorrect = selectedIndex === correctIndex && correctIndex >= 0;
+      const correctText = correctIndex >= 0 && choices[correctIndex] != null ? String(choices[correctIndex]) : "N/A";
+      const explanation = String(q.explanation || "");
+
+      if (result) {
+        result.innerHTML = `
+          <div class="review-question ${isCorrect ? "correct" : "wrong"}">
+            <div class="review-question-head">
+              <h5>${isCorrect ? "Correct" : "Not quite"}</h5>
+              <span class="review-chip ${isCorrect ? "success" : "danger"}">${isCorrect ? "✓" : "✕"}</span>
+            </div>
+            <p><strong>Correct answer:</strong> ${escapeHtml(correctText)}</p>
+            ${explanation ? `<p><strong>Explanation:</strong> ${escapeHtml(explanation)}</p>` : ""}
+          </div>
+        `;
+      }
+
+      // Persist attempt (non-blocking).
+      fetch("/api/quiz-attempts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: currentStudentId,
+          courseKey: tutorSelectedCourse,
+          track: tutorActiveTrackByCourse[tutorSelectedCourse] || null,
+          sessionId: tutorSessionCacheByCourse[tutorSelectedCourse]?.session?.sessionId || null,
+          quizTitle: title,
+          questionId: q.id || null,
+          prompt: q.prompt || null,
+          selectedChoiceIndex: selectedIndex,
+          correctChoiceIndex: correctIndex,
+          isCorrect,
+          explanation,
+        }),
+      }).catch(() => {});
+    });
+  };
+
+  render();
 }
 
 function parseIsoDateLocal(isoDate) {
@@ -1595,7 +2090,6 @@ async function loadRecords() {
     dbTeacherDashboardCards = Array.isArray(dashboardCardsResult?.teacherDashboardCards)
       ? dashboardCardsResult.teacherDashboardCards
       : [];
-
     recordsLoaded = true;
     applyRecordsToCourseData();
     updateCourseCardsGrades();
@@ -3327,18 +3821,9 @@ if (tutorCourseSelect) {
 
 if (createStudySessionBtn) {
   createStudySessionBtn.addEventListener("click", () => {
-    const courseTitle = courseData[tutorSelectedCourse]?.title || "your selected course";
-    const tutorConfig = getTutorStudioDataForCourse(tutorSelectedCourse);
-    const defaultPromptTemplate = String(tutorConfig.defaultPrompt || "").trim();
-    setChatOpen(true);
-    if (defaultPromptTemplate) {
-      chatInput.value = defaultPromptTemplate
-        .replace(/\{courseTitle\}/g, courseTitle)
-        .replace(/\{courseKey\}/g, tutorSelectedCourse);
-    } else {
-      chatInput.value = `Create a new guided study session for ${courseTitle} with goals, 30-minute plan, and quick quiz.`;
-    }
-    chatInput.focus();
+    tutorUserTriggeredByCourse[tutorSelectedCourse] = true;
+    clearTutorSessionUi(tutorSelectedCourse);
+    ensureTutorStudySession(tutorSelectedCourse, { force: true });
   });
 }
 
