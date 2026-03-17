@@ -7,6 +7,78 @@
     "term": "Spring 2026",
     "room": "Science 204",
     "heading": "Lab Safety and First Experiment Setup",
-    "description": "This course introduces lab safety procedures, scientific notation in measurements, and foundational experiment documentation."
+    "description": "This course introduces lab safety procedures, scientific notation in measurements, and foundational experiment documentation.",
+    "syllabus": {
+      "version": "Spring 2026 v1",
+      "overview": "Hands-on chemistry lab course focused on safety, measurement, data quality, and core reactions. Timeline is approximate and may adjust based on lab availability and pacing.",
+      "policies": {
+        "lateWork": "Assignments submitted up to 24 hours late receive up to 80% credit unless otherwise noted. Labs and quizzes generally do not accept late submissions.",
+        "makeUpWork": "Make-ups require instructor approval and must be scheduled within one week of the missed activity.",
+        "materials": [
+          "Safety goggles (required in lab)",
+          "Composition notebook (lab notebook)",
+          "Scientific calculator",
+          "Closed-toe shoes (required in lab)"
+        ]
+      },
+      "timeline": [
+        {
+          "byDate": "2026-01-19",
+          "topics": [
+            "Lab safety + expectations",
+            "Lab notebook setup + documentation standards",
+            "Measurement foundations (SI units, sig figs, scientific notation)"
+          ],
+          "deliverables": [
+            "Lab safety contract",
+            "Lab notebook template"
+          ]
+        },
+        {
+          "byDate": "2026-02-23",
+          "topics": [
+            "Atomic structure + periodic trends",
+            "Moles and molar mass",
+            "Balancing equations + reaction types",
+            "Intro stoichiometry (limiting reactant, percent yield)"
+          ],
+          "deliverables": [
+            "First formal lab write-up"
+          ]
+        },
+        {
+          "byDate": "2026-03-23",
+          "topics": [
+            "Solutions (molarity, dilutions, technique)",
+            "Acids/bases (pH/pOH, indicators, neutralization)",
+            "Titration fundamentals + error sources"
+          ],
+          "deliverables": [
+            "Midterm lab practical / checkpoint"
+          ]
+        },
+        {
+          "byDate": "2026-04-13",
+          "topics": [
+            "Thermochemistry (energy changes, intro calorimetry)",
+            "Gas laws (intro) + data interpretation",
+            "Cumulative review and synthesis"
+          ],
+          "deliverables": [
+            "Unit review checkpoint"
+          ]
+        },
+        {
+          "byDate": "2026-04-27",
+          "topics": [
+            "Mini-investigation (planning, data collection, revision)",
+            "Results presentation + reflection"
+          ],
+          "deliverables": [
+            "Final mini-investigation report"
+          ]
+        }
+      ]
+    }
   }
 ]
