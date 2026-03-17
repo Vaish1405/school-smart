@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SchoolSmart LMS</title>
+  <link rel="icon" type="image/webp" href="schoolSmartLogo.webp" />
+  <link rel="shortcut icon" type="image/webp" href="schoolSmartLogo.webp" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -243,6 +245,7 @@
             <button class="course-tab" data-tab="files" type="button">Files</button>
             <button class="course-tab" data-tab="modules" type="button">Modules</button>
             <button class="course-tab" data-tab="analytics" type="button">Analytics</button>
+            <button class="course-tab" data-tab="career" type="button">Career Readiness</button>
           </aside>
 
           <article class="course-main">
@@ -341,6 +344,40 @@
                     <section class="analytics-card analytics-wide">
                       <h3>Performance Insights</h3>
                       <ul id="analyticsInsights" class="insight-list"></ul>
+                    </section>
+                  </article>
+                </section>
+              </div>
+
+              <div id="careerPanel" class="career-panel hidden">
+                <section class="career-layout">
+                  <article class="career-summary-card">
+                    <div>
+                      <p class="mini-label">Career Readiness Snapshot</p>
+                      <h3 id="careerSummaryTitle">Project Progress</h3>
+                    </div>
+                    <p id="careerSummaryText">0 of 0 projects completed.</p>
+                  </article>
+
+                  <article class="career-grid">
+                    <section class="career-card">
+                      <h3>Possible Careers</h3>
+                      <div id="careerTrackList" class="career-list"></div>
+                    </section>
+
+                    <section class="career-card">
+                      <h3>Skill Checklist For These Careers</h3>
+                      <ul id="careerSkillsList" class="career-skills-list"></ul>
+                    </section>
+
+                    <section class="career-card career-wide">
+                      <h3>Recommended 4-Week Projects</h3>
+                      <div id="careerProjectsList" class="career-projects-list"></div>
+                    </section>
+
+                    <section class="career-card career-wide">
+                      <h3>Growth Suggestions</h3>
+                      <ul id="careerIdeasList" class="career-ideas-list"></ul>
                     </section>
                   </article>
                 </section>

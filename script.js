@@ -67,9 +67,16 @@ const unpublishedCourseGrid = document.getElementById("unpublishedCourseGrid");
 const unpublishedCoursesGroup = document.getElementById("unpublishedCoursesGroup");
 const publishedCourseDivider = document.querySelector("#publishedCoursesGroup .course-divider");
 const analyticsPanel = document.getElementById("analyticsPanel");
+const careerPanel = document.getElementById("careerPanel");
 const activeUserNameHome = document.getElementById("activeUserNameHome");
 const activeUserNameCalendar = document.getElementById("activeUserNameCalendar");
 const activeUserNameDetail = document.getElementById("activeUserNameDetail");
+const careerSummaryTitle = document.getElementById("careerSummaryTitle");
+const careerSummaryText = document.getElementById("careerSummaryText");
+const careerTrackList = document.getElementById("careerTrackList");
+const careerSkillsList = document.getElementById("careerSkillsList");
+const careerProjectsList = document.getElementById("careerProjectsList");
+const careerIdeasList = document.getElementById("careerIdeasList");
 
 const toggleButtons = [
   document.getElementById("chatToggle"),
@@ -344,6 +351,279 @@ const defaultModulesScheduleByCourse = {
   ],
 };
 
+const careerReadinessByCourse = {
+  chemistry: {
+    careers: [
+      {
+        title: "Lab Technician",
+        why: "Apply lab safety, measurement accuracy, and reporting skills in research and quality labs.",
+        requiredSkills: ["Lab safety procedures", "Data logging", "Measurement precision", "Report writing"],
+      },
+      {
+        title: "Quality Control Analyst",
+        why: "Use testing workflows to verify product quality in pharma, food, and manufacturing.",
+        requiredSkills: ["Standard operating procedures", "Sample testing", "Root-cause analysis", "Documentation"],
+      },
+    ],
+    projects: [
+      {
+        id: "chem-project-1",
+        title: "Household pH Testing Journal",
+        outcome: "Create a mini lab report comparing acidity/basicity across common household liquids.",
+        skills: ["Experimental design", "Data collection", "Observation writing", "Scientific communication"],
+        plan: [
+          "Week 1: Define hypothesis, list materials, and build a safe testing checklist.",
+          "Week 2: Run pH tests on 8-10 samples and record results in a table.",
+          "Week 3: Analyze patterns, make a chart, and identify outliers.",
+          "Week 4: Write final report with conclusion, errors, and next experiment ideas.",
+        ],
+      },
+      {
+        id: "chem-project-2",
+        title: "Reaction Rate Comparison",
+        outcome: "Compare how temperature affects dissolving rate and present findings.",
+        skills: ["Controlled variables", "Timing experiments", "Graphing results", "Presentation skills"],
+        plan: [
+          "Week 1: Choose materials and design fair-test procedure with controls.",
+          "Week 2: Run repeated trials at different temperatures.",
+          "Week 3: Plot rate curves and summarize trends.",
+          "Week 4: Build a short slide deck and present recommendations.",
+        ],
+      },
+    ],
+    ideas: [
+      "Add your top project to a student portfolio with 1 screenshot and 3 bullet outcomes.",
+      "Practice explaining your project in 60 seconds for interviews.",
+      "Ask your teacher for one rubric-based improvement and apply it in the next project.",
+    ],
+  },
+  math: {
+    careers: [
+      {
+        title: "Data Analyst",
+        why: "Use logic and structured reasoning to interpret trends and support decisions.",
+        requiredSkills: ["Logical reasoning", "Pattern detection", "Data interpretation", "Clear communication"],
+      },
+      {
+        title: "Operations Research Assistant",
+        why: "Solve optimization and planning problems with discrete math foundations.",
+        requiredSkills: ["Set and graph models", "Combinatorics", "Proof-based thinking", "Model validation"],
+      },
+    ],
+    projects: [
+      {
+        id: "math-project-1",
+        title: "Campus Schedule Optimizer",
+        outcome: "Model course scheduling constraints and propose an improved weekly schedule.",
+        skills: ["Constraint modeling", "Set logic", "Optimization basics", "Decision documentation"],
+        plan: [
+          "Week 1: Define constraints (time blocks, conflicts, availability).",
+          "Week 2: Build feasible schedule options using sets and logic rules.",
+          "Week 3: Score each option on efficiency and workload balance.",
+          "Week 4: Present final schedule recommendation with reasoning.",
+        ],
+      },
+      {
+        id: "math-project-2",
+        title: "Proof Portfolio",
+        outcome: "Build a mini portfolio of 6 polished proofs across different techniques.",
+        skills: ["Direct proof", "Contrapositive", "Induction", "Technical writing"],
+        plan: [
+          "Week 1: Select proof topics and collect reference examples.",
+          "Week 2: Draft first 3 proofs and get peer feedback.",
+          "Week 3: Draft remaining proofs and standardize format.",
+          "Week 4: Revise all proofs into a clean portfolio PDF.",
+        ],
+      },
+    ],
+    ideas: [
+      "Turn one project into a GitHub README with your reasoning process.",
+      "Track common logic mistakes and create a personal checklist before submission.",
+      "Pair with a classmate to review proof clarity each week.",
+    ],
+  },
+  biology: {
+    careers: [
+      {
+        title: "Clinical Research Assistant",
+        why: "Use biological systems knowledge to support data collection and protocol adherence.",
+        requiredSkills: ["Biology fundamentals", "Observation accuracy", "Protocol compliance", "Data entry"],
+      },
+      {
+        title: "Biotech Lab Assistant",
+        why: "Apply microscopy and cell-system concepts in lab support roles.",
+        requiredSkills: ["Microscopy", "Sample handling", "Documentation", "Team communication"],
+      },
+    ],
+    projects: [
+      {
+        id: "bio-project-1",
+        title: "Cell Systems Visual Guide",
+        outcome: "Design a visual handbook of major organelles and their functions.",
+        skills: ["Concept synthesis", "Scientific visualization", "Comparative analysis", "Teaching others"],
+        plan: [
+          "Week 1: Select organelles and gather accurate references.",
+          "Week 2: Create organelle cards with function and analogy.",
+          "Week 3: Build comparison pages (plant vs animal cells).",
+          "Week 4: Share handbook and run a 10-minute peer walkthrough.",
+        ],
+      },
+      {
+        id: "bio-project-2",
+        title: "Microscopy Observation Tracker",
+        outcome: "Build a repeatable observation template for microscope sessions.",
+        skills: ["Observation protocols", "Pattern tracking", "Scientific note-taking", "Quality checks"],
+        plan: [
+          "Week 1: Create a standard observation form and scoring rubric.",
+          "Week 2: Log observations from at least 5 slide sessions.",
+          "Week 3: Analyze repeated findings and error patterns.",
+          "Week 4: Summarize improvements and propose next lab focus.",
+        ],
+      },
+    ],
+    ideas: [
+      "Convert your best diagram into a one-page revision sheet for exams.",
+      "Build a glossary of 25 key biology terms with examples.",
+      "Practice explaining one concept weekly to a non-biology friend.",
+    ],
+  },
+  literature: {
+    careers: [
+      {
+        title: "Content Writer",
+        why: "Use narrative analysis and clear communication to create engaging written content.",
+        requiredSkills: ["Audience awareness", "Structured writing", "Critical reading", "Editing"],
+      },
+      {
+        title: "Communications Specialist",
+        why: "Apply textual interpretation and messaging skills in organizational communication.",
+        requiredSkills: ["Messaging strategy", "Tone adaptation", "Research synthesis", "Presentation"],
+      },
+    ],
+    projects: [
+      {
+        id: "lit-project-1",
+        title: "Theme Analysis Blog Series",
+        outcome: "Publish a 4-post series analyzing modern text themes for student readers.",
+        skills: ["Close reading", "Argument building", "Blog writing", "Editorial revision"],
+        plan: [
+          "Week 1: Choose texts and draft editorial calendar.",
+          "Week 2: Write and revise first two posts.",
+          "Week 3: Write final posts and add supporting evidence.",
+          "Week 4: Publish series and gather peer comments for revision.",
+        ],
+      },
+      {
+        id: "lit-project-2",
+        title: "Narrative Voice Podcast Script",
+        outcome: "Create a short podcast script comparing narrative voice across stories.",
+        skills: ["Script writing", "Comparative analysis", "Storytelling", "Public speaking"],
+        plan: [
+          "Week 1: Select two stories and collect key excerpts.",
+          "Week 2: Outline script segments and transitions.",
+          "Week 3: Draft, rehearse, and tighten script timing.",
+          "Week 4: Record episode and publish reflection notes.",
+        ],
+      },
+    ],
+    ideas: [
+      "Use your strongest writing sample as a portfolio piece for internships.",
+      "Practice one mock interview answer each week using literary evidence.",
+      "Create a personal editing rubric and reuse it for all future writing.",
+    ],
+  },
+  history: {
+    careers: [
+      {
+        title: "Policy Research Assistant",
+        why: "Historical source analysis supports evidence-based policy research work.",
+        requiredSkills: ["Source evaluation", "Argument building", "Context framing", "Evidence citation"],
+      },
+      {
+        title: "Museum Education Assistant",
+        why: "History communication skills transfer to public learning and interpretation roles.",
+        requiredSkills: ["Historical storytelling", "Audience engagement", "Program planning", "Visual curation"],
+      },
+    ],
+    projects: [
+      {
+        id: "hist-project-1",
+        title: "Trade Route Story Map",
+        outcome: "Build an interactive or slide-based map showing impacts of key trade routes.",
+        skills: ["Historical mapping", "Cause-effect analysis", "Narrative design", "Research synthesis"],
+        plan: [
+          "Week 1: Choose routes and collect primary/secondary sources.",
+          "Week 2: Draft map layers and timeline notes.",
+          "Week 3: Add cultural/economic impact narratives.",
+          "Week 4: Present map with evidence citations and Q&A notes.",
+        ],
+      },
+      {
+        id: "hist-project-2",
+        title: "Debate Evidence Portfolio",
+        outcome: "Create a claim-evidence-reasoning packet for a history policy debate.",
+        skills: ["Claim writing", "Evidence ranking", "Counterargument", "Debate prep"],
+        plan: [
+          "Week 1: Frame debate question and initial claim set.",
+          "Week 2: Collect evidence and evaluate source reliability.",
+          "Week 3: Build counterarguments and rebuttal strategy.",
+          "Week 4: Finalize debate packet and reflect on performance.",
+        ],
+      },
+    ],
+    ideas: [
+      "Create a one-page timeline artifact for your portfolio.",
+      "Track your evidence quality score each week to improve citations.",
+      "Join or simulate a panel discussion to practice concise arguments.",
+    ],
+  },
+  programming: {
+    careers: [
+      {
+        title: "Junior Software Developer",
+        why: "Programming coursework builds coding, debugging, and delivery habits needed in real product teams.",
+        requiredSkills: ["Problem decomposition", "Debugging", "Version control", "Code readability"],
+      },
+      {
+        title: "QA Automation Associate",
+        why: "Structured thinking and loop logic are strong foundations for test automation roles.",
+        requiredSkills: ["Test cases", "Automation logic", "Bug reporting", "Collaboration"],
+      },
+    ],
+    projects: [
+      {
+        id: "cs-project-1",
+        title: "Assignment Tracker App",
+        outcome: "Build a simple web app to track assignments, due dates, and completion status.",
+        skills: ["JavaScript fundamentals", "State handling", "UI design", "Feature planning"],
+        plan: [
+          "Week 1: Define features, wireframe UI, and scaffold project files.",
+          "Week 2: Implement add/edit/complete task flows.",
+          "Week 3: Add sorting, filtering, and local storage persistence.",
+          "Week 4: Test edge cases, improve UX, and publish demo.",
+        ],
+      },
+      {
+        id: "cs-project-2",
+        title: "Debugging Playbook",
+        outcome: "Create a reusable debugging guide with real examples from your assignments.",
+        skills: ["Error diagnosis", "Troubleshooting workflow", "Technical writing", "Reflection"],
+        plan: [
+          "Week 1: Collect 10 bugs and categorize by root cause.",
+          "Week 2: Document steps to reproduce and fix each bug type.",
+          "Week 3: Add checklist and common prevention patterns.",
+          "Week 4: Turn it into a polished guide and share with peers.",
+        ],
+      },
+    ],
+    ideas: [
+      "Keep a project changelog to show growth over time.",
+      "Write one resume bullet for each completed project outcome.",
+      "Ask for a peer code review at least once per week.",
+    ],
+  },
+};
+
 function makeTabPlaceholders(courseTitle, courseKey) {
   const seed = uniqueTabSeedByCourse[courseKey] || uniqueTabSeedByCourse.math;
   return {
@@ -376,6 +656,11 @@ function makeTabPlaceholders(courseTitle, courseKey) {
     analytics: {
       title: "Analytics",
       description: `Progress analytics for ${courseTitle}.`,
+      items: [],
+    },
+    career: {
+      title: "Career Readiness",
+      description: `Connect course learning to careers, portfolio projects, and future-ready skills for ${courseTitle}.`,
       items: [],
     },
   };
@@ -1224,6 +1509,117 @@ function renderAnalytics() {
 }
 updateCourseCardsGrades();
 
+function getCareerDataForCourse(courseKey) {
+  return careerReadinessByCourse[courseKey] || careerReadinessByCourse.programming;
+}
+
+function projectStorageKey(courseKey, projectId) {
+  return `career_project_done:${currentStudentId}:${courseKey}:${projectId}`;
+}
+
+function isProjectCompleted(courseKey, projectId) {
+  try {
+    return localStorage.getItem(projectStorageKey(courseKey, projectId)) === "1";
+  } catch (_error) {
+    return false;
+  }
+}
+
+function setProjectCompleted(courseKey, projectId, done) {
+  try {
+    if (done) {
+      localStorage.setItem(projectStorageKey(courseKey, projectId), "1");
+    } else {
+      localStorage.removeItem(projectStorageKey(courseKey, projectId));
+    }
+  } catch (_error) {
+    // Ignore storage errors in restricted browsers.
+  }
+}
+
+function renderCareerReadinessTab(courseKey) {
+  if (!careerPanel || !careerTrackList || !careerSkillsList || !careerProjectsList || !careerIdeasList) return;
+
+  const data = getCareerDataForCourse(courseKey);
+  const careers = data.careers || [];
+  const projects = data.projects || [];
+  const ideas = data.ideas || [];
+
+  careerTrackList.innerHTML = "";
+  careerSkillsList.innerHTML = "";
+  careerProjectsList.innerHTML = "";
+  careerIdeasList.innerHTML = "";
+
+  careers.forEach((career) => {
+    const card = document.createElement("article");
+    card.className = "career-pill";
+    card.innerHTML = `<h4>${escapeHtml(career.title)}</h4><p>${escapeHtml(career.why)}</p>`;
+    careerTrackList.appendChild(card);
+  });
+
+  const requiredSkills = Array.from(
+    new Set(careers.flatMap((career) => (career.requiredSkills || []).map((s) => s.trim())).filter(Boolean))
+  );
+  requiredSkills.forEach((skill) => {
+    const li = document.createElement("li");
+    li.textContent = skill;
+    careerSkillsList.appendChild(li);
+  });
+
+  let completedCount = 0;
+
+  projects.forEach((project) => {
+    const done = isProjectCompleted(courseKey, project.id);
+    if (done) completedCount += 1;
+
+    const card = document.createElement("article");
+    card.className = "project-card";
+
+    const weekListHtml = (project.plan || [])
+      .map((step) => `<li>${escapeHtml(step)}</li>`)
+      .join("");
+    const skillsText = (project.skills || []).join(" • ");
+
+    card.innerHTML = `
+      <div class="project-top">
+        <div>
+          <h4 class="project-title">${escapeHtml(project.title)}</h4>
+          <p class="project-meta">${escapeHtml(project.outcome || "")}</p>
+        </div>
+        <label class="project-check">
+          <input type="checkbox" ${done ? "checked" : ""} aria-label="Mark project as completed" />
+          Completed
+        </label>
+      </div>
+      <ol class="week-plan">${weekListHtml}</ol>
+      <p class="project-skills"><strong>Skills you will build:</strong> ${escapeHtml(skillsText)}</p>
+    `;
+
+    const checkbox = card.querySelector("input[type='checkbox']");
+    if (checkbox) {
+      checkbox.addEventListener("change", () => {
+        setProjectCompleted(courseKey, project.id, checkbox.checked);
+        renderCareerReadinessTab(courseKey);
+      });
+    }
+
+    careerProjectsList.appendChild(card);
+  });
+
+  ideas.forEach((idea) => {
+    const li = document.createElement("li");
+    li.textContent = idea;
+    careerIdeasList.appendChild(li);
+  });
+
+  if (careerSummaryTitle) {
+    careerSummaryTitle.textContent = `${projects.length ? Math.round((completedCount / projects.length) * 100) : 0}% Portfolio Plan Complete`;
+  }
+  if (careerSummaryText) {
+    careerSummaryText.textContent = `${completedCount} of ${projects.length} projects completed.`;
+  }
+}
+
 function renderActiveTab() {
   if (currentCourse === "home") return;
 
@@ -1252,6 +1648,7 @@ function renderActiveTab() {
   fileItems.innerHTML = "";
   filesPanel.classList.add("hidden");
   if (analyticsPanel) analyticsPanel.classList.add("hidden");
+  if (careerPanel) careerPanel.classList.add("hidden");
 
   assignmentsAccordion.classList.add("hidden");
   gradesPanel.classList.add("hidden");
@@ -1477,6 +1874,12 @@ function renderActiveTab() {
     if (classId) analyticsClassId = classId;
     populateAnalyticsFilters();
     renderAnalytics();
+  }
+
+  // CAREER READINESS TAB ONLY
+  else if (activeTab === "career") {
+    if (careerPanel) careerPanel.classList.remove("hidden");
+    renderCareerReadinessTab(currentCourse);
   }
 
   // OTHER TABS
