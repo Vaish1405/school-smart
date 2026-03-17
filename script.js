@@ -526,7 +526,6 @@ function getAssignmentById(id) {
 function applyRecordsToCourseData() {
   Object.entries(courseKeyToClassId).forEach(([courseKey, classId]) => {
     const cls = getClassById(classId);
-    const teacher = cls ? getTeacherById(cls.teacherId) : null;
     const list = recordsAssignments.filter((a) => a.classId === classId);
     const course = courseData[courseKey];
     if (!course) return;
@@ -553,45 +552,24 @@ function applyRecordsToCourseData() {
       const overdueItems = [];
       const currentItems = [];
       const pastItems = [];
+
       list.forEach((a) => {
         const grade = recordsAssignmentGrades.find(
           (g) => g.assignmentId === a.id && g.studentId === currentStudentId
         );
-        const dueLabel = `${a.title} (due ${formatShortDate(a.dueDate)} at ${a.dueTime})`;
+        const dueLabel = `${a.title} (${a.pointsPossible} pts) — Due ${formatShortDate(a.dueDate)} at ${a.dueTime}`;
+
         if (grade && grade.pointsEarned != null) {
-          pastItems.push(`${a.title} (submitted, ${grade.pointsEarned}/${a.pointsPossible})`);
+          pastItems.push(`${a.title} (${grade.pointsEarned}/${a.pointsPossible})`);
           return;
         }
+
         const due = new Date(a.dueDate);
-        if (due < demoToday) overdueItems.push(`${a.title} (was due ${formatShortDate(a.dueDate)} at ${a.dueTime})`);
-        else currentItems.push(dueLabel);
-      });
-      const now = new Date("2026-03-26T12:00:00");
-      const getStatus = (assignment) => {
-        const grade = recordsAssignmentGrades.find(
-          (g) => g.studentId === currentStudentId && g.assignmentId === assignment.id
-        );
-        if (grade && grade.pointsEarned != null) return "Past Assignments";
-        const dueDate = new Date(`${assignment.dueDate}T23:59:59`);
-        return dueDate < now ? "Overdue Assignments" : "Current Assignments";
-      };
-
-      const sectionMap = {
-        "Overdue Assignments": [],
-        "Current Assignments": [],
-        "Past Assignments": [],
-      };
-
-      list.forEach((a) => {
-        const dueLabel = a.dueDate
-          ? `${new Date(a.dueDate).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })} ${a.dueTime || ""}`.trim()
-          : "No due date";
-        const itemText = `${a.title} (${a.pointsPossible} pts) — Due ${dueLabel}`;
-        sectionMap[getStatus(a)].push(itemText);
+        if (due < demoToday) {
+          overdueItems.push(`${a.title} (was due ${formatShortDate(a.dueDate)} at ${a.dueTime})`);
+        } else {
+          currentItems.push(dueLabel);
+        }
       });
 
       course.tabs.assignments = {
@@ -601,29 +579,18 @@ function applyRecordsToCourseData() {
           {
             label: "Overdue Assignments",
             summary: "Needs immediate action",
-            items: sectionMap["Overdue Assignments"].length
-              ? sectionMap["Overdue Assignments"]
-              : ["No overdue assignments."],
+            items: overdueItems.length ? overdueItems : ["No overdue assignments right now."],
           },
           {
             label: "Current Assignments",
             summary: "Due soon",
-            items: sectionMap["Current Assignments"].length
-              ? sectionMap["Current Assignments"]
-              : ["No current assignments."],
+            items: currentItems.length ? currentItems : ["No current assignments this week."],
           },
           {
             label: "Past Assignments",
             summary: "Completed or submitted",
-            items: sectionMap["Past Assignments"].length
-              ? sectionMap["Past Assignments"]
-              : ["No past assignments yet."],
+            items: pastItems.length ? pastItems : ["No completed assignments yet."],
           },
-        ],
-        sections: [
-          { label: "Overdue Assignments", summary: "Needs immediate action", items: overdueItems.length ? overdueItems : ["No overdue assignments right now."] },
-          { label: "Current Assignments", summary: "Due soon", items: currentItems.length ? currentItems : ["No current assignments this week."] },
-          { label: "Past Assignments", summary: "Completed or submitted", items: pastItems.length ? pastItems : ["No completed assignments yet."] },
         ],
       };
 
@@ -667,21 +634,7 @@ function applyRecordsToCourseData() {
         const bd = new Date(`2026 ${b.dueDate}`).getTime() || 0;
         return ad - bd;
       });
-    const classGrade = recordsClassGrades.find(
-      (g) => g.studentId === currentStudentId && g.classId === classId
-    );
-        return a && a.classId === classId
-          ? {
-              assignmentId: a.id,
-              assignmentTitle: a.title,
-              dueDate: a.dueDate,
-              pointsEarned: g.pointsEarned,
-              pointsPossible: a.pointsPossible,
-              feedback: g.feedback,
-            }
-          : null;
-      })
-      .filter(Boolean);
+
     course.tabs.grades = {
       title: "Grades",
       description: `Gradebook for ${course.title}. Overall score updates from the assignment rows below.`,
