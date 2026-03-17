@@ -35,14 +35,8 @@
         <a href="dashboard.html" class="nav-icon active" id="navDashboard" aria-label="Dashboard">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg>
         </a>
-        <a href="dashboard.html" class="nav-icon" id="navCourses" aria-label="Courses">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M8 6v12"/></svg>
-        </a>
         <a href="calendar.html" class="nav-icon" id="navCalendar" aria-label="Calendar">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v15H4z"/><path d="M4 10h16M8 3v4m8-4v4"/></svg>
-        </a>
-        <a href="#" class="nav-icon" id="navInbox" aria-label="Inbox">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 8l9 6 9-6"/></svg>
         </a>
       </nav>
     </aside>
@@ -323,25 +317,44 @@
                     </label>
                   </article>
 
+                  <article class="analytics-kpis" id="analyticsKpis">
+                    <div class="analytics-kpi">
+                      <span class="kpi-label" id="kpiLabel1">Overall</span>
+                      <strong class="kpi-value" id="kpiValue1">--</strong>
+                    </div>
+                    <div class="analytics-kpi">
+                      <span class="kpi-label" id="kpiLabel2">Completion</span>
+                      <strong class="kpi-value" id="kpiValue2">--</strong>
+                    </div>
+                    <div class="analytics-kpi">
+                      <span class="kpi-label" id="kpiLabel3">Needs Attention</span>
+                      <strong class="kpi-value" id="kpiValue3">--</strong>
+                    </div>
+                  </article>
+
                   <article class="analytics-grid">
                     <section class="analytics-card">
                       <h3 id="gradePieTitle">Grade Distribution (Class)</h3>
+                      <p class="analytics-help" id="gradePieHelp">How many items are complete vs missing.</p>
                       <canvas id="gradePieChart" height="190"></canvas>
                       <div id="gradePieLegend" class="chart-legend"></div>
                     </section>
 
                     <section class="analytics-card">
                       <h3 id="studentBarTitle">Student Assignment Scores</h3>
+                      <p class="analytics-help" id="studentBarHelp">Scores by assignment (0-100%).</p>
                       <canvas id="studentBarChart" height="190"></canvas>
                     </section>
 
                     <section class="analytics-card analytics-wide" id="assignmentLevelCard">
                       <h3 id="trendLineTitle">Progress Trend: Student vs Class Average</h3>
+                      <p class="analytics-help" id="trendLineHelp">Compare progress over time with a reference line.</p>
                       <canvas id="trendLineChart" height="200"></canvas>
                     </section>
 
                     <section class="analytics-card analytics-wide" id="topicPerformanceCard">
                       <h3 id="topicBarTitle">Topic-wise Performance</h3>
+                      <p class="analytics-help" id="topicBarHelp">Average mastery by topic area.</p>
                       <canvas id="topicBarChart" height="145"></canvas>
                     </section>
 

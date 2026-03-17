@@ -6,12 +6,12 @@ const chatMessages = document.getElementById("chatMessages");
 
 const homeView = document.getElementById("homeView");
 const calendarView = document.getElementById("calendarView");
+const tutorView = document.getElementById("tutorView");
+const careerView = document.getElementById("careerView");
 const detailView = document.getElementById("detailView");
 const cards = document.querySelectorAll(".class-card");
 const backToHome = document.getElementById("backToHome");
 const courseTabs = document.querySelectorAll(".course-tab");
-const tutorTabButton = document.querySelector('.course-tab[data-tab="tutor"]');
-const careerTabButton = document.querySelector('.course-tab[data-tab="career"]');
 
 const detailTag = document.getElementById("detailTag");
 const detailTitle = document.getElementById("detailTitle");
@@ -33,6 +33,8 @@ const miniNext = document.getElementById("miniNext");
 
 const navDashboard = document.getElementById("navDashboard");
 const navCalendar = document.getElementById("navCalendar");
+const navTutor = document.getElementById("navTutor");
+const navCareer = document.getElementById("navCareer");
 const navCourses = document.getElementById("navCourses");
 const navInbox = document.getElementById("navInbox");
 
@@ -52,6 +54,16 @@ const gradePieTitle = document.getElementById("gradePieTitle");
 const studentBarTitle = document.getElementById("studentBarTitle");
 const trendLineTitle = document.getElementById("trendLineTitle");
 const topicBarTitle = document.getElementById("topicBarTitle");
+const kpiLabel1 = document.getElementById("kpiLabel1");
+const kpiLabel2 = document.getElementById("kpiLabel2");
+const kpiLabel3 = document.getElementById("kpiLabel3");
+const kpiValue1 = document.getElementById("kpiValue1");
+const kpiValue2 = document.getElementById("kpiValue2");
+const kpiValue3 = document.getElementById("kpiValue3");
+const gradePieHelp = document.getElementById("gradePieHelp");
+const studentBarHelp = document.getElementById("studentBarHelp");
+const trendLineHelp = document.getElementById("trendLineHelp");
+const topicBarHelp = document.getElementById("topicBarHelp");
 
 const filesPanel = document.getElementById("filesPanel");
 const folderList = document.getElementById("folderList");
@@ -74,6 +86,8 @@ const analyticsPanel = document.getElementById("analyticsPanel");
 const careerPanel = document.getElementById("careerPanel");
 const activeUserNameHome = document.getElementById("activeUserNameHome");
 const activeUserNameCalendar = document.getElementById("activeUserNameCalendar");
+const activeUserNameTutor = document.getElementById("activeUserNameTutor");
+const activeUserNameCareer = document.getElementById("activeUserNameCareer");
 const activeUserNameDetail = document.getElementById("activeUserNameDetail");
 const careerSummaryTitle = document.getElementById("careerSummaryTitle");
 const careerSummaryText = document.getElementById("careerSummaryText");
@@ -81,10 +95,19 @@ const careerTrackList = document.getElementById("careerTrackList");
 const careerSkillsList = document.getElementById("careerSkillsList");
 const careerProjectsList = document.getElementById("careerProjectsList");
 const careerIdeasList = document.getElementById("careerIdeasList");
+const careerCourseSelect = document.getElementById("careerCourseSelect");
+const careerContentHeader = document.getElementById("careerContentHeader");
+const tutorCourseSelect = document.getElementById("tutorCourseSelect");
+const tutorContentHeader = document.getElementById("tutorContentHeader");
+const tutorSessionCards = document.getElementById("tutorSessionCards");
+const tutorResourceList = document.getElementById("tutorResourceList");
+const createStudySessionBtn = document.getElementById("createStudySessionBtn");
 
 const toggleButtons = [
   document.getElementById("chatToggle"),
   document.getElementById("chatToggleCalendar"),
+  document.getElementById("chatToggleTutor"),
+  document.getElementById("chatToggleCareer"),
   document.getElementById("chatToggleDetail"),
 ].filter(Boolean);
 
@@ -93,6 +116,8 @@ let activeTab = "assignments";
 let calendarDate = new Date(2026, 2, 1);
 let isTeacherView = false;
 let currentCourseDisplayTitle = "";
+let tutorSelectedCourse = "chemistry";
+let careerSelectedCourse = "chemistry";
 
 const teacherDashboardCards = [
   { icon: "CH1", title: "Chemistry Lab Foundations - Period 1", teacher: "Dr. Nina Verma", schedule: "Mon/Wed | 8:00 AM", published: true },
@@ -110,6 +135,7 @@ let dbUniqueTabSeedByCourse = {};
 let dbDefaultModulesScheduleByCourse = {};
 let dbReviewQuestionTemplatesByCourse = {};
 let dbCareerReadinessByCourse = {};
+let dbTutorStudioByCourse = {};
 
 let studentDashboardCards = [];
 let analyticsClassId = "c1";
@@ -888,18 +914,6 @@ const courseData = {
 Object.entries(courseData).forEach(([courseKey, course]) => {
   course.tabs = makeTabPlaceholders(course.title, courseKey);
   course.tabs.grades.records = defaultGradeRecordsByCourse[courseKey] || [];
-  if (courseKey === "chemistry") {
-    course.tabs.tutor = {
-      title: "Tutor",
-      description: "Chemistry tutoring support for lab safety, calculations, and report writing.",
-      items: [
-        "Live tutor hours: Tue/Thu 4:00-5:00 PM in Science 204.",
-        "Ask the Tutor: Bring one lab question and one sig-fig question each session.",
-        "Quick Help Topics: Unit conversion, significant figures, graph interpretation.",
-        "This Week Focus: Structuring your first experiment write-up (purpose, data, conclusion).",
-      ],
-    };
-  }
 });
 
 function computePercentFromGradeRecords(records) {
@@ -1036,6 +1050,43 @@ function getQuestionReviewForAssignment(courseKey, scorePercent, questionCount =
   });
 }
 
+function getInstructorQuestionAggregate(courseKey, assignmentId, questionCount = 5) {
+  const reviewSource =
+    Object.keys(dbReviewQuestionTemplatesByCourse).length > 0
+      ? dbReviewQuestionTemplatesByCourse
+      : reviewQuestionTemplatesByCourse;
+  const templates = reviewSource[courseKey] || reviewSource.programming;
+  const totalQuestions = Math.min(5, Math.max(1, Number(questionCount) || 5));
+  const classId = courseKeyToClassId[courseKey];
+  const studentIds = classId
+    ? recordsEnrollments.filter((e) => e.classId === classId).map((e) => e.studentId)
+    : [currentStudentId];
+
+  const rows = Array.from({ length: totalQuestions }, (_unused, index) => ({
+    prompt: templates[index % templates.length].prompt,
+    right: 0,
+    wrong: 0,
+  }));
+
+  studentIds.forEach((studentId) => {
+    const grade = assignmentId
+      ? recordsAssignmentGrades.find((g) => g.assignmentId === assignmentId && g.studentId === studentId)
+      : null;
+    const assignment = assignmentId ? getAssignmentById(assignmentId) : null;
+    const total = Number(assignment?.pointsPossible || 100);
+    const earned = grade?.pointsEarned == null ? 0 : Number(grade.pointsEarned);
+    const percent = total > 0 ? Math.round((earned / total) * 100) : 0;
+    const correctCount = Math.max(0, Math.min(totalQuestions, Math.round((percent / 100) * totalQuestions)));
+
+    rows.forEach((row, idx) => {
+      if (idx < correctCount) row.right += 1;
+      else row.wrong += 1;
+    });
+  });
+
+  return rows;
+}
+
 function buildPastAssignmentReviewItem(courseKey, record) {
   const earned = record.status === "Missing" ? 0 : Number(record.earned ?? 0);
   const total = Number(record.total ?? 100);
@@ -1047,6 +1098,7 @@ function buildPastAssignmentReviewItem(courseKey, record) {
   const questions = getQuestionReviewForAssignment(courseKey, percent, questionCount, missed);
   return {
     type: "pastReview",
+    assignmentId: record.assignmentId || null,
     title: record.name,
     scoreLabel: `${correctCount}/${questionCount}`,
     percentLabel: `${reviewPercent}%`,
@@ -1127,6 +1179,125 @@ function getTutorAssignmentsForCourse(courseKey) {
     .sort((a, b) => (b.dueIso || "").localeCompare(a.dueIso || ""));
 
   return rows;
+}
+
+function getTutorCourseOptions() {
+  const dbKeys = Object.keys(dbTutorStudioByCourse || {});
+  const keys = dbKeys.length > 0 ? dbKeys : Object.keys(courseData);
+  return keys.map((key) => ({
+    key,
+    title: courseData[key]?.title || key.charAt(0).toUpperCase() + key.slice(1),
+  }));
+}
+
+function getTutorStudioDataForCourse(courseKey) {
+  const source = Object.keys(dbTutorStudioByCourse).length > 0 ? dbTutorStudioByCourse : {};
+  return source[courseKey] || source.programming || {};
+}
+
+function buildTutorResourcesForCourse(courseKey) {
+  const dbTutorData = getTutorStudioDataForCourse(courseKey);
+  const dbResources = Array.isArray(dbTutorData.resources) ? dbTutorData.resources : [];
+  const classId = courseKeyToClassId[courseKey];
+  const assignments = classId ? getClassAssignments(classId) : [];
+  const weeks = courseData[courseKey]?.tabs?.modules?.weeks || [];
+
+  const tests = assignments.slice(0, 3).map((a, idx) => ({
+    type: "Practice Test",
+    title: `${a.title} - Practice ${idx + 1}`,
+    meta: `Based on ${a.type || "course"} material`,
+  }));
+
+  const guides = weeks.slice(0, 3).map((week) => ({
+    type: "Study Guide",
+    title: `${week.title}: ${week.summary}`,
+    meta: `Covers ${Math.max(1, (week.assignments || []).length)} assignment topic(s)`,
+  }));
+
+  return [...dbResources, ...tests, ...guides];
+}
+
+function renderTutorWorkspace() {
+  if (!tutorCourseSelect || !tutorSessionCards || !tutorResourceList) return;
+
+  const options = getTutorCourseOptions();
+  if (!options.find((opt) => opt.key === tutorSelectedCourse)) {
+    tutorSelectedCourse = options[0]?.key || "chemistry";
+  }
+
+  tutorCourseSelect.innerHTML = "";
+  options.forEach((opt) => {
+    const option = document.createElement("option");
+    option.value = opt.key;
+    option.textContent = opt.title;
+    tutorCourseSelect.appendChild(option);
+  });
+  tutorCourseSelect.value = tutorSelectedCourse;
+
+  const selectedCourse = courseData[tutorSelectedCourse];
+  if (tutorContentHeader) {
+    tutorContentHeader.textContent = `Current study session: ${selectedCourse?.title || "Course"}`;
+  }
+
+  tutorSessionCards.innerHTML = "";
+  tutorResourceList.innerHTML = "";
+
+  const dbTutorData = getTutorStudioDataForCourse(tutorSelectedCourse);
+  const tutorRows = getTutorAssignmentsForCourse(tutorSelectedCourse);
+  const studyCards = Array.isArray(dbTutorData.sessions) ? dbTutorData.sessions : [];
+
+  studyCards.forEach((card) => {
+    const item = document.createElement("article");
+    item.className = "tutor-session-card";
+    item.innerHTML = `
+      <h4>${escapeHtml(card.title)}</h4>
+      <p>${escapeHtml(card.desc)}</p>
+      <button class="study-btn" type="button">Start Session</button>
+    `;
+    const btn = item.querySelector("button");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        setChatOpen(true);
+        const promptTemplate = String(card.prompt || "").trim();
+        if (promptTemplate) {
+          chatInput.value = promptTemplate
+            .replace(/\{courseTitle\}/g, selectedCourse?.title || "this course")
+            .replace(/\{courseKey\}/g, tutorSelectedCourse);
+        } else {
+          chatInput.value = `Start a ${card.title.toLowerCase()} for ${selectedCourse?.title || "this course"}.`;
+        }
+        chatInput.focus();
+      });
+    }
+    tutorSessionCards.appendChild(item);
+  });
+
+  const resources = buildTutorResourcesForCourse(tutorSelectedCourse);
+  resources.forEach((resource) => {
+    const li = document.createElement("li");
+    li.className = "tutor-resource-item";
+    li.innerHTML = `
+      <div>
+        <strong>${escapeHtml(resource.title)}</strong>
+        <p>${escapeHtml(resource.meta)}</p>
+      </div>
+      <span class="review-chip neutral">${escapeHtml(resource.type)}</span>
+    `;
+    tutorResourceList.appendChild(li);
+  });
+
+  tutorRows.slice(0, 4).forEach((row) => {
+    const li = document.createElement("li");
+    li.className = "tutor-resource-item";
+    li.innerHTML = `
+      <div>
+        <strong>${escapeHtml(row.title)}</strong>
+        <p>Due ${escapeHtml(row.dueDate)} | Score: ${escapeHtml(row.scoreText)}</p>
+      </div>
+      <span class="review-chip success">Past Work</span>
+    `;
+    tutorResourceList.appendChild(li);
+  });
 }
 
 function escapeHtml(text) {
@@ -1264,6 +1435,7 @@ function applyRecordsToCourseData() {
         const a = getAssignmentById(g.assignmentId);
         if (!a || a.classId !== classId) return null;
         return {
+          assignmentId: a.id,
           name: a.title,
           dueDate: a.dueDate
             ? new Date(a.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
@@ -1374,6 +1546,7 @@ async function loadRecords() {
     "files.json",
     "tab_seeds.json",
     "career_readiness.json",
+    "tutor_studio.json",
     "review_templates.json",
     "dashboard_cards.json",
   ];
@@ -1393,6 +1566,7 @@ async function loadRecords() {
       recordsFiles,
       tabSeedsResult,
       careerReadinessResult,
+      tutorStudioResult,
       reviewTemplatesResult,
       dashboardCardsResult,
     ] = results;
@@ -1412,6 +1586,9 @@ async function loadRecords() {
     dbCareerReadinessByCourse = careerReadinessResult && typeof careerReadinessResult === "object"
       ? careerReadinessResult
       : {};
+    dbTutorStudioByCourse = tutorStudioResult && typeof tutorStudioResult === "object"
+      ? tutorStudioResult
+      : {};
     dbReviewQuestionTemplatesByCourse = reviewTemplatesResult && typeof reviewTemplatesResult === "object"
       ? reviewTemplatesResult
       : {};
@@ -1425,6 +1602,8 @@ async function loadRecords() {
     applyDashboardClassesForRole();
     populateAnalyticsFilters();
     renderAnalytics();
+    renderTutorWorkspace();
+    renderCareerWorkspace();
     if (currentCourse !== "home") renderActiveTab();
   } catch (e) {
     console.warn("Could not load records. Serve the app over HTTP (see README).", e);
@@ -1854,6 +2033,15 @@ function renderAnalytics() {
   const series = buildAssignmentSeries(analyticsClassId, teacherAllMode ? currentStudentId : analyticsStudentValue);
   const topicSeries = buildTopicSeries(analyticsClassId, teacherAllMode ? currentStudentId : analyticsStudentValue, isTeacherView && teacherAllMode);
 
+  const setKpi = (l1, v1, l2, v2, l3, v3) => {
+    if (kpiLabel1) kpiLabel1.textContent = l1;
+    if (kpiValue1) kpiValue1.textContent = v1;
+    if (kpiLabel2) kpiLabel2.textContent = l2;
+    if (kpiValue2) kpiValue2.textContent = v2;
+    if (kpiLabel3) kpiLabel3.textContent = l3;
+    if (kpiValue3) kpiValue3.textContent = v3;
+  };
+
   if (!isTeacherView) {
     if (assignmentLevelCard) assignmentLevelCard.classList.remove("hidden");
     if (topicPerformanceCard) topicPerformanceCard.classList.add("hidden");
@@ -1880,6 +2068,15 @@ function renderAnalytics() {
     if (studentBarTitle) studentBarTitle.textContent = "Your Assignment Scores";
     if (trendLineTitle) trendLineTitle.textContent = "Assignment Trend: You vs Class Average";
     if (topicBarTitle) topicBarTitle.textContent = "Your Topic-wise Performance";
+    if (gradePieHelp) gradePieHelp.textContent = "Shows how many assignments you completed vs still missing.";
+    if (studentBarHelp) studentBarHelp.textContent = "Each bar is your score for one assignment (0-100%).";
+    if (trendLineHelp) trendLineHelp.textContent = "Green line is you. Blue line is class average.";
+    if (topicBarHelp) topicBarHelp.textContent = "Hidden in student view to keep this focused.";
+    const overall = series.studentValues.length
+      ? Math.round(series.studentValues.reduce((a, b) => a + b, 0) / series.studentValues.length)
+      : 0;
+    const weakScore = series.studentValues.length ? Math.min(...series.studentValues) : 0;
+    setKpi("Current Average", `${overall}%`, "Completed", `${completed}`, "Lowest Score", `${weakScore}%`);
 
     drawBarChart(studentBarChart, series.labels, series.studentValues, { color: "#5fa7a5" });
     drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues, "Class Avg", "You");
@@ -1908,8 +2105,18 @@ function renderAnalytics() {
       if (studentBarTitle) studentBarTitle.textContent = "Student-level Performance";
       if (trendLineTitle) trendLineTitle.textContent = "Assignment-level Class Performance";
       if (topicBarTitle) topicBarTitle.textContent = "Topic-wise Class Performance";
+      if (gradePieHelp) gradePieHelp.textContent = "How many students are in each grade band.";
+      if (studentBarHelp) studentBarHelp.textContent = "Each bar is one student's overall performance.";
+      if (trendLineHelp) trendLineHelp.textContent = "Blue line is class average by assignment. Green line is target.";
+      if (topicBarHelp) topicBarHelp.textContent = "Shows class average score by assignment topic.";
 
       const studentSeries = buildStudentOverallSeries(analyticsClassId);
+      const classAverage = studentSeries.values.length
+        ? Math.round(studentSeries.values.reduce((a, b) => a + b, 0) / studentSeries.values.length)
+        : 0;
+      const below70 = studentSeries.values.filter((v) => v < 70).length;
+      const atRiskTopic = topicSeries.values.length ? topicSeries.labels[topicSeries.values.indexOf(Math.min(...topicSeries.values))] : "N/A";
+      setKpi("Class Average", `${classAverage}%`, "Below 70%", `${below70} students`, "Focus Topic", atRiskTopic);
       drawBarChart(studentBarChart, studentSeries.labels, studentSeries.values, { color: "#4d9aa8" });
       drawTrendChart(
         trendLineChart,
@@ -1941,6 +2148,15 @@ function renderAnalytics() {
       if (studentBarTitle) studentBarTitle.textContent = `${selectedName}: Assignment Scores`;
       if (trendLineTitle) trendLineTitle.textContent = `${selectedName}: You vs Class Average`;
       if (topicBarTitle) topicBarTitle.textContent = `${selectedName}: Topic-wise Performance`;
+      if (gradePieHelp) gradePieHelp.textContent = `Completion view for ${selectedName}.`;
+      if (studentBarHelp) studentBarHelp.textContent = `Assignment scores for ${selectedName}.`;
+      if (trendLineHelp) trendLineHelp.textContent = `Compare ${selectedName} against class average over time.`;
+      if (topicBarHelp) topicBarHelp.textContent = `Topic strengths and gaps for ${selectedName}.`;
+      const overall = series.studentValues.length
+        ? Math.round(series.studentValues.reduce((a, b) => a + b, 0) / series.studentValues.length)
+        : 0;
+      const weakScore = series.studentValues.length ? Math.min(...series.studentValues) : 0;
+      setKpi("Selected Student Avg", `${overall}%`, "Completed", `${completed}`, "Lowest Score", `${weakScore}%`);
 
       drawBarChart(studentBarChart, series.labels, series.studentValues, { color: "#5fa7a5" });
       drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues, "Class Avg", selectedName);
@@ -1953,11 +2169,8 @@ function renderAnalytics() {
 updateCourseCardsGrades();
 
 function getCareerDataForCourse(courseKey) {
-  const careerSource =
-    Object.keys(dbCareerReadinessByCourse).length > 0
-      ? dbCareerReadinessByCourse
-      : careerReadinessByCourse;
-  return careerSource[courseKey] || careerSource.programming;
+  const careerSource = Object.keys(dbCareerReadinessByCourse).length > 0 ? dbCareerReadinessByCourse : {};
+  return careerSource[courseKey] || careerSource.programming || { careers: [], projects: [], ideas: [] };
 }
 
 function projectStorageKey(courseKey, projectId) {
@@ -2067,6 +2280,38 @@ function renderCareerReadinessTab(courseKey) {
   }
 }
 
+function renderCareerWorkspace() {
+  if (!careerCourseSelect) {
+    renderCareerReadinessTab(careerSelectedCourse);
+    return;
+  }
+
+  const dbKeys = Object.keys(dbCareerReadinessByCourse || {});
+  const keys = dbKeys.length > 0 ? dbKeys : Object.keys(courseData);
+  const options = keys.map((key) => ({
+    key,
+    title: courseData[key]?.title || key.charAt(0).toUpperCase() + key.slice(1),
+  }));
+  if (!options.find((opt) => opt.key === careerSelectedCourse)) {
+    careerSelectedCourse = options[0]?.key || "chemistry";
+  }
+
+  careerCourseSelect.innerHTML = "";
+  options.forEach((opt) => {
+    const option = document.createElement("option");
+    option.value = opt.key;
+    option.textContent = opt.title;
+    careerCourseSelect.appendChild(option);
+  });
+  careerCourseSelect.value = careerSelectedCourse;
+
+  if (careerContentHeader) {
+    careerContentHeader.textContent = `Career pathways for ${courseData[careerSelectedCourse]?.title || "this course"}`;
+  }
+
+  renderCareerReadinessTab(careerSelectedCourse);
+}
+
 function renderActiveTab() {
   if (currentCourse === "home") return;
 
@@ -2135,35 +2380,83 @@ function renderActiveTab() {
         const li = document.createElement("li");
         if (item && typeof item === "object" && item.type === "pastReview") {
           li.className = "assignment-review-item";
-          const questionRows = (item.questions || [])
-            .map(
-              (question, qIndex) => `
-                <article class="review-question ${question.correct ? "correct" : "wrong"}">
-                  <h5>Q${qIndex + 1}. ${escapeHtml(question.prompt)}</h5>
-                  <p><strong>Your answer:</strong> ${escapeHtml(question.studentAnswer)}</p>
-                  <p><strong>Expected:</strong> ${escapeHtml(question.expectedAnswer)}</p>
-                  ${question.correct
-                    ? `<p><strong>Status:</strong> Correct</p>`
-                    : `<p><strong>Issue:</strong> ${escapeHtml(question.issue)}</p>
-                       <p><strong>Explanation:</strong> ${escapeHtml(question.explanation)}</p>`}
-                </article>
-              `
-            )
-            .join("");
-          li.innerHTML = `
-            <div class="review-header">
-              <div>
-                <strong>${escapeHtml(item.title)}</strong>
-                <p class="review-meta">Score: ${escapeHtml(item.scoreLabel)} (${escapeHtml(item.percentLabel)})</p>
+          if (isTeacherView) {
+            const aggregateRows = getInstructorQuestionAggregate(
+              currentCourse,
+              item.assignmentId,
+              item.questions?.length || 5
+            );
+            const aggregateHtml = aggregateRows
+              .map((row, qIndex) => {
+                const total = (row.right || 0) + (row.wrong || 0);
+                const rightPct = total > 0 ? Math.round((row.right / total) * 100) : 0;
+                return `
+                  <article class="review-question review-question-teacher">
+                    <div class="review-question-head">
+                      <h5>Q${qIndex + 1}. ${escapeHtml(row.prompt)}</h5>
+                      <span class="review-chip neutral">${rightPct}% correct</span>
+                    </div>
+                    <div class="review-stats">
+                      <span class="review-chip success">${row.right} right</span>
+                      <span class="review-chip danger">${row.wrong} wrong</span>
+                    </div>
+                    <div class="review-progress">
+                      <div class="review-progress-right" style="width:${rightPct}%"></div>
+                    </div>
+                  </article>
+                `;
+              })
+              .join("");
+            li.innerHTML = `
+              <div class="review-header">
+                <div>
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <p class="review-meta">Class question-level overview</p>
+                </div>
+                <span class="review-chip neutral">Instructor View</span>
               </div>
-              <span class="review-missed">${item.missedCount} missed</span>
-            </div>
-            <p class="review-teacher-note"><strong>Teacher note:</strong> ${escapeHtml(item.teacherNotes)}</p>
-            <details class="review-details">
-              <summary>View question-level feedback</summary>
-              <div class="review-questions">${questionRows}</div>
-            </details>
-          `;
+              <details class="review-details">
+                <summary>View class right/wrong by question</summary>
+                <div class="review-questions">${aggregateHtml}</div>
+              </details>
+            `;
+          } else {
+            const questionRows = (item.questions || [])
+              .map(
+                (question, qIndex) => `
+                  <article class="review-question ${question.correct ? "correct" : "wrong"}">
+                    <div class="review-question-head">
+                      <h5>Q${qIndex + 1}. ${escapeHtml(question.prompt)}</h5>
+                      <span class="review-chip ${question.correct ? "success" : "danger"}">${question.correct ? "Correct" : "Needs Work"}</span>
+                    </div>
+                    <p><strong>Your answer:</strong> ${escapeHtml(question.studentAnswer)}</p>
+                    <p><strong>Expected:</strong> ${escapeHtml(question.expectedAnswer)}</p>
+                    ${question.correct
+                      ? `<p><strong>Status:</strong> Correct</p>`
+                      : `<p><strong>Issue:</strong> ${escapeHtml(question.issue)}</p>
+                         <p><strong>Explanation:</strong> ${escapeHtml(question.explanation)}</p>`}
+                  </article>
+                `
+              )
+              .join("");
+            li.innerHTML = `
+              <div class="review-header">
+                <div>
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <p class="review-meta">Score: ${escapeHtml(item.scoreLabel)} (${escapeHtml(item.percentLabel)})</p>
+                </div>
+                <div class="review-stats">
+                  <span class="review-chip success">${Math.max(0, 5 - Number(item.missedCount || 0))} correct</span>
+                  <span class="review-chip danger">${item.missedCount} missed</span>
+                </div>
+              </div>
+              <p class="review-teacher-note"><strong>Teacher note:</strong> ${escapeHtml(item.teacherNotes)}</p>
+              <details class="review-details">
+                <summary>View question-level feedback</summary>
+                <div class="review-questions">${questionRows}</div>
+              </details>
+            `;
+          }
           const detailsEl = li.querySelector(".review-details");
           if (detailsEl) {
             detailsEl.addEventListener("toggle", () => {
@@ -2406,42 +2699,6 @@ function renderActiveTab() {
     });
   }
 
-  // TUTOR TAB ONLY
-  else if (activeTab === "tutor") {
-    if (tutorPanel) tutorPanel.classList.remove("hidden");
-    const tutorRows = getTutorAssignmentsForCourse(currentCourse);
-
-    if (tutorAssignmentList && tutorRows.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "announcement-empty";
-      empty.textContent = "No past assignments are available to study yet.";
-      tutorAssignmentList.appendChild(empty);
-    } else if (tutorAssignmentList) {
-      tutorRows.forEach((row) => {
-        const item = document.createElement("article");
-        item.className = "tutor-row";
-        item.innerHTML = `
-          <div class="tutor-row-left">
-            <div class="tutor-row-title">${escapeHtml(row.title)}</div>
-            <div class="tutor-row-meta">Due ${escapeHtml(row.dueDate)} | Score: ${escapeHtml(row.scoreText)}</div>
-          </div>
-          <button class="study-btn" type="button">Study</button>
-        `;
-
-        const studyBtn = item.querySelector(".study-btn");
-        if (studyBtn) {
-          studyBtn.addEventListener("click", () => {
-            setChatOpen(true);
-            chatInput.value = `Help me study for "${row.title}" in ${courseData[currentCourse].title}.`;
-            chatInput.focus();
-          });
-        }
-
-        tutorAssignmentList.appendChild(item);
-      });
-    }
-  }
-
   // ANALYTICS TAB ONLY
   else if (activeTab === "analytics") {
     if (analyticsPanel) analyticsPanel.classList.remove("hidden");
@@ -2449,12 +2706,6 @@ function renderActiveTab() {
     if (classId) analyticsClassId = classId;
     populateAnalyticsFilters();
     renderAnalytics();
-  }
-
-  // CAREER READINESS TAB ONLY
-  else if (activeTab === "career") {
-    if (careerPanel) careerPanel.classList.remove("hidden");
-    renderCareerReadinessTab(currentCourse);
   }
 
   // OTHER TABS
@@ -2637,12 +2888,18 @@ function renderCalendarMonth() {
 }
 
 function setActiveNav(active) {
-  [navDashboard, navCourses, navCalendar, navInbox].forEach((el) => el.classList.remove("active"));
+  [navDashboard, navCourses, navCalendar, navTutor, navCareer, navInbox]
+    .filter(Boolean)
+    .forEach((el) => el.classList.remove("active"));
 
   if (active === "calendar") {
-    navCalendar.classList.add("active");
+    if (navCalendar) navCalendar.classList.add("active");
+  } else if (active === "tutor") {
+    if (navTutor) navTutor.classList.add("active");
+  } else if (active === "career") {
+    if (navCareer) navCareer.classList.add("active");
   } else {
-    navDashboard.classList.add("active");
+    if (navDashboard) navDashboard.classList.add("active");
   }
 }
 
@@ -2650,17 +2907,40 @@ function showView(view) {
   if (view === "detail") {
     homeView.classList.add("hidden");
     calendarView.classList.add("hidden");
+    if (tutorView) tutorView.classList.add("hidden");
+    if (careerView) careerView.classList.add("hidden");
     detailView.classList.remove("hidden");
     setActiveNav("dashboard");
   } else if (view === "calendar") {
     homeView.classList.add("hidden");
+    if (tutorView) tutorView.classList.add("hidden");
+    if (careerView) careerView.classList.add("hidden");
     detailView.classList.add("hidden");
     calendarView.classList.remove("hidden");
     setActiveNav("calendar");
     renderCalendarMonth();
+  } else if (view === "tutor") {
+    homeView.classList.add("hidden");
+    calendarView.classList.add("hidden");
+    if (careerView) careerView.classList.add("hidden");
+    detailView.classList.add("hidden");
+    if (tutorView) tutorView.classList.remove("hidden");
+    setActiveNav("tutor");
+    renderTutorWorkspace();
+  } else if (view === "career") {
+    homeView.classList.add("hidden");
+    calendarView.classList.add("hidden");
+    if (tutorView) tutorView.classList.add("hidden");
+    detailView.classList.add("hidden");
+    if (careerView) careerView.classList.remove("hidden");
+    if (careerPanel) careerPanel.classList.remove("hidden");
+    setActiveNav("career");
+    renderCareerWorkspace();
   } else {
     currentCourse = "home";
     calendarView.classList.add("hidden");
+    if (tutorView) tutorView.classList.add("hidden");
+    if (careerView) careerView.classList.add("hidden");
     detailView.classList.add("hidden");
     homeView.classList.remove("hidden");
     setActiveNav("dashboard");
@@ -2669,6 +2949,8 @@ function showView(view) {
 
 function currentViewName() {
   if (!calendarView.classList.contains("hidden")) return "calendar";
+  if (tutorView && !tutorView.classList.contains("hidden")) return "tutor";
+  if (careerView && !careerView.classList.contains("hidden")) return "career";
   if (!detailView.classList.contains("hidden")) return "course-detail";
   return "home";
 }
@@ -2676,6 +2958,12 @@ function currentViewName() {
 function activeContextText() {
   if (!calendarView.classList.contains("hidden")) {
     return calendarView.innerText.toLowerCase();
+  }
+  if (tutorView && !tutorView.classList.contains("hidden")) {
+    return tutorView.innerText.toLowerCase();
+  }
+  if (careerView && !careerView.classList.contains("hidden")) {
+    return careerView.innerText.toLowerCase();
   }
 
   return detailView.classList.contains("hidden")
@@ -2741,6 +3029,30 @@ function captureStudentDashboardCards() {
   });
 }
 
+function getCourseCardIconFromTitle(title) {
+  const words = String(title || "")
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!words.length) return "CS";
+  const first = words[0];
+  const firstLettersOnly = first.replace(/[^a-zA-Z]/g, "");
+
+  if (firstLettersOnly.length >= 2) {
+    return firstLettersOnly.slice(0, 2).toUpperCase();
+  }
+
+  const twoWordInitials = words
+    .slice(0, 2)
+    .map((w) => (w.match(/[a-zA-Z]/) || [""])[0])
+    .join("")
+    .toUpperCase();
+
+  return twoWordInitials || "CS";
+}
+
 function applyDashboardClassesForRole() {
   captureStudentDashboardCards();
   const teacherCards = dbTeacherDashboardCards.length ? dbTeacherDashboardCards : teacherDashboardCards;
@@ -2753,8 +3065,8 @@ function applyDashboardClassesForRole() {
     const iconEl = card.querySelector(".course-icon");
     const titleEl = card.querySelector(".course-body h3");
     const lines = card.querySelectorAll(".course-body p");
-    if (iconEl) iconEl.textContent = info.icon;
     if (titleEl) titleEl.textContent = info.title;
+    if (iconEl) iconEl.textContent = getCourseCardIconFromTitle(info.title);
     if (lines[0]) lines[0].textContent = info.teacher;
     if (lines[1]) lines[1].textContent = info.schedule;
     card.dataset.displayTitle = info.title;
@@ -2789,17 +3101,7 @@ function applyDashboardClassesForRole() {
 }
 
 function updateCourseTabVisibility() {
-  const showTutorTab = !isTeacherView && currentCourse === "chemistry";
-  if (tutorTabButton) {
-    tutorTabButton.classList.toggle("hidden", !showTutorTab);
-  }
-  const showCareerTab = !isTeacherView;
-  if (careerTabButton) {
-    careerTabButton.classList.toggle("hidden", !showCareerTab);
-  }
-  if ((!showTutorTab && activeTab === "tutor") || (!showCareerTab && activeTab === "career")) {
-    activeTab = "assignments";
-  }
+  if (activeTab === "career") activeTab = "assignments";
 }
 
 function getTeacherTabDescription(tabKey, courseTitle) {
@@ -2834,6 +3136,8 @@ function setViewRole(teacherMode) {
   [activeUserNameHome, activeUserNameCalendar, activeUserNameDetail].forEach((el) => {
     if (el) el.textContent = activeName;
   });
+  if (activeUserNameTutor) activeUserNameTutor.textContent = activeName;
+  if (activeUserNameCareer) activeUserNameCareer.textContent = activeName;
 
   if (homeSubtitle) {
     homeSubtitle.textContent = `Spring 2026 | ${teacherMode ? "Teacher" : "Student"} View`;
@@ -2882,25 +3186,33 @@ cards.forEach((card) => {
   });
 });
 
-navDashboard.addEventListener("click", (event) => {
-  event.preventDefault();
-  navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
-});
+if (navDashboard) {
+  navDashboard.addEventListener("click", (event) => {
+    event.preventDefault();
+    navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
+  });
+}
 
-navCalendar.addEventListener("click", (event) => {
-  event.preventDefault();
-  navigateToPage("calendar.html");
-});
+if (navCalendar) {
+  navCalendar.addEventListener("click", (event) => {
+    event.preventDefault();
+    navigateToPage("calendar.html");
+  });
+}
 
-navCourses.addEventListener("click", (event) => {
-  event.preventDefault();
-  navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
-});
+if (navTutor) {
+  navTutor.addEventListener("click", (event) => {
+    event.preventDefault();
+    navigateToPage("dashboard.html", { tab: "tutor" });
+  });
+}
 
-navInbox.addEventListener("click", (event) => {
-  event.preventDefault();
-  navigateToPage(isTeacherView ? "teacher.html" : "dashboard.html");
-});
+if (navCareer) {
+  navCareer.addEventListener("click", (event) => {
+    event.preventDefault();
+    navigateToPage("dashboard.html", { tab: "career" });
+  });
+}
 
 calendarPrev.addEventListener("click", () => {
   calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
@@ -2974,6 +3286,15 @@ if (settingsOption) {
 
 function initPageRoute() {
   const pageName = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+  const routeParams = new URLSearchParams(window.location.search);
+  if (routeParams.get("tab") === "career") {
+    showView("career");
+    return;
+  }
+  if (routeParams.get("tab") === "tutor") {
+    showView("tutor");
+    return;
+  }
   if (pageName === "calendar.html") {
     showView("calendar");
     return;
@@ -2996,6 +3317,37 @@ const initialTeacherMode = pageName === "teacher.html" || pageParams.get("view")
 
 setViewRole(initialTeacherMode);
 initPageRoute();
+
+if (tutorCourseSelect) {
+  tutorCourseSelect.addEventListener("change", () => {
+    tutorSelectedCourse = tutorCourseSelect.value;
+    renderTutorWorkspace();
+  });
+}
+
+if (createStudySessionBtn) {
+  createStudySessionBtn.addEventListener("click", () => {
+    const courseTitle = courseData[tutorSelectedCourse]?.title || "your selected course";
+    const tutorConfig = getTutorStudioDataForCourse(tutorSelectedCourse);
+    const defaultPromptTemplate = String(tutorConfig.defaultPrompt || "").trim();
+    setChatOpen(true);
+    if (defaultPromptTemplate) {
+      chatInput.value = defaultPromptTemplate
+        .replace(/\{courseTitle\}/g, courseTitle)
+        .replace(/\{courseKey\}/g, tutorSelectedCourse);
+    } else {
+      chatInput.value = `Create a new guided study session for ${courseTitle} with goals, 30-minute plan, and quick quiz.`;
+    }
+    chatInput.focus();
+  });
+}
+
+if (careerCourseSelect) {
+  careerCourseSelect.addEventListener("change", () => {
+    careerSelectedCourse = careerCourseSelect.value;
+    renderCareerWorkspace();
+  });
+}
 
 toggleButtons.forEach((btn) => {
   btn.addEventListener("click", () => {

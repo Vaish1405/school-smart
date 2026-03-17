@@ -1,0 +1,122 @@
+{
+  "chemistry": {
+    "defaultPrompt": "Create a guided study session for {courseTitle} with a 30-minute plan, 5 review questions, and common lab mistakes to avoid.",
+    "sessions": [
+      {
+        "title": "Lab Concepts Refresh",
+        "desc": "Review lab safety, variables, and measurement accuracy.",
+        "prompt": "Start a quick review session for {courseTitle}. Focus on safety rules, controlled variables, and significant figures."
+      },
+      {
+        "title": "Pre-Lab Readiness",
+        "desc": "Get ready for the next lab with a focused warmup.",
+        "prompt": "Create a pre-lab readiness session for {courseTitle} with checklist, key formulas, and 5 practice prompts."
+      },
+      {
+        "title": "Report Writing Coach",
+        "desc": "Improve claim-evidence-conclusion writing for lab reports.",
+        "prompt": "Coach me through writing a stronger lab report for {courseTitle}, including intro, data interpretation, and conclusion."
+      }
+    ],
+    "resources": [
+      { "type": "Study Guide", "title": "Chemistry Formula Sheet", "meta": "Core equations and unit conversions" },
+      { "type": "Practice Test", "title": "Safety & Measurement Quiz", "meta": "10-question rapid check" }
+    ]
+  },
+  "math": {
+    "defaultPrompt": "Create a guided study session for {courseTitle} with a proof strategy checklist, worked examples, and a short quiz.",
+    "sessions": [
+      {
+        "title": "Logic Sprint",
+        "desc": "Practice propositions, implications, and truth tables.",
+        "prompt": "Run a logic sprint for {courseTitle} with quick drills on implication, equivalence, and quantifiers."
+      },
+      {
+        "title": "Proof Builder",
+        "desc": "Build stronger proof structure step-by-step.",
+        "prompt": "Guide me through a proof builder session for {courseTitle} using direct proof, contrapositive, and induction."
+      },
+      {
+        "title": "Exam Rescue",
+        "desc": "Target common mistakes before a test.",
+        "prompt": "Create an exam rescue session for {courseTitle} with high-risk mistakes and correction patterns."
+      }
+    ],
+    "resources": [
+      { "type": "Study Guide", "title": "Proof Techniques Cheatsheet", "meta": "Direct, contrapositive, contradiction, induction" }
+    ]
+  },
+  "biology": {
+    "defaultPrompt": "Create a guided study session for {courseTitle} with concept mapping, terminology checks, and 5 practice questions.",
+    "sessions": [
+      {
+        "title": "Cell Systems Review",
+        "desc": "Refresh organelles and cellular processes quickly.",
+        "prompt": "Start a review session for {courseTitle} on organelles, membrane transport, and cell cycle."
+      },
+      {
+        "title": "Microscopy Practice",
+        "desc": "Strengthen observation and reporting approach.",
+        "prompt": "Create a microscopy-focused session for {courseTitle} with observation checklist and analysis prompts."
+      }
+    ],
+    "resources": [
+      { "type": "Study Guide", "title": "Organelle Comparison Table", "meta": "Plant vs animal cell quick reference" }
+    ]
+  },
+  "literature": {
+    "defaultPrompt": "Create a guided study session for {courseTitle} with close reading steps, theme analysis prompts, and writing feedback.",
+    "sessions": [
+      {
+        "title": "Close Reading Clinic",
+        "desc": "Practice evidence-based interpretation from passages.",
+        "prompt": "Run a close reading clinic for {courseTitle} with passage analysis and evidence-supported answers."
+      },
+      {
+        "title": "Essay Structure Coach",
+        "desc": "Improve thesis, analysis, and paragraph flow.",
+        "prompt": "Coach me on writing stronger literary analysis for {courseTitle}, with clear thesis and claim-evidence-reasoning."
+      }
+    ],
+    "resources": [
+      { "type": "Study Guide", "title": "Theme Analysis Framework", "meta": "Claim, quote, analysis, insight" }
+    ]
+  },
+  "history": {
+    "defaultPrompt": "Create a guided study session for {courseTitle} with source evaluation, timeline links, and debate prep questions.",
+    "sessions": [
+      {
+        "title": "Source Reliability Drill",
+        "desc": "Evaluate claims using stronger historical evidence.",
+        "prompt": "Start a source reliability drill for {courseTitle} with primary vs secondary source checks."
+      },
+      {
+        "title": "Debate Prep Session",
+        "desc": "Build claim-evidence-reasoning confidence.",
+        "prompt": "Create a debate prep session for {courseTitle} with claims, evidence, counterarguments, and rebuttals."
+      }
+    ],
+    "resources": [
+      { "type": "Practice Test", "title": "Cause-Effect Historical Reasoning", "meta": "Scenario-based short answers" }
+    ]
+  },
+  "programming": {
+    "defaultPrompt": "Create a guided study session for {courseTitle} with debugging workflow, coding prompts, and mini quiz.",
+    "sessions": [
+      {
+        "title": "Debugging Lab",
+        "desc": "Practice finding and fixing common coding bugs.",
+        "prompt": "Run a debugging lab for {courseTitle} with off-by-one, null checks, and loop boundary mistakes."
+      },
+      {
+        "title": "Coding Interview Basics",
+        "desc": "Strengthen algorithm thinking and communication.",
+        "prompt": "Create a coding interview basics session for {courseTitle} with 3 easy-to-medium questions and walkthroughs."
+      }
+    ],
+    "resources": [
+      { "type": "Study Guide", "title": "Loop Patterns Reference", "meta": "Counted loops, sentinel loops, nested loops" },
+      { "type": "Practice Test", "title": "Tracing & Dry Run Quiz", "meta": "Predict output and find bugs" }
+    ]
+  }
+}

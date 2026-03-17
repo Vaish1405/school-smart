@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SchoolSmart LMS | Course</title>
+  <title>SchoolSmart LMS | Dashboard</title>
   <link rel="icon" type="image/webp" href="schoolSmartLogo.webp" />
   <link rel="shortcut icon" type="image/webp" href="schoolSmartLogo.webp" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -35,14 +35,14 @@
         <a href="dashboard.html" class="nav-icon active" id="navDashboard" aria-label="Dashboard">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg>
         </a>
-        <a href="dashboard.html" class="nav-icon" id="navCourses" aria-label="Courses">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M8 6v12"/></svg>
-        </a>
         <a href="calendar.html" class="nav-icon" id="navCalendar" aria-label="Calendar">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v15H4z"/><path d="M4 10h16M8 3v4m8-4v4"/></svg>
         </a>
-        <a href="#" class="nav-icon" id="navInbox" aria-label="Inbox">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 8l9 6 9-6"/></svg>
+        <a href="dashboard.html?tab=tutor" class="nav-icon" id="navTutor" aria-label="Tutor">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 3 8l9 4 9-4-9-4z"/><path d="M6 10.5V15c0 1.2 2.7 3 6 3s6-1.8 6-3v-4.5"/></svg>
+        </a>
+        <a href="dashboard.html?tab=career" class="nav-icon" id="navCareer" aria-label="Career">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v12H3z"/><path d="M9 7V5h6v2"/><path d="M3 12h18"/></svg>
         </a>
       </nav>
     </aside>
@@ -244,9 +244,7 @@
             <button class="course-tab" data-tab="announcements" type="button">Announcements</button>
             <button class="course-tab" data-tab="files" type="button">Files</button>
             <button class="course-tab" data-tab="modules" type="button">Modules</button>
-            <button class="course-tab hidden" data-tab="tutor" type="button">Tutor</button>
             <button class="course-tab" data-tab="analytics" type="button">Analytics</button>
-            <button class="course-tab" data-tab="career" type="button">Career Readiness</button>
           </aside>
 
           <article class="course-main">
@@ -307,9 +305,6 @@
               </div>
 
               <div id="modulesAccordion" class="modules-accordion hidden"></div>
-              <div id="tutorPanel" class="tutor-panel hidden">
-                <div id="tutorAssignmentList" class="tutor-assignment-list"></div>
-              </div>
               <div id="analyticsPanel" class="analytics-panel hidden">
                 <section class="analytics-layout">
                   <article class="analytics-controls">
@@ -353,43 +348,109 @@
                 </section>
               </div>
 
-              <div id="careerPanel" class="career-panel hidden">
-                <section class="career-layout">
-                  <article class="career-summary-card">
-                    <div>
-                      <p class="mini-label">Career Readiness Snapshot</p>
-                      <h3 id="careerSummaryTitle">Project Progress</h3>
-                    </div>
-                    <p id="careerSummaryText">0 of 0 projects completed.</p>
-                  </article>
-
-                  <article class="career-grid">
-                    <section class="career-card">
-                      <h3>Possible Careers</h3>
-                      <div id="careerTrackList" class="career-list"></div>
-                    </section>
-
-                    <section class="career-card">
-                      <h3>Skill Checklist For These Careers</h3>
-                      <ul id="careerSkillsList" class="career-skills-list"></ul>
-                    </section>
-
-                    <section class="career-card career-wide">
-                      <h3>Recommended 4-Week Projects</h3>
-                      <div id="careerProjectsList" class="career-projects-list"></div>
-                    </section>
-
-                    <section class="career-card career-wide">
-                      <h3>Growth Suggestions</h3>
-                      <ul id="careerIdeasList" class="career-ideas-list"></ul>
-                    </section>
-                  </article>
-                </section>
-              </div>
               <ul id="tabList"></ul>
               <div id="calendarGroups" class="calendar-groups hidden"></div>
             </section>
           </article>
+        </section>
+      </section>
+
+      <section id="tutorView" class="hidden">
+        <header class="page-topbar">
+          <div>
+            <p class="eyebrow">AI Tutor Workspace</p>
+            <h1>Tutor Studio</h1>
+            <p class="subtitle">Choose a course, review generated study materials, and launch guided sessions.</p>
+          </div>
+          <div class="topbar-actions">
+            <span class="user-badge" id="activeUserNameTutor">Jordan Chen</span>
+            <button class="help-toggle" id="chatToggleTutor" aria-expanded="false" aria-controls="chatPanel">
+              Open AI Study Helper
+            </button>
+          </div>
+        </header>
+
+        <section class="tutor-workspace">
+          <article class="tutor-hero">
+            <div class="tutor-controls">
+              <label for="tutorCourseSelect">Select Course</label>
+              <select id="tutorCourseSelect"></select>
+              <button id="createStudySessionBtn" class="study-btn" type="button">Create Study Session</button>
+            </div>
+            <h3 id="tutorContentHeader">Current study session</h3>
+          </article>
+
+          <article class="tutor-grid">
+            <section class="tutor-panel">
+              <h3>Study Session Types</h3>
+              <div id="tutorSessionCards" class="tutor-session-cards"></div>
+            </section>
+
+            <section class="tutor-panel">
+              <h3>Tests and Study Guides</h3>
+              <ul id="tutorResourceList" class="tutor-resource-list"></ul>
+            </section>
+          </article>
+        </section>
+      </section>
+
+      <section id="careerView" class="hidden">
+        <header class="page-topbar">
+          <div>
+            <p class="eyebrow">Career Guidance</p>
+            <h1>Future Pathways</h1>
+            <p class="subtitle">Pick a course to see role paths, required skills, and project-based preparation plans.</p>
+          </div>
+          <div class="topbar-actions">
+            <span class="user-badge" id="activeUserNameCareer">Jordan Chen</span>
+            <button class="help-toggle" id="chatToggleCareer" aria-expanded="false" aria-controls="chatPanel">
+              Open AI Study Helper
+            </button>
+          </div>
+        </header>
+
+        <section class="career-workspace">
+          <article class="career-summary-card">
+            <div class="tutor-controls">
+              <label for="careerCourseSelect">Select Course</label>
+              <select id="careerCourseSelect"></select>
+            </div>
+            <p id="careerContentHeader">Career pathways for this course</p>
+          </article>
+
+          <div id="careerPanel" class="career-panel">
+            <section class="career-layout">
+              <article class="career-summary-card">
+                <div>
+                  <p class="mini-label">Career Readiness Snapshot</p>
+                  <h3 id="careerSummaryTitle">Project Progress</h3>
+                </div>
+                <p id="careerSummaryText">0 of 0 projects completed.</p>
+              </article>
+
+              <article class="career-grid">
+                <section class="career-card">
+                  <h3>Possible Careers</h3>
+                  <div id="careerTrackList" class="career-list"></div>
+                </section>
+
+                <section class="career-card">
+                  <h3>Skill Checklist For These Careers</h3>
+                  <ul id="careerSkillsList" class="career-skills-list"></ul>
+                </section>
+
+                <section class="career-card career-wide">
+                  <h3>Recommended 4-Week Projects</h3>
+                  <div id="careerProjectsList" class="career-projects-list"></div>
+                </section>
+
+                <section class="career-card career-wide">
+                  <h3>Growth Suggestions</h3>
+                  <ul id="careerIdeasList" class="career-ideas-list"></ul>
+                </section>
+              </article>
+            </section>
+          </div>
         </section>
       </section>
     </main>
