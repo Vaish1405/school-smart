@@ -487,10 +487,6 @@ body:not(.teacher-view) .analytics-controls {
   display: none;
 }
 
-body.teacher-view #analyticsStudentFilter {
-  display: none;
-}
-
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
