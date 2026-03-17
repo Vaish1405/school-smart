@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SchoolSmart LMS</title>
+  <link rel="icon" type="image/webp" href="schoolSmartLogo.webp" />
+  <link rel="shortcut icon" type="image/webp" href="schoolSmartLogo.webp" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -54,9 +56,7 @@
             <p class="subtitle" id="homeSubtitle">Spring 2026 | Student View</p>
           </div>
           <div class="topbar-actions">
-            <button class="new-course-btn" id="startNewCourseBtn" type="button">
-              Start a New Course
-            </button>
+            <span class="user-badge" id="activeUserNameHome">Jordan Chen</span>
             <button class="help-toggle" id="chatToggle" aria-expanded="false" aria-controls="chatPanel">
               Open AI Study Helper
             </button>
@@ -166,6 +166,7 @@
             <button class="calendar-btn" id="calendarNext" aria-label="Next month">&rarr;</button>
             <h1 id="calendarMonthLabel">March 2026</h1>
           </div>
+          <span class="user-badge" id="activeUserNameCalendar">Jordan Chen</span>
           <div class="calendar-view-switch" aria-label="Calendar view switch">
             <button class="calendar-btn">Week</button>
             <button class="calendar-btn active">Month</button>
@@ -227,9 +228,12 @@
               <h1 id="detailTitle">Course Title</h1>
             </div>
           </div>
-          <button class="help-toggle" id="chatToggleDetail" aria-expanded="false" aria-controls="chatPanel">
-            Open AI Study Helper
-          </button>
+          <div class="topbar-actions">
+            <span class="user-badge" id="activeUserNameDetail">Jordan Chen</span>
+            <button class="help-toggle" id="chatToggleDetail" aria-expanded="false" aria-controls="chatPanel">
+              Open AI Study Helper
+            </button>
+          </div>
         </header>
 
         <section class="course-layout">
@@ -242,6 +246,7 @@
             <button class="course-tab" data-tab="modules" type="button">Modules</button>
             <button class="course-tab hidden" data-tab="tutor" type="button">Tutor</button>
             <button class="course-tab" data-tab="analytics" type="button">Analytics</button>
+            <button class="course-tab" data-tab="career" type="button">Career Readiness</button>
           </aside>
 
           <article class="course-main">
@@ -312,7 +317,7 @@
                       Class
                       <select id="analyticsClassSelect"></select>
                     </label>
-                    <label>
+                    <label id="analyticsStudentFilter">
                       Student
                       <select id="analyticsStudentSelect"></select>
                     </label>
@@ -320,24 +325,63 @@
 
                   <article class="analytics-grid">
                     <section class="analytics-card">
-                      <h3>Grade Distribution (Class)</h3>
+                      <h3 id="gradePieTitle">Grade Distribution (Class)</h3>
                       <canvas id="gradePieChart" height="190"></canvas>
                       <div id="gradePieLegend" class="chart-legend"></div>
                     </section>
 
                     <section class="analytics-card">
-                      <h3>Student Assignment Scores</h3>
+                      <h3 id="studentBarTitle">Student Assignment Scores</h3>
                       <canvas id="studentBarChart" height="190"></canvas>
                     </section>
 
-                    <section class="analytics-card analytics-wide">
-                      <h3>Progress Trend: Student vs Class Average</h3>
+                    <section class="analytics-card analytics-wide" id="assignmentLevelCard">
+                      <h3 id="trendLineTitle">Progress Trend: Student vs Class Average</h3>
                       <canvas id="trendLineChart" height="200"></canvas>
+                    </section>
+
+                    <section class="analytics-card analytics-wide" id="topicPerformanceCard">
+                      <h3 id="topicBarTitle">Topic-wise Performance</h3>
+                      <canvas id="topicBarChart" height="145"></canvas>
                     </section>
 
                     <section class="analytics-card analytics-wide">
                       <h3>Performance Insights</h3>
                       <ul id="analyticsInsights" class="insight-list"></ul>
+                    </section>
+                  </article>
+                </section>
+              </div>
+
+              <div id="careerPanel" class="career-panel hidden">
+                <section class="career-layout">
+                  <article class="career-summary-card">
+                    <div>
+                      <p class="mini-label">Career Readiness Snapshot</p>
+                      <h3 id="careerSummaryTitle">Project Progress</h3>
+                    </div>
+                    <p id="careerSummaryText">0 of 0 projects completed.</p>
+                  </article>
+
+                  <article class="career-grid">
+                    <section class="career-card">
+                      <h3>Possible Careers</h3>
+                      <div id="careerTrackList" class="career-list"></div>
+                    </section>
+
+                    <section class="career-card">
+                      <h3>Skill Checklist For These Careers</h3>
+                      <ul id="careerSkillsList" class="career-skills-list"></ul>
+                    </section>
+
+                    <section class="career-card career-wide">
+                      <h3>Recommended 4-Week Projects</h3>
+                      <div id="careerProjectsList" class="career-projects-list"></div>
+                    </section>
+
+                    <section class="career-card career-wide">
+                      <h3>Growth Suggestions</h3>
+                      <ul id="careerIdeasList" class="career-ideas-list"></ul>
                     </section>
                   </article>
                 </section>

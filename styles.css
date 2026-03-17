@@ -362,28 +362,39 @@ h1 {
 
 .topbar-actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: 10px;
+  max-width: none;
 }
 
-.new-course-btn {
-  display: none;
-  border: 1px solid #c8d8dc;
-  background: #f6fbfb;
-  color: #29424a;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-family: inherit;
-  font-weight: 700;
-  cursor: pointer;
+.topbar-actions .user-badge {
+  flex: 0 0 auto;
+  text-align: center;
+  align-self: flex-start;
 }
 
-.new-course-btn:hover {
-  background: #e9f3f1;
+.user-badge {
+  border: 1px solid #c9d9dd;
+  background: #f5fbfc;
+  color: #2e4b55;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 12px;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-body.teacher-view .new-course-btn {
-  display: inline-block;
+.calendar-topbar {
+  flex-wrap: wrap;
+}
+
+.calendar-topbar .user-badge {
+  margin-left: auto;
 }
 
 .profile-menu-wrap {
@@ -467,6 +478,19 @@ body.teacher-view .new-course-btn {
   color: #2f444d;
 }
 
+.analytics-controls select:disabled {
+  background: #f0f5f4;
+  color: #6c8188;
+}
+
+body:not(.teacher-view) .analytics-controls {
+  display: none;
+}
+
+body.teacher-view #analyticsStudentFilter {
+  display: none;
+}
+
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -502,8 +526,161 @@ body.teacher-view .new-course-btn {
   max-height: 200px;
 }
 
+#topicBarChart {
+  max-height: 145px;
+}
+
 .analytics-wide {
   grid-column: 1 / -1;
+}
+
+.career-layout {
+  display: grid;
+  gap: 12px;
+}
+
+.career-summary-card {
+  border: 1px solid #cfdfdc;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f3faf8, #e8f2ef);
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.career-summary-card h3 {
+  margin: 0;
+}
+
+.career-summary-card p {
+  margin: 0;
+  color: #2f515a;
+  font-weight: 700;
+}
+
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.career-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fcfefd;
+  box-shadow: var(--card-shadow);
+  padding: 12px;
+}
+
+.career-card h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.career-wide {
+  grid-column: 1 / -1;
+}
+
+.career-list,
+.career-projects-list {
+  display: grid;
+  gap: 10px;
+}
+
+.career-pill {
+  border: 1px solid #d4e3e0;
+  border-radius: 10px;
+  background: #f7fbfa;
+  padding: 9px 10px;
+}
+
+.career-pill h4 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.career-pill p {
+  margin: 0;
+  color: #466069;
+  font-size: 0.88rem;
+}
+
+.career-skills-list,
+.career-ideas-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #2f4952;
+  line-height: 1.45;
+}
+
+.career-skills-list li,
+.career-ideas-list li {
+  margin-bottom: 6px;
+}
+
+.project-card {
+  border: 1px solid #d8e4e1;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.project-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.project-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.project-meta {
+  margin: 4px 0 0;
+  color: #4f6770;
+  font-size: 0.88rem;
+}
+
+.project-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #cddedb;
+  border-radius: 999px;
+  background: #f5fbf9;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2e4f59;
+  white-space: nowrap;
+}
+
+.project-check input {
+  width: 16px;
+  height: 16px;
+}
+
+.week-plan {
+  margin: 0;
+  padding-left: 18px;
+  color: #2f4650;
+  line-height: 1.45;
+}
+
+.week-plan li {
+  margin-bottom: 4px;
+}
+
+.project-skills {
+  margin: 0;
+  color: #49636c;
+  font-size: 0.87rem;
 }
 
 .chart-legend {
@@ -1439,6 +1616,15 @@ body.teacher-view .course-card .course-grade {
   .analytics-grid {
     grid-template-columns: 1fr;
   }
+
+  .career-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .career-summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 920px) {
@@ -1467,6 +1653,12 @@ body.teacher-view .course-card .course-grade {
   .topbar-actions {
     width: 100%;
     flex-wrap: wrap;
+    max-width: none;
+  }
+
+  .topbar-actions .user-badge {
+    text-align: center;
+    align-self: flex-start;
   }
 
   .sidebar-profile-wrap {

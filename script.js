@@ -40,10 +40,17 @@ const analyticsStudentSelect = document.getElementById("analyticsStudentSelect")
 const gradePieChart = document.getElementById("gradePieChart");
 const studentBarChart = document.getElementById("studentBarChart");
 const trendLineChart = document.getElementById("trendLineChart");
+const assignmentLevelCard = document.getElementById("assignmentLevelCard");
+const topicBarChart = document.getElementById("topicBarChart");
+const topicPerformanceCard = document.getElementById("topicPerformanceCard");
 const gradePieLegend = document.getElementById("gradePieLegend");
 const analyticsInsights = document.getElementById("analyticsInsights");
 const tutorPanel = document.getElementById("tutorPanel");
 const tutorAssignmentList = document.getElementById("tutorAssignmentList");
+const gradePieTitle = document.getElementById("gradePieTitle");
+const studentBarTitle = document.getElementById("studentBarTitle");
+const trendLineTitle = document.getElementById("trendLineTitle");
+const topicBarTitle = document.getElementById("topicBarTitle");
 
 const filesPanel = document.getElementById("filesPanel");
 const folderList = document.getElementById("folderList");
@@ -63,6 +70,16 @@ const unpublishedCourseGrid = document.getElementById("unpublishedCourseGrid");
 const unpublishedCoursesGroup = document.getElementById("unpublishedCoursesGroup");
 const publishedCourseDivider = document.querySelector("#publishedCoursesGroup .course-divider");
 const analyticsPanel = document.getElementById("analyticsPanel");
+const careerPanel = document.getElementById("careerPanel");
+const activeUserNameHome = document.getElementById("activeUserNameHome");
+const activeUserNameCalendar = document.getElementById("activeUserNameCalendar");
+const activeUserNameDetail = document.getElementById("activeUserNameDetail");
+const careerSummaryTitle = document.getElementById("careerSummaryTitle");
+const careerSummaryText = document.getElementById("careerSummaryText");
+const careerTrackList = document.getElementById("careerTrackList");
+const careerSkillsList = document.getElementById("careerSkillsList");
+const careerProjectsList = document.getElementById("careerProjectsList");
+const careerIdeasList = document.getElementById("careerIdeasList");
 
 const toggleButtons = [
   document.getElementById("chatToggle"),
@@ -337,6 +354,279 @@ const defaultModulesScheduleByCourse = {
   ],
 };
 
+const careerReadinessByCourse = {
+  chemistry: {
+    careers: [
+      {
+        title: "Lab Technician",
+        why: "Apply lab safety, measurement accuracy, and reporting skills in research and quality labs.",
+        requiredSkills: ["Lab safety procedures", "Data logging", "Measurement precision", "Report writing"],
+      },
+      {
+        title: "Quality Control Analyst",
+        why: "Use testing workflows to verify product quality in pharma, food, and manufacturing.",
+        requiredSkills: ["Standard operating procedures", "Sample testing", "Root-cause analysis", "Documentation"],
+      },
+    ],
+    projects: [
+      {
+        id: "chem-project-1",
+        title: "Household pH Testing Journal",
+        outcome: "Create a mini lab report comparing acidity/basicity across common household liquids.",
+        skills: ["Experimental design", "Data collection", "Observation writing", "Scientific communication"],
+        plan: [
+          "Week 1: Define hypothesis, list materials, and build a safe testing checklist.",
+          "Week 2: Run pH tests on 8-10 samples and record results in a table.",
+          "Week 3: Analyze patterns, make a chart, and identify outliers.",
+          "Week 4: Write final report with conclusion, errors, and next experiment ideas.",
+        ],
+      },
+      {
+        id: "chem-project-2",
+        title: "Reaction Rate Comparison",
+        outcome: "Compare how temperature affects dissolving rate and present findings.",
+        skills: ["Controlled variables", "Timing experiments", "Graphing results", "Presentation skills"],
+        plan: [
+          "Week 1: Choose materials and design fair-test procedure with controls.",
+          "Week 2: Run repeated trials at different temperatures.",
+          "Week 3: Plot rate curves and summarize trends.",
+          "Week 4: Build a short slide deck and present recommendations.",
+        ],
+      },
+    ],
+    ideas: [
+      "Add your top project to a student portfolio with 1 screenshot and 3 bullet outcomes.",
+      "Practice explaining your project in 60 seconds for interviews.",
+      "Ask your teacher for one rubric-based improvement and apply it in the next project.",
+    ],
+  },
+  math: {
+    careers: [
+      {
+        title: "Data Analyst",
+        why: "Use logic and structured reasoning to interpret trends and support decisions.",
+        requiredSkills: ["Logical reasoning", "Pattern detection", "Data interpretation", "Clear communication"],
+      },
+      {
+        title: "Operations Research Assistant",
+        why: "Solve optimization and planning problems with discrete math foundations.",
+        requiredSkills: ["Set and graph models", "Combinatorics", "Proof-based thinking", "Model validation"],
+      },
+    ],
+    projects: [
+      {
+        id: "math-project-1",
+        title: "Campus Schedule Optimizer",
+        outcome: "Model course scheduling constraints and propose an improved weekly schedule.",
+        skills: ["Constraint modeling", "Set logic", "Optimization basics", "Decision documentation"],
+        plan: [
+          "Week 1: Define constraints (time blocks, conflicts, availability).",
+          "Week 2: Build feasible schedule options using sets and logic rules.",
+          "Week 3: Score each option on efficiency and workload balance.",
+          "Week 4: Present final schedule recommendation with reasoning.",
+        ],
+      },
+      {
+        id: "math-project-2",
+        title: "Proof Portfolio",
+        outcome: "Build a mini portfolio of 6 polished proofs across different techniques.",
+        skills: ["Direct proof", "Contrapositive", "Induction", "Technical writing"],
+        plan: [
+          "Week 1: Select proof topics and collect reference examples.",
+          "Week 2: Draft first 3 proofs and get peer feedback.",
+          "Week 3: Draft remaining proofs and standardize format.",
+          "Week 4: Revise all proofs into a clean portfolio PDF.",
+        ],
+      },
+    ],
+    ideas: [
+      "Turn one project into a GitHub README with your reasoning process.",
+      "Track common logic mistakes and create a personal checklist before submission.",
+      "Pair with a classmate to review proof clarity each week.",
+    ],
+  },
+  biology: {
+    careers: [
+      {
+        title: "Clinical Research Assistant",
+        why: "Use biological systems knowledge to support data collection and protocol adherence.",
+        requiredSkills: ["Biology fundamentals", "Observation accuracy", "Protocol compliance", "Data entry"],
+      },
+      {
+        title: "Biotech Lab Assistant",
+        why: "Apply microscopy and cell-system concepts in lab support roles.",
+        requiredSkills: ["Microscopy", "Sample handling", "Documentation", "Team communication"],
+      },
+    ],
+    projects: [
+      {
+        id: "bio-project-1",
+        title: "Cell Systems Visual Guide",
+        outcome: "Design a visual handbook of major organelles and their functions.",
+        skills: ["Concept synthesis", "Scientific visualization", "Comparative analysis", "Teaching others"],
+        plan: [
+          "Week 1: Select organelles and gather accurate references.",
+          "Week 2: Create organelle cards with function and analogy.",
+          "Week 3: Build comparison pages (plant vs animal cells).",
+          "Week 4: Share handbook and run a 10-minute peer walkthrough.",
+        ],
+      },
+      {
+        id: "bio-project-2",
+        title: "Microscopy Observation Tracker",
+        outcome: "Build a repeatable observation template for microscope sessions.",
+        skills: ["Observation protocols", "Pattern tracking", "Scientific note-taking", "Quality checks"],
+        plan: [
+          "Week 1: Create a standard observation form and scoring rubric.",
+          "Week 2: Log observations from at least 5 slide sessions.",
+          "Week 3: Analyze repeated findings and error patterns.",
+          "Week 4: Summarize improvements and propose next lab focus.",
+        ],
+      },
+    ],
+    ideas: [
+      "Convert your best diagram into a one-page revision sheet for exams.",
+      "Build a glossary of 25 key biology terms with examples.",
+      "Practice explaining one concept weekly to a non-biology friend.",
+    ],
+  },
+  literature: {
+    careers: [
+      {
+        title: "Content Writer",
+        why: "Use narrative analysis and clear communication to create engaging written content.",
+        requiredSkills: ["Audience awareness", "Structured writing", "Critical reading", "Editing"],
+      },
+      {
+        title: "Communications Specialist",
+        why: "Apply textual interpretation and messaging skills in organizational communication.",
+        requiredSkills: ["Messaging strategy", "Tone adaptation", "Research synthesis", "Presentation"],
+      },
+    ],
+    projects: [
+      {
+        id: "lit-project-1",
+        title: "Theme Analysis Blog Series",
+        outcome: "Publish a 4-post series analyzing modern text themes for student readers.",
+        skills: ["Close reading", "Argument building", "Blog writing", "Editorial revision"],
+        plan: [
+          "Week 1: Choose texts and draft editorial calendar.",
+          "Week 2: Write and revise first two posts.",
+          "Week 3: Write final posts and add supporting evidence.",
+          "Week 4: Publish series and gather peer comments for revision.",
+        ],
+      },
+      {
+        id: "lit-project-2",
+        title: "Narrative Voice Podcast Script",
+        outcome: "Create a short podcast script comparing narrative voice across stories.",
+        skills: ["Script writing", "Comparative analysis", "Storytelling", "Public speaking"],
+        plan: [
+          "Week 1: Select two stories and collect key excerpts.",
+          "Week 2: Outline script segments and transitions.",
+          "Week 3: Draft, rehearse, and tighten script timing.",
+          "Week 4: Record episode and publish reflection notes.",
+        ],
+      },
+    ],
+    ideas: [
+      "Use your strongest writing sample as a portfolio piece for internships.",
+      "Practice one mock interview answer each week using literary evidence.",
+      "Create a personal editing rubric and reuse it for all future writing.",
+    ],
+  },
+  history: {
+    careers: [
+      {
+        title: "Policy Research Assistant",
+        why: "Historical source analysis supports evidence-based policy research work.",
+        requiredSkills: ["Source evaluation", "Argument building", "Context framing", "Evidence citation"],
+      },
+      {
+        title: "Museum Education Assistant",
+        why: "History communication skills transfer to public learning and interpretation roles.",
+        requiredSkills: ["Historical storytelling", "Audience engagement", "Program planning", "Visual curation"],
+      },
+    ],
+    projects: [
+      {
+        id: "hist-project-1",
+        title: "Trade Route Story Map",
+        outcome: "Build an interactive or slide-based map showing impacts of key trade routes.",
+        skills: ["Historical mapping", "Cause-effect analysis", "Narrative design", "Research synthesis"],
+        plan: [
+          "Week 1: Choose routes and collect primary/secondary sources.",
+          "Week 2: Draft map layers and timeline notes.",
+          "Week 3: Add cultural/economic impact narratives.",
+          "Week 4: Present map with evidence citations and Q&A notes.",
+        ],
+      },
+      {
+        id: "hist-project-2",
+        title: "Debate Evidence Portfolio",
+        outcome: "Create a claim-evidence-reasoning packet for a history policy debate.",
+        skills: ["Claim writing", "Evidence ranking", "Counterargument", "Debate prep"],
+        plan: [
+          "Week 1: Frame debate question and initial claim set.",
+          "Week 2: Collect evidence and evaluate source reliability.",
+          "Week 3: Build counterarguments and rebuttal strategy.",
+          "Week 4: Finalize debate packet and reflect on performance.",
+        ],
+      },
+    ],
+    ideas: [
+      "Create a one-page timeline artifact for your portfolio.",
+      "Track your evidence quality score each week to improve citations.",
+      "Join or simulate a panel discussion to practice concise arguments.",
+    ],
+  },
+  programming: {
+    careers: [
+      {
+        title: "Junior Software Developer",
+        why: "Programming coursework builds coding, debugging, and delivery habits needed in real product teams.",
+        requiredSkills: ["Problem decomposition", "Debugging", "Version control", "Code readability"],
+      },
+      {
+        title: "QA Automation Associate",
+        why: "Structured thinking and loop logic are strong foundations for test automation roles.",
+        requiredSkills: ["Test cases", "Automation logic", "Bug reporting", "Collaboration"],
+      },
+    ],
+    projects: [
+      {
+        id: "cs-project-1",
+        title: "Assignment Tracker App",
+        outcome: "Build a simple web app to track assignments, due dates, and completion status.",
+        skills: ["JavaScript fundamentals", "State handling", "UI design", "Feature planning"],
+        plan: [
+          "Week 1: Define features, wireframe UI, and scaffold project files.",
+          "Week 2: Implement add/edit/complete task flows.",
+          "Week 3: Add sorting, filtering, and local storage persistence.",
+          "Week 4: Test edge cases, improve UX, and publish demo.",
+        ],
+      },
+      {
+        id: "cs-project-2",
+        title: "Debugging Playbook",
+        outcome: "Create a reusable debugging guide with real examples from your assignments.",
+        skills: ["Error diagnosis", "Troubleshooting workflow", "Technical writing", "Reflection"],
+        plan: [
+          "Week 1: Collect 10 bugs and categorize by root cause.",
+          "Week 2: Document steps to reproduce and fix each bug type.",
+          "Week 3: Add checklist and common prevention patterns.",
+          "Week 4: Turn it into a polished guide and share with peers.",
+        ],
+      },
+    ],
+    ideas: [
+      "Keep a project changelog to show growth over time.",
+      "Write one resume bullet for each completed project outcome.",
+      "Ask for a peer code review at least once per week.",
+    ],
+  },
+};
+
 function makeTabPlaceholders(courseTitle, courseKey) {
   const seed = uniqueTabSeedByCourse[courseKey] || uniqueTabSeedByCourse.math;
   return {
@@ -374,6 +664,11 @@ function makeTabPlaceholders(courseTitle, courseKey) {
     analytics: {
       title: "Analytics",
       description: `Progress analytics for ${courseTitle}.`,
+      items: [],
+    },
+    career: {
+      title: "Career Readiness",
+      description: `Connect course learning to careers, portfolio projects, and future-ready skills for ${courseTitle}.`,
       items: [],
     },
   };
@@ -823,8 +1118,11 @@ function getStudentName(studentId) {
 function populateAnalyticsFilters() {
   if (!analyticsClassSelect || !analyticsStudentSelect) return;
 
+  const activeCourseClassId = courseKeyToClassId[currentCourse] || analyticsClassId;
   const enrolledClassIds = Array.from(new Set(recordsEnrollments.map((e) => e.classId)));
-  const classes = recordsClasses.filter((c) => enrolledClassIds.includes(c.id));
+  const classes = isTeacherView
+    ? recordsClasses.filter((c) => enrolledClassIds.includes(c.id))
+    : recordsClasses.filter((c) => c.id === activeCourseClassId);
 
   analyticsClassSelect.innerHTML = "";
   classes.forEach((cls) => {
@@ -839,10 +1137,11 @@ function populateAnalyticsFilters() {
   }
   analyticsClassSelect.value = analyticsClassId;
 
-  const studentIdsForClass = recordsEnrollments
-    .filter((e) => e.classId === analyticsClassId)
-    .map((e) => e.studentId);
-  const classStudents = recordsStudents.filter((s) => studentIdsForClass.includes(s.id));
+  const classStudents = isTeacherView
+    ? recordsStudents.filter((s) =>
+        recordsEnrollments.some((e) => e.classId === analyticsClassId && e.studentId === s.id)
+      )
+    : recordsStudents.filter((s) => s.id === currentStudentId);
 
   analyticsStudentSelect.innerHTML = "";
   classStudents.forEach((student) => {
@@ -895,7 +1194,7 @@ function drawPieChart(canvas, values, colors) {
   ctx.fill();
 }
 
-function drawBarChart(canvas, labels, values) {
+function drawBarChart(canvas, labels, values, options = {}) {
   const { ctx, width, height } = setupCanvas(canvas);
   const left = 40;
   const right = 16;
@@ -912,7 +1211,8 @@ function drawBarChart(canvas, labels, values) {
   ctx.lineTo(left + chartW, top + chartH);
   ctx.stroke();
 
-  const max = 100;
+  const max = Number(options.max || 100);
+  const barColor = options.color || "#6aa5af";
   const slot = chartW / Math.max(values.length, 1);
   const barW = Math.max(16, slot * 0.55);
 
@@ -920,7 +1220,7 @@ function drawBarChart(canvas, labels, values) {
     const x = left + i * slot + (slot - barW) / 2;
     const h = Math.max(0, (v / max) * chartH);
     const y = top + chartH - h;
-    ctx.fillStyle = "#6aa5af";
+    ctx.fillStyle = barColor;
     ctx.fillRect(x, y, barW, h);
     ctx.fillStyle = "#2f4c56";
     ctx.font = "11px Nunito";
@@ -931,7 +1231,7 @@ function drawBarChart(canvas, labels, values) {
   });
 }
 
-function drawTrendChart(canvas, labels, studentValues, classValues) {
+function drawTrendChart(canvas, labels, studentValues, classValues, legendA = "Class Avg", legendB = "Student") {
   const { ctx, width, height } = setupCanvas(canvas);
   const left = 42;
   const right = 18;
@@ -1012,11 +1312,11 @@ function drawTrendChart(canvas, labels, studentValues, classValues) {
   ctx.fillStyle = "#38535e";
   ctx.fillRect(left + 8, top + 6, 10, 10);
   ctx.fillStyle = "#2f4c56";
-  ctx.fillText("Class Avg", left + 24, top + 15);
+  ctx.fillText(legendA, left + 24, top + 15);
   ctx.fillStyle = "#2f8d71";
   ctx.fillRect(left + 108, top + 6, 10, 10);
   ctx.fillStyle = "#2f4c56";
-  ctx.fillText("Student", left + 124, top + 15);
+  ctx.fillText(legendB, left + 124, top + 15);
 }
 
 function buildGradeDistribution(classId) {
@@ -1054,27 +1354,120 @@ function buildAssignmentSeries(classId, studentId) {
   return { labels, assignments, studentValues, classValues };
 }
 
-function renderAnalyticsInsights(classId, studentId, series) {
-  analyticsInsights.innerHTML = "";
-  const studentGrade = recordsClassGrades.find((g) => g.classId === classId && g.studentId === studentId);
-  const overall = studentGrade ? `${studentGrade.percent}% (${studentGrade.letterGrade})` : "Not available";
-  const missingCount = series.studentValues.filter((v) => v === 0).length;
-
-  let weakestIndex = 0;
-  series.studentValues.forEach((value, idx) => {
-    if (value < series.studentValues[weakestIndex]) weakestIndex = idx;
+function buildStudentOverallSeries(classId) {
+  const assignments = getClassAssignments(classId);
+  const studentIds = recordsEnrollments.filter((e) => e.classId === classId).map((e) => e.studentId);
+  const labels = studentIds.map((id) => {
+    const s = recordsStudents.find((row) => row.id === id);
+    return s ? `${s.firstName}` : id;
   });
-  const weakest = series.assignments[weakestIndex];
-  const weakestScore = series.studentValues[weakestIndex] || 0;
+  const values = studentIds.map((studentId) => {
+    const grades = recordsAssignmentGrades.filter(
+      (g) => g.studentId === studentId && assignments.some((a) => a.id === g.assignmentId)
+    );
+    const earned = grades.reduce((sum, g) => sum + Number(g.pointsEarned || 0), 0);
+    const possible = assignments.reduce((sum, a) => sum + Number(a.pointsPossible || 0), 0) || 1;
+    return Math.round((earned / possible) * 100);
+  });
+  return { labels, values };
+}
 
-  const messages = [
-    `${getStudentName(studentId)} current overall grade: ${overall}.`,
-    `Missing or unsubmitted assignments: ${missingCount}.`,
-    weakest
-      ? `Lowest assignment performance: "${weakest.title}" at ${weakestScore}%.`
-      : "No assignment analytics available yet.",
-    "Goal suggestion: Raise the lowest assignment category by 10-15% to improve overall trend.",
-  ];
+function buildTopicSeries(classId, studentId, teacherMode) {
+  const assignments = getClassAssignments(classId);
+  const topicMap = {};
+
+  assignments.forEach((assignment) => {
+    const topic = String(assignment.type || "other")
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+    if (!topicMap[topic]) topicMap[topic] = { earned: 0, possible: 0 };
+
+    if (teacherMode) {
+      const rows = recordsAssignmentGrades.filter(
+        (g) => g.assignmentId === assignment.id && g.pointsEarned != null
+      );
+      const avg = rows.length
+        ? rows.reduce((sum, r) => sum + Number(r.pointsEarned || 0), 0) / rows.length
+        : 0;
+      topicMap[topic].earned += avg;
+      topicMap[topic].possible += Number(assignment.pointsPossible || 0);
+    } else {
+      const row = recordsAssignmentGrades.find(
+        (g) => g.assignmentId === assignment.id && g.studentId === studentId
+      );
+      topicMap[topic].earned += Number(row?.pointsEarned || 0);
+      topicMap[topic].possible += Number(assignment.pointsPossible || 0);
+    }
+  });
+
+  const labels = Object.keys(topicMap);
+  const values = labels.map((label) => {
+    const item = topicMap[label];
+    return item.possible > 0 ? Math.round((item.earned / item.possible) * 100) : 0;
+  });
+
+  return { labels, values };
+}
+
+function renderAnalyticsInsights(classId, studentId, series, topicSeries) {
+  analyticsInsights.innerHTML = "";
+  let messages = [];
+
+  if (!isTeacherView) {
+    const studentGrade = recordsClassGrades.find((g) => g.classId === classId && g.studentId === studentId);
+    const overall = studentGrade ? `${studentGrade.percent}% (${studentGrade.letterGrade})` : "Not available";
+    const missingCount = series.studentValues.filter((v) => v === 0).length;
+    let weakestIndex = 0;
+    series.studentValues.forEach((value, idx) => {
+      if (value < series.studentValues[weakestIndex]) weakestIndex = idx;
+    });
+    const weakest = series.assignments[weakestIndex];
+    const weakestScore = series.studentValues[weakestIndex] || 0;
+    messages = [
+      `${getStudentName(studentId)} current overall grade: ${overall}.`,
+      `Missing or unsubmitted assignments: ${missingCount}.`,
+      weakest
+        ? `Lowest assignment performance: "${weakest.title}" at ${weakestScore}%.`
+        : "No assignment analytics available yet.",
+      topicSeries.labels.length
+        ? `Topic to focus this week: ${topicSeries.labels[topicSeries.values.indexOf(Math.min(...topicSeries.values))]}.`
+        : "Topic performance will appear as more graded work is available.",
+    ];
+  } else {
+    const studentSeries = buildStudentOverallSeries(classId);
+    const classAverage = studentSeries.values.length
+      ? Math.round(studentSeries.values.reduce((a, b) => a + b, 0) / studentSeries.values.length)
+      : 0;
+    let lowestStudentIdx = 0;
+    studentSeries.values.forEach((v, idx) => {
+      if (v < studentSeries.values[lowestStudentIdx]) lowestStudentIdx = idx;
+    });
+    let weakestAssignmentIdx = 0;
+    series.classValues.forEach((v, idx) => {
+      if (v < series.classValues[weakestAssignmentIdx]) weakestAssignmentIdx = idx;
+    });
+    const weakestAssignment = series.assignments[weakestAssignmentIdx];
+    const weakestTopicIdx = topicSeries.values.length
+      ? topicSeries.values.indexOf(Math.min(...topicSeries.values))
+      : -1;
+    const weakestTopic = weakestTopicIdx >= 0 ? topicSeries.labels[weakestTopicIdx] : "N/A";
+    const missingRows = recordsAssignmentGrades.filter(
+      (g) => g.pointsEarned == null && series.assignments.some((a) => a.id === g.assignmentId)
+    ).length;
+    const totalRows = series.assignments.length * Math.max(1, studentSeries.labels.length);
+    const missingRate = Math.round((missingRows / totalRows) * 100);
+
+    messages = [
+      `Class average performance: ${classAverage}%. Lowest student group is ${studentSeries.labels[lowestStudentIdx] || "N/A"} at ${studentSeries.values[lowestStudentIdx] || 0}%.`,
+      weakestAssignment
+        ? `Weakest assignment-level outcome: "${weakestAssignment.title}" with class average ${series.classValues[weakestAssignmentIdx]}%.`
+        : "Assignment-level trend needs more data.",
+      `Topic with lowest mastery: ${weakestTopic}. Missing submission rate: ${missingRate}%.`,
+      `Instructor suggestion: Add a 10-minute mini-lesson and worked example on ${weakestTopic}, then assign a short formative check in the next class.`,
+      "Instructor suggestion: Group students below 70% into a targeted support station and provide scaffolded practice.",
+    ];
+  }
 
   messages.forEach((text) => {
     const li = document.createElement("li");
@@ -1084,36 +1477,201 @@ function renderAnalyticsInsights(classId, studentId, series) {
 }
 
 function renderAnalytics() {
-  if (!analyticsPanel || !gradePieChart || !studentBarChart || !trendLineChart) return;
+  if (!analyticsPanel || !gradePieChart || !studentBarChart || !trendLineChart || !topicBarChart) return;
 
   if (!recordsLoaded) {
     drawPieChart(gradePieChart, [1], ["#d8e6e9"]);
     drawBarChart(studentBarChart, ["A1", "A2"], [0, 0]);
     drawTrendChart(trendLineChart, ["A1", "A2"], [0, 0], [0, 0]);
+    drawBarChart(topicBarChart, ["Topic"], [0]);
     if (gradePieLegend) gradePieLegend.innerHTML = "<span><i style='background:#d8e6e9'></i>Loading records...</span>";
     return;
   }
 
-  const bins = buildGradeDistribution(analyticsClassId);
-  const pieValues = [bins.A, bins.B, bins.C, bins.Df];
-  const pieColors = ["#4aa77a", "#62b3c8", "#e9b46b", "#d57a7a"];
-  drawPieChart(gradePieChart, pieValues, pieColors);
+  const series = buildAssignmentSeries(analyticsClassId, analyticsStudentId);
+  const topicSeries = buildTopicSeries(analyticsClassId, analyticsStudentId, isTeacherView);
 
-  if (gradePieLegend) {
-    gradePieLegend.innerHTML = "";
-    ["A (90-100)", "B (80-89)", "C (70-79)", "D/F (<70)"].forEach((label, idx) => {
-      const pill = document.createElement("span");
-      pill.innerHTML = `<i style="background:${pieColors[idx]}"></i>${label}: ${pieValues[idx]}`;
-      gradePieLegend.appendChild(pill);
-    });
+  if (!isTeacherView) {
+    if (assignmentLevelCard) assignmentLevelCard.classList.remove("hidden");
+    if (topicPerformanceCard) topicPerformanceCard.classList.add("hidden");
+    analyticsStudentId = currentStudentId;
+    if (analyticsStudentSelect) analyticsStudentSelect.disabled = true;
+    if (analyticsClassSelect) analyticsClassSelect.disabled = true;
+
+    const completed = series.studentValues.filter((v) => v > 0).length;
+    const missing = series.studentValues.filter((v) => v === 0).length;
+    drawPieChart(gradePieChart, [completed, missing || 0], ["#4aa77a", "#d57a7a"]);
+
+    if (gradePieLegend) {
+      gradePieLegend.innerHTML = "";
+      ["Completed", "Missing"].forEach((label, idx) => {
+        const val = idx === 0 ? completed : missing;
+        const color = idx === 0 ? "#4aa77a" : "#d57a7a";
+        const pill = document.createElement("span");
+        pill.innerHTML = `<i style="background:${color}"></i>${label}: ${val}`;
+        gradePieLegend.appendChild(pill);
+      });
+    }
+
+    if (gradePieTitle) gradePieTitle.textContent = "Your Completion Snapshot";
+    if (studentBarTitle) studentBarTitle.textContent = "Your Assignment Scores";
+    if (trendLineTitle) trendLineTitle.textContent = "Assignment Trend: You vs Class Average";
+    if (topicBarTitle) topicBarTitle.textContent = "Your Topic-wise Performance";
+
+    drawBarChart(studentBarChart, series.labels, series.studentValues, { color: "#5fa7a5" });
+    drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues, "Class Avg", "You");
+  } else {
+    if (assignmentLevelCard) assignmentLevelCard.classList.add("hidden");
+    if (topicPerformanceCard) topicPerformanceCard.classList.remove("hidden");
+    if (analyticsStudentSelect) analyticsStudentSelect.disabled = false;
+    if (analyticsClassSelect) analyticsClassSelect.disabled = false;
+
+    const bins = buildGradeDistribution(analyticsClassId);
+    const pieValues = [bins.A, bins.B, bins.C, bins.Df];
+    const pieColors = ["#4aa77a", "#62b3c8", "#e9b46b", "#d57a7a"];
+    drawPieChart(gradePieChart, pieValues, pieColors);
+
+    if (gradePieLegend) {
+      gradePieLegend.innerHTML = "";
+      ["A (90-100)", "B (80-89)", "C (70-79)", "D/F (<70)"].forEach((label, idx) => {
+        const pill = document.createElement("span");
+        pill.innerHTML = `<i style="background:${pieColors[idx]}"></i>${label}: ${pieValues[idx]}`;
+        gradePieLegend.appendChild(pill);
+      });
+    }
+
+    if (gradePieTitle) gradePieTitle.textContent = "Grade Distribution (Class)";
+    if (studentBarTitle) studentBarTitle.textContent = "Student-level Performance";
+    if (trendLineTitle) trendLineTitle.textContent = "Assignment-level Class Performance";
+    if (topicBarTitle) topicBarTitle.textContent = "Topic-wise Class Performance";
+
+    const studentSeries = buildStudentOverallSeries(analyticsClassId);
+    drawBarChart(studentBarChart, studentSeries.labels, studentSeries.values, { color: "#4d9aa8" });
+    drawTrendChart(
+      trendLineChart,
+      series.labels,
+      series.classValues,
+      new Array(series.classValues.length).fill(80),
+      "Class Avg",
+      "Target 80%"
+    );
+    drawBarChart(topicBarChart, topicSeries.labels, topicSeries.values, { color: "#7e9cb6" });
   }
 
-  const series = buildAssignmentSeries(analyticsClassId, analyticsStudentId);
-  drawBarChart(studentBarChart, series.labels, series.studentValues);
-  drawTrendChart(trendLineChart, series.labels, series.studentValues, series.classValues);
-  renderAnalyticsInsights(analyticsClassId, analyticsStudentId, series);
+  renderAnalyticsInsights(analyticsClassId, analyticsStudentId, series, topicSeries);
 }
 updateCourseCardsGrades();
+
+function getCareerDataForCourse(courseKey) {
+  return careerReadinessByCourse[courseKey] || careerReadinessByCourse.programming;
+}
+
+function projectStorageKey(courseKey, projectId) {
+  return `career_project_done:${currentStudentId}:${courseKey}:${projectId}`;
+}
+
+function isProjectCompleted(courseKey, projectId) {
+  try {
+    return localStorage.getItem(projectStorageKey(courseKey, projectId)) === "1";
+  } catch (_error) {
+    return false;
+  }
+}
+
+function setProjectCompleted(courseKey, projectId, done) {
+  try {
+    if (done) {
+      localStorage.setItem(projectStorageKey(courseKey, projectId), "1");
+    } else {
+      localStorage.removeItem(projectStorageKey(courseKey, projectId));
+    }
+  } catch (_error) {
+    // Ignore storage errors in restricted browsers.
+  }
+}
+
+function renderCareerReadinessTab(courseKey) {
+  if (!careerPanel || !careerTrackList || !careerSkillsList || !careerProjectsList || !careerIdeasList) return;
+
+  const data = getCareerDataForCourse(courseKey);
+  const careers = data.careers || [];
+  const projects = data.projects || [];
+  const ideas = data.ideas || [];
+
+  careerTrackList.innerHTML = "";
+  careerSkillsList.innerHTML = "";
+  careerProjectsList.innerHTML = "";
+  careerIdeasList.innerHTML = "";
+
+  careers.forEach((career) => {
+    const card = document.createElement("article");
+    card.className = "career-pill";
+    card.innerHTML = `<h4>${escapeHtml(career.title)}</h4><p>${escapeHtml(career.why)}</p>`;
+    careerTrackList.appendChild(card);
+  });
+
+  const requiredSkills = Array.from(
+    new Set(careers.flatMap((career) => (career.requiredSkills || []).map((s) => s.trim())).filter(Boolean))
+  );
+  requiredSkills.forEach((skill) => {
+    const li = document.createElement("li");
+    li.textContent = skill;
+    careerSkillsList.appendChild(li);
+  });
+
+  let completedCount = 0;
+
+  projects.forEach((project) => {
+    const done = isProjectCompleted(courseKey, project.id);
+    if (done) completedCount += 1;
+
+    const card = document.createElement("article");
+    card.className = "project-card";
+
+    const weekListHtml = (project.plan || [])
+      .map((step) => `<li>${escapeHtml(step)}</li>`)
+      .join("");
+    const skillsText = (project.skills || []).join(" • ");
+
+    card.innerHTML = `
+      <div class="project-top">
+        <div>
+          <h4 class="project-title">${escapeHtml(project.title)}</h4>
+          <p class="project-meta">${escapeHtml(project.outcome || "")}</p>
+        </div>
+        <label class="project-check">
+          <input type="checkbox" ${done ? "checked" : ""} aria-label="Mark project as completed" />
+          Completed
+        </label>
+      </div>
+      <ol class="week-plan">${weekListHtml}</ol>
+      <p class="project-skills"><strong>Skills you will build:</strong> ${escapeHtml(skillsText)}</p>
+    `;
+
+    const checkbox = card.querySelector("input[type='checkbox']");
+    if (checkbox) {
+      checkbox.addEventListener("change", () => {
+        setProjectCompleted(courseKey, project.id, checkbox.checked);
+        renderCareerReadinessTab(courseKey);
+      });
+    }
+
+    careerProjectsList.appendChild(card);
+  });
+
+  ideas.forEach((idea) => {
+    const li = document.createElement("li");
+    li.textContent = idea;
+    careerIdeasList.appendChild(li);
+  });
+
+  if (careerSummaryTitle) {
+    careerSummaryTitle.textContent = `${projects.length ? Math.round((completedCount / projects.length) * 100) : 0}% Portfolio Plan Complete`;
+  }
+  if (careerSummaryText) {
+    careerSummaryText.textContent = `${completedCount} of ${projects.length} projects completed.`;
+  }
+}
 
 function renderActiveTab() {
   if (currentCourse === "home") return;
@@ -1145,6 +1703,7 @@ function renderActiveTab() {
   if (tutorAssignmentList) tutorAssignmentList.innerHTML = "";
   if (analyticsPanel) analyticsPanel.classList.add("hidden");
   if (tutorPanel) tutorPanel.classList.add("hidden");
+  if (careerPanel) careerPanel.classList.add("hidden");
 
   assignmentsAccordion.classList.add("hidden");
   gradesPanel.classList.add("hidden");
@@ -1406,6 +1965,12 @@ function renderActiveTab() {
     if (classId) analyticsClassId = classId;
     populateAnalyticsFilters();
     renderAnalytics();
+  }
+
+  // CAREER READINESS TAB ONLY
+  else if (activeTab === "career") {
+    if (careerPanel) careerPanel.classList.remove("hidden");
+    renderCareerReadinessTab(currentCourse);
   }
 
   // OTHER TABS
@@ -1745,6 +2310,17 @@ function updateCourseTabVisibility() {
 function setViewRole(teacherMode) {
   isTeacherView = teacherMode;
   document.body.classList.toggle("teacher-view", teacherMode);
+  const teacherName = recordsTeachers[0]
+    ? `${recordsTeachers[0].title || ""} ${recordsTeachers[0].firstName || ""} ${recordsTeachers[0].lastName || ""}`.trim()
+    : "Dr. Nina Verma";
+  const student = recordsStudents.find((s) => s.id === currentStudentId);
+  const studentName = student ? `${student.firstName} ${student.lastName}` : "Jordan Chen";
+  const activeName = teacherMode ? teacherName : studentName;
+
+  [activeUserNameHome, activeUserNameCalendar, activeUserNameDetail].forEach((el) => {
+    if (el) el.textContent = activeName;
+  });
+
   if (homeSubtitle) {
     homeSubtitle.textContent = `Spring 2026 | ${teacherMode ? "Teacher" : "Student"} View`;
   }
@@ -1763,6 +2339,10 @@ function setViewRole(teacherMode) {
   updateCourseTabVisibility();
   applyDashboardClassesForRole();
   if (currentCourse !== "home") renderActiveTab();
+  if (activeTab === "analytics") {
+    populateAnalyticsFilters();
+    renderAnalytics();
+  }
 }
 
 function closeProfileMenu() {
