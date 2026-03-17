@@ -1,0 +1,42 @@
+[
+  {
+    "id": "a1",
+    "classId": "c1",
+    "title": "Lab Safety Contract",
+    "description": "Read the lab safety guidelines and sign the safety contract acknowledging that you understand proper handling of chemicals, use of personal protective equipment, and emergency procedures. Upload the signed contract as a PDF.",
+    "dueDate": "2026-03-18",
+    "dueTime": "11:59 PM",
+    "pointsPossible": 10,
+    "type": "document"
+  },
+  {
+    "id": "a2",
+    "classId": "c1",
+    "title": "Lab Notebook Template",
+    "description": "Download the lab notebook template from the Files tab and complete the header section with your name, course, and experiment title. Submit a screenshot or PDF of your completed template to show you are ready for formal experiment documentation.",
+    "dueDate": "2026-03-20",
+    "dueTime": "11:59 PM",
+    "pointsPossible": 15,
+    "type": "document"
+  },
+  {
+    "id": "a3",
+    "classId": "c1",
+    "title": "Measurement and Significant Figures Quiz",
+    "description": "Complete the short quiz on scientific notation, unit conversion, and significant figures. Covers accuracy vs. precision and how to report measurements correctly in lab write-ups.",
+    "dueDate": "2026-03-25",
+    "dueTime": "5:00 PM",
+    "pointsPossible": 20,
+    "type": "quiz"
+  },
+  {
+    "id": "a4",
+    "classId": "c1",
+    "title": "First Experiment Write-up",
+    "description": "After completing the introductory density experiment in lab, write a formal lab report using the notebook template. Include purpose, procedure, data table, calculations, and conclusion. Focus on clear presentation of measurements and proper use of units.",
+    "dueDate": "2026-03-27",
+    "dueTime": "11:59 PM",
+    "pointsPossible": 30,
+    "type": "report"
+  }
+]

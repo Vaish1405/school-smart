@@ -963,6 +963,23 @@ h1 {
   line-height: 1.5;
 }
 
+#tabList li {
+  margin-bottom: 12px;
+}
+
+#tabList .assignment-desc {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+#tabList .muted {
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .calendar-groups {
   display: grid;
   gap: 10px;

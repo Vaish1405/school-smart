@@ -1,0 +1,26 @@
+[
+  {
+    "id": "n1",
+    "classId": "c1",
+    "title": "Welcome to Chemistry Lab Foundations",
+    "body": "Please read the syllabus in the Files tab and sign the lab safety contract by the end of Week 2. Our first in-person lab is March 20.",
+    "postedAt": "2026-01-08T09:00:00",
+    "authorId": "t1"
+  },
+  {
+    "id": "n2",
+    "classId": "c1",
+    "title": "Lab Notebook Template Due Wednesday",
+    "body": "Reminder: submit your completed lab notebook template (header section) by Wednesday 11:59 PM. This is required before you can submit your first experiment write-up.",
+    "postedAt": "2026-03-16T14:00:00",
+    "authorId": "t1"
+  },
+  {
+    "id": "n3",
+    "classId": "c1",
+    "title": "Significant Figures Quiz Opens Monday",
+    "body": "The Measurement and Significant Figures quiz will open Monday March 23 and is due Thursday March 25 at 5:00 PM. Review the Week 2 slides and your notes.",
+    "postedAt": "2026-03-14T10:00:00",
+    "authorId": "t1"
+  }
+]
